@@ -1,0 +1,669 @@
+import type { ReactNode } from "react";
+import Link from "next/link";
+import {
+  ArrowRight,
+  BarChart3,
+  BookOpen,
+  BookmarkCheck,
+  CheckCircle2,
+  Circle,
+  CircleUserRound,
+  FileText,
+  FlaskConical,
+  GitBranch,
+  LibraryBig,
+  Lightbulb,
+  NotebookText,
+  Search,
+  Sparkles,
+  Target,
+  TriangleAlert,
+  Upload,
+  type LucideIcon,
+} from "lucide-react";
+import {
+  guideSectionAnchor,
+  type GroundedClaim,
+  type Guide,
+  type GuideTopic,
+  type Priority,
+  type SourceReference,
+} from "@/lib/schemas";
+import { SourceReference as SourceReferenceView } from "@/components/source-reference";
+
+const priorityMeta: Record<Priority, { label: string; icon: string }> = {
+  study_first: { label: "Study first", icon: "target" },
+  study_next: { label: "Study next", icon: "check_circle" },
+  review_if_time: { label: "Review if time", icon: "radio_button_unchecked" },
+};
+
+const iconGlyphs: Record<string, LucideIcon> = {
+  menu_book: BookOpen,
+  target: Target,
+  science: FlaskConical,
+  analytics: BarChart3,
+  lightbulb: Lightbulb,
+  check_circle: CheckCircle2,
+  radio_button_unchecked: Circle,
+  upload_file: Upload,
+  search: Search,
+  person: CircleUserRound,
+  bookmark_star: BookmarkCheck,
+  notes: NotebookText,
+  account_tree: GitBranch,
+  warning: TriangleAlert,
+  source: FileText,
+  sparkle: Sparkles,
+  library: LibraryBig,
+  arrow_right: ArrowRight,
+};
+
+function Icon({
+  name,
+  children,
+  className = "",
+}: {
+  name?: string;
+  children?: string;
+  className?: string;
+}) {
+  const icon = name ?? children ?? "circle";
+  const Glyph = iconGlyphs[icon] ?? Circle;
+  return (
+    <Glyph
+      aria-hidden="true"
+      className={`h-[1em] w-[1em] shrink-0 ${className}`}
+      strokeWidth={1.8}
+    />
+  );
+}
+
+function ClaimList({
+  claims,
+  compact = false,
+}: {
+  claims: GroundedClaim[];
+  compact?: boolean;
+}) {
+  if (!claims.length) return null;
+  return (
+    <ul className={compact ? "space-y-2" : "space-y-3"}>
+      {claims.map((claim) => (
+        <li
+          id={`claim-${claim.id}`}
+          key={claim.id}
+          className={`relative pl-5 ${compact ? "text-[14px] leading-[1.55]" : "text-[16px] leading-[1.65]"} text-[var(--text-secondary)]`}
+        >
+          <span className="absolute left-0 top-[0.72em] h-1.5 w-1.5 rounded-full bg-[var(--accent-bright)]" />
+          {claim.text}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function SourceChip({ reference }: { reference: SourceReference }) {
+  const kind =
+    reference.locator.kind === "page"
+      ? "Pg"
+      : reference.locator.kind === "slide"
+        ? "Slide"
+        : "Section";
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-md border border-sky-200/70 bg-[var(--source-blue)]/80 px-2 py-1 text-[11px] font-semibold text-sky-900 shadow-[0_1px_2px_rgba(14,29,43,0.04)]">
+      <Icon className="text-[13px]" name="source" />
+      {kind} {reference.locator.number}
+    </span>
+  );
+}
+
+function SectionHeading({ title, icon }: { title: string; icon: string }) {
+  return (
+    <div className="mb-6 flex items-center gap-3">
+      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
+        <Icon className="text-[18px]" name={icon} />
+      </span>
+      <h2 className="font-headline-md text-[24px] font-semibold leading-[1.3] text-[var(--foreground)]">
+        {title}
+      </h2>
+    </div>
+  );
+}
+
+function MarginNote({
+  label,
+  children,
+  tone = "accent",
+}: {
+  label: string;
+  children: ReactNode;
+  tone?: "accent" | "amber" | "blue";
+}) {
+  const color =
+    tone === "amber"
+      ? "text-[var(--warning)]"
+      : tone === "blue"
+        ? "text-[var(--tertiary)]"
+        : "text-[var(--accent)]";
+  return (
+    <aside className="relative rounded-lg border border-[var(--line-soft)] bg-white/85 p-3.5 shadow-[0_3px_12px_rgba(24,29,24,0.045)] transition-[border-color,box-shadow] hover:border-[var(--line)] hover:shadow-[0_4px_16px_rgba(24,29,24,0.07)]">
+      <div className="absolute -left-3 top-4 hidden w-3 border-t border-dashed border-[var(--line)] lg:block" />
+      <div
+        className={`mb-2 border-b border-[var(--line)] pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${color}`}
+      >
+        {label}
+      </div>
+      <div className="text-[13px] leading-[1.5] text-[var(--text-secondary)]">
+        {children}
+      </div>
+    </aside>
+  );
+}
+
+function ConceptCard({
+  name,
+  explanation,
+  reference,
+}: {
+  name: string;
+  explanation: GroundedClaim[];
+  reference?: SourceReference;
+}) {
+  return (
+    <div className="rounded-lg border border-[var(--line-soft)] bg-[var(--surface-container)] p-5 transition-[border-color,box-shadow] hover:border-[var(--accent)]/45 hover:shadow-[0_4px_16px_rgba(24,29,24,0.05)]">
+      <h3 className="font-headline-md text-[18px] font-semibold leading-[1.35] text-[var(--foreground)]">
+        {name}
+      </h3>
+      <div className="mt-2.5">
+        <ClaimList claims={explanation} compact />
+      </div>
+      {reference && (
+        <div className="mt-4">
+          <SourceChip reference={reference} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TopicDetails({
+  topic,
+  index,
+  lead = false,
+}: {
+  topic: GuideTopic;
+  index: number;
+  lead?: boolean;
+}) {
+  const firstReference = topic.source_references[0];
+  return (
+    <article
+      id={guideSectionAnchor(topic.id)}
+      className="guide-anchor border-t border-[var(--line)] pt-12"
+    >
+      {!lead && (
+        <>
+          <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-label-sm uppercase text-[var(--accent)]">
+                {priorityMeta[topic.priority].label} · Topic {index + 1}
+              </p>
+              <h2 className="mt-2 max-w-3xl font-headline-lg text-[32px] font-bold leading-[1.2] text-[var(--foreground)]">
+                {topic.title}
+              </h2>
+            </div>
+            <span className="inline-flex items-center gap-1 rounded border border-[var(--line)] bg-[var(--surface-container-low)] px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+              <Icon
+                className="text-[14px]"
+                name={priorityMeta[topic.priority].icon}
+              />
+              {priorityMeta[topic.priority].label}
+            </span>
+          </div>
+          <p className="mb-10 border-l-2 border-[var(--secondary)] bg-[var(--secondary-container)]/35 px-5 py-4 text-[15px] leading-7 text-[var(--text-secondary)]">
+            <span className="mr-2 text-label-sm uppercase text-[var(--text-muted)]">
+              Why focus here
+            </span>
+            {topic.focus_reason}
+          </p>
+        </>
+      )}
+      {topic.explanation.length > 0 && (
+        <section className="mb-12">
+          <SectionHeading title="Study notes" icon="notes" />
+          <ClaimList claims={topic.explanation} />
+        </section>
+      )}
+      {!lead && topic.key_concepts.length > 0 && (
+        <section className="mb-12">
+          <SectionHeading title="Key Concepts" icon="lightbulb" />
+          <div className="grid gap-6 md:grid-cols-2">
+            {topic.key_concepts.map((concept) => (
+              <ConceptCard
+                key={concept.id}
+                name={concept.name}
+                explanation={concept.explanation}
+                reference={firstReference}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+      {topic.processes_relationships.length > 0 && (
+        <section className="mb-12">
+          <SectionHeading
+            title="Processes / Relationships"
+            icon="account_tree"
+          />
+          <div className="rounded-lg border border-[var(--line-soft)] bg-white/80 p-6">
+            <ClaimList claims={topic.processes_relationships} />
+          </div>
+        </section>
+      )}
+      {topic.definitions.length > 0 && (
+        <section className="mb-12">
+          <SectionHeading title="Glossary" icon="menu_book" />
+          <dl className="space-y-6">
+            {topic.definitions.map((definition) => (
+              <div
+                id={guideSectionAnchor(topic.id, "definition", definition.id)}
+                key={definition.id}
+                className="grid gap-3 border-b border-[var(--line)] pb-6 sm:grid-cols-[13rem_1fr] sm:gap-6"
+              >
+                <dt className="font-body-lg text-[18px] font-semibold text-[var(--foreground)]">
+                  {definition.term}
+                </dt>
+                <dd>
+                  <ClaimList claims={definition.definition} />
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
+      {topic.common_confusions.length > 0 && (
+        <section className="mb-12 rounded-lg border border-[var(--secondary-fixed-dim)]/35 bg-[var(--secondary-container)]/20 p-6 sm:p-8">
+          <div className="mb-5 flex items-center gap-3 text-[var(--warning)]">
+            <Icon className="text-[22px]" name="warning" />
+            <h3 className="font-body-lg text-[18px] font-bold">
+              Common Confusions
+            </h3>
+          </div>
+          {topic.common_confusions.map((item) => (
+            <div
+              id={guideSectionAnchor(topic.id, "common_confusion", item.id)}
+              key={item.id}
+              className="mb-6 last:mb-0"
+            >
+              <p className="text-label-sm uppercase text-[var(--warning)]">
+                Common mix-up
+              </p>
+              <div className="mt-2">
+                <ClaimList claims={item.confusion} compact />
+              </div>
+              <p className="mb-2 mt-5 text-label-sm uppercase text-[var(--accent)]">
+                Clarification
+              </p>
+              <ClaimList claims={item.clarification} compact />
+            </div>
+          ))}
+        </section>
+      )}
+      {topic.source_references.length > 0 && (
+        <section className="mb-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-label-sm uppercase text-[var(--text-muted)]">
+              Sources
+            </p>
+            <div className="flex flex-wrap justify-end gap-2">
+              {topic.source_references.slice(0, 4).map((reference) => (
+                <SourceChip key={reference.span_id} reference={reference} />
+              ))}
+            </div>
+          </div>
+          <div className="grid gap-2">
+            {topic.source_references.map((reference) => (
+              <SourceReferenceView
+                key={reference.span_id}
+                reference={reference}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+    </article>
+  );
+}
+
+export function GuideWorkspace({
+  guide,
+  isDemo = false,
+  quickCheckHref,
+  reviewQuestion,
+}: {
+  guide: Guide;
+  isDemo?: boolean;
+  quickCheckHref?: string;
+  reviewQuestion?: string;
+}) {
+  const firstTopic =
+    guide.topics.find((topic) => topic.priority === "study_first") ??
+    guide.topics[0];
+  const stageTopics = guide.topics.slice(0, 3);
+  const allReferences = guide.topics.flatMap(
+    (topic) => topic.source_references,
+  );
+  const uniqueReferences = allReferences.filter(
+    (reference, index, refs) =>
+      refs.findIndex((item) => item.span_id === reference.span_id) === index,
+  );
+  const priorities = Object.keys(priorityMeta) as Priority[];
+  return (
+    <main className="min-h-screen bg-[var(--background)] text-[var(--text-secondary)]">
+      <aside className="fixed left-0 top-0 z-50 hidden h-full w-72 flex-col border-r border-[var(--line)] bg-[var(--surface-container-low)] lg:flex">
+        <div className="mb-7 flex items-center bg-transparent px-6 pb-5 pt-8">
+          <Link
+            href="/"
+            className="font-headline-md text-[24px] font-semibold tracking-tight text-[var(--accent-bright)]"
+          >
+            Folveta
+          </Link>
+        </div>
+        <div className="mb-3 px-6 text-label-sm uppercase tracking-[0.15em] text-[var(--text-muted)]">
+          Study Topics
+        </div>
+        <nav
+          className="flex-1 space-y-1.5 px-3"
+          aria-label="Study guide topics"
+        >
+          <a
+            href="#overview"
+            aria-current="page"
+            className="group flex cursor-pointer items-center justify-between rounded-lg bg-[var(--accent-soft)]/60 px-3 py-3 text-[14px] font-medium text-[var(--foreground)] transition-[background-color,color,transform] hover:bg-[var(--accent-soft)] active:translate-y-px"
+          >
+            <span className="flex items-center gap-3">
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white/75 text-[var(--accent)] shadow-[0_1px_3px_rgba(24,29,24,0.06)]">
+                <Icon className="text-[17px]" name="menu_book" />
+              </span>
+              Overview
+            </span>
+            <Icon className="text-[18px] text-[var(--accent)]" name="target" />
+          </a>
+          {priorities.map((priority) =>
+            guide.topics
+              .filter((topic) => topic.priority === priority)
+              .map((topic) => (
+                <a
+                  key={topic.id}
+                  href={`#${guideSectionAnchor(topic.id)}`}
+                  className="group flex cursor-pointer items-center justify-between rounded-lg px-3 py-3 text-[14px] text-[var(--text-secondary)] transition-[background-color,color,transform] hover:bg-[var(--surface-container-high)] hover:text-[var(--foreground)] active:translate-y-px"
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white/50 text-[var(--text-muted)] transition-colors group-hover:bg-white group-hover:text-[var(--accent)]">
+                      <Icon
+                        className="text-[17px]"
+                        name={
+                          priority === "study_first"
+                            ? "science"
+                            : priority === "study_next"
+                              ? "analytics"
+                              : "lightbulb"
+                        }
+                      />
+                    </span>
+                    <span className="truncate">{topic.title}</span>
+                  </span>
+                  <Icon
+                    className="text-[18px] text-[var(--text-faint)]"
+                    name={priorityMeta[priority].icon}
+                  />
+                </a>
+              )),
+          )}
+        </nav>
+        <div className="mt-auto border-t border-[var(--line)] p-6">
+          <Link
+            href="/"
+            className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-[var(--accent-bright)] px-4 text-[13px] font-semibold text-white shadow-[0_3px_10px_rgba(0,109,48,0.18)] transition-[background-color,box-shadow,transform] hover:bg-[var(--accent)] hover:shadow-[0_5px_14px_rgba(0,101,44,0.22)] active:translate-y-px active:shadow-sm"
+          >
+            <Icon className="text-[18px]" name="upload_file" />
+            Upload Document
+          </Link>
+        </div>
+      </aside>
+      <div className="lg:pl-72">
+        <header className="fixed left-0 right-0 top-0 z-40 flex h-20 items-center justify-between gap-3 border-b border-[var(--line)]/70 bg-[var(--surface)]/90 px-4 backdrop-blur-xl sm:px-6 lg:left-72 lg:px-6">
+          <div className="flex min-w-0 flex-1 items-center rounded-full border border-[var(--line)] bg-[var(--surface-container)] px-4 py-2 transition-colors focus-within:border-[var(--accent)] sm:max-w-sm">
+            <Icon
+              className="mr-3 text-[20px] text-[var(--text-muted)]"
+              name="search"
+            />
+            <input
+              aria-label="Search your knowledge"
+              className="w-full bg-transparent text-[14px] text-[var(--text-secondary)] outline-none placeholder:text-[var(--text-faint)]"
+              placeholder="Search your knowledge..."
+            />
+          </div>
+          <nav
+            className="ml-auto mr-4 hidden items-center gap-7 sm:flex"
+            aria-label="Workspace navigation"
+          >
+            <a
+              href="#overview"
+              className="flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-2 text-label-sm uppercase text-[var(--accent)] transition-colors hover:bg-[var(--accent-soft)] active:bg-[var(--surface-container-high)]"
+            >
+              <Icon className="text-[15px]" name="menu_book" /> My Guides
+            </a>
+            <a
+              href="#sources"
+              className="flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-2 text-label-sm uppercase text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-container)] hover:text-[var(--foreground)] active:bg-[var(--surface-container-high)]"
+            >
+              <Icon className="text-[15px]" name="library" /> Library
+            </a>
+          </nav>
+          <button
+            type="button"
+            aria-label="Profile"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-[0_2px_8px_rgba(0,101,44,0.18)] transition-[background-color,box-shadow,transform] hover:bg-[var(--accent-bright)] hover:shadow-[0_4px_12px_rgba(0,101,44,0.24)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <Icon className="text-[18px]" name="person" />
+          </button>
+        </header>
+        <main className="min-h-screen bg-[var(--background)] pt-20">
+          <div
+            id="overview"
+            className="mx-auto flex w-full max-w-[1140px] flex-col px-6"
+          >
+            <div className="pb-6 pt-12">
+              <div className="mb-3 flex flex-wrap items-center gap-3">
+                <span className="rounded-full bg-[var(--tertiary-container)] px-3 py-1 text-label-sm uppercase tracking-[0.08em] text-white">
+                  Study Guide
+                </span>
+                <span className="font-mono-caption text-[12px] font-medium text-[var(--text-muted)]">
+                  {isDemo
+                    ? "Example guide"
+                    : `Updated ${new Date(guide.generated_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`}{" "}
+                  · {guide.source_count} source
+                  {guide.source_count === 1 ? "" : "s"}
+                </span>
+              </div>
+              <h1 className="max-w-4xl font-display text-[38px] font-extrabold leading-[1.1] tracking-[-0.02em] text-[var(--foreground)] sm:text-[48px]">
+                {guide.title}
+              </h1>
+              <p className="mt-4 max-w-3xl font-body-lg text-[18px] leading-[1.6] text-[var(--text-secondary)]">
+                {guide.priority_method_summary}
+              </p>
+            </div>
+            <div className="border-t border-[var(--line)]/70" />
+            {reviewQuestion && (
+              <section
+                className="mt-6 border-l-2 border-[var(--accent)] bg-[var(--accent-soft)] px-4 py-3 text-[14px]"
+                role="status"
+              >
+                Reviewing because of Quick Check question {reviewQuestion}. The
+                related section is highlighted below.
+              </section>
+            )}
+            <div className="grid gap-16 pb-20 pt-12 lg:grid-cols-[minmax(0,1fr)_200px] lg:gap-20">
+              <div className="min-w-0">
+                <section className="relative mb-16">
+                  <div className="absolute -left-4 top-0 h-full w-1 rounded-r bg-[var(--accent)]" />
+                  <div className="relative rounded border border-[var(--line)] bg-white p-6 shadow-[0_2px_10px_rgba(24,29,24,0.05)] transition-colors hover:border-[var(--accent)]">
+                    <div className="mb-3 flex items-center gap-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
+                        <Icon className="text-[20px]" name="bookmark_star" />
+                      </span>
+                      <h2 className="font-headline-md text-[24px] font-semibold">
+                        Study First
+                      </h2>
+                    </div>
+                    <p className="text-[16px] leading-[1.65] text-[var(--text-secondary)]">
+                      {firstTopic.focus_reason}{" "}
+                      {firstTopic.explanation[0]?.text && (
+                        <>
+                          <span>Start with the core idea: </span>
+                          <mark className="highlight-mark font-medium text-[var(--foreground)]">
+                            {firstTopic.explanation[0].text}
+                          </mark>
+                        </>
+                      )}
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {firstTopic.source_references
+                        .slice(0, 3)
+                        .map((reference) => (
+                          <SourceChip
+                            key={reference.span_id}
+                            reference={reference}
+                          />
+                        ))}
+                    </div>
+                  </div>
+                </section>
+                {firstTopic.key_concepts.length > 0 && (
+                  <section className="mb-16">
+                    <SectionHeading title="Key Concepts" icon="lightbulb" />
+                    <div className="grid gap-6 md:grid-cols-2">
+                      {firstTopic.key_concepts.map((concept) => (
+                        <ConceptCard
+                          key={concept.id}
+                          name={concept.name}
+                          explanation={concept.explanation}
+                          reference={firstTopic.source_references[0]}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
+                {stageTopics.length > 1 && (
+                  <section className="mb-16">
+                    <SectionHeading title="Study Path" icon="account_tree" />
+                    <div className="relative flex flex-col items-center justify-between gap-6 overflow-hidden rounded-lg border border-[var(--line-soft)] bg-[var(--surface-bright)] p-8 md:flex-row md:gap-2 lg:p-10">
+                      <div
+                        className="pointer-events-none absolute inset-0 opacity-[0.04]"
+                        style={{
+                          backgroundImage:
+                            "radial-gradient(circle at center, #181d17 1px, transparent 1px)",
+                          backgroundSize: "16px 16px",
+                        }}
+                      />
+                      {stageTopics.map((topic, index) => (
+                        <div
+                          key={topic.id}
+                          className="relative z-10 flex w-full flex-col items-center px-2 py-3 text-center md:w-1/3"
+                        >
+                          <div
+                            className={`mb-3 flex h-14 w-14 items-center justify-center rounded-full font-headline-md text-[24px] font-semibold shadow-sm ring-4 ring-[var(--background)] ${index === 0 ? "bg-[var(--accent-bright)] text-white" : index === 1 ? "bg-[var(--tertiary-container)] text-white" : "bg-[var(--secondary-container)] text-[var(--warning)]"}`}
+                          >
+                            {index + 1}
+                          </div>
+                          <h3 className="text-label-sm uppercase tracking-[0.12em] text-[var(--foreground)]">
+                            {topic.title}
+                          </h3>
+                          <p className="mt-1 font-mono-caption text-[12px] text-[var(--text-muted)]">
+                            {priorityMeta[topic.priority].label}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+                <TopicDetails topic={firstTopic} index={0} lead />
+                {guide.topics.slice(1).map((topic, index) => (
+                  <TopicDetails
+                    key={topic.id}
+                    topic={topic}
+                    index={index + 1}
+                  />
+                ))}
+                {guide.overall_gaps.length > 0 && (
+                  <section className="mt-10 rounded-lg border border-[var(--secondary-fixed-dim)]/35 bg-[var(--secondary-container)]/20 p-6">
+                    <div className="mb-3 flex items-center gap-3 text-[var(--warning)]">
+                      <Icon className="text-[22px]" name="warning" />
+                      <h2 className="font-body-lg text-[18px] font-bold">
+                        Material gaps
+                      </h2>
+                    </div>
+                    <ClaimList claims={guide.overall_gaps} compact />
+                  </section>
+                )}
+              </div>
+              <div id="sources" className="hidden lg:block">
+                <div className="sticky top-24 space-y-6">
+                  <MarginNote label="Study cue">
+                    {firstTopic.focus_reason}
+                  </MarginNote>
+                  {guide.source_issues.slice(0, 2).map((issue) => (
+                    <MarginNote
+                      key={`${issue.source_id}-${issue.code}`}
+                      label="Source note"
+                      tone="amber"
+                    >
+                      <strong>{issue.source_name ?? "Source"}</strong>
+                      <br />
+                      {issue.message}
+                    </MarginNote>
+                  ))}
+                  {guide.overall_gaps[0] && (
+                    <MarginNote label="Evidence boundary" tone="blue">
+                      {guide.overall_gaps[0].text}
+                    </MarginNote>
+                  )}
+                  <MarginNote label="Sources">
+                    <div className="flex flex-wrap gap-2">
+                      {uniqueReferences.slice(0, 6).map((reference) => (
+                        <SourceChip
+                          key={reference.span_id}
+                          reference={reference}
+                        />
+                      ))}
+                    </div>
+                  </MarginNote>
+                </div>
+              </div>
+            </div>
+            {quickCheckHref && (
+              <div className="mb-12 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--line)] pt-6">
+                <div>
+                  <p className="text-label-sm uppercase text-[var(--text-muted)]">
+                    Optional learning check
+                  </p>
+                  <p className="mt-1 text-[14px] text-[var(--text-muted)]">
+                    5 questions · about 5 minutes
+                  </p>
+                </div>
+                <Link
+                  href={quickCheckHref}
+                  className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg bg-[var(--accent-bright)] px-5 text-[14px] font-semibold text-white shadow-[0_3px_10px_rgba(0,109,48,0.16)] transition-[background-color,box-shadow,transform] hover:bg-[var(--accent)] hover:shadow-[0_5px_14px_rgba(0,101,44,0.2)] active:translate-y-px active:shadow-sm"
+                >
+                  Open Quick Check{" "}
+                  <Icon className="text-[17px]" name="arrow_right" />
+                </Link>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+    </main>
+  );
+}
