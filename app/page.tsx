@@ -20,7 +20,7 @@ import { buttonClassName } from "@/components/ui/styles";
 import { MVP_LIMITS, formatMegabytes } from "@/lib/config";
 import { absoluteUrl, SITE_NAME } from "@/lib/site";
 
-const title = "Folveta | AI Study Guide Maker";
+const title = "Folveta | Study Guide Maker";
 const description =
   "Turn text-based PDFs and PowerPoint slides into a clear, source-grounded study guide with priorities, key concepts, and an optional Quick Check.";
 
@@ -169,7 +169,7 @@ function LandingHeader() {
       </Link>
       <div className="hidden items-center gap-2 text-[14px] text-[var(--text-muted)] lg:flex">
         <Sparkles className="h-4 w-4 text-[var(--accent)]" strokeWidth={1.8} />
-        AI Study Guide Maker
+        Study Guide Maker
       </div>
       <nav
         className="ml-auto flex items-center gap-1 sm:gap-3"
@@ -194,44 +194,51 @@ function LandingHeader() {
 
 function TransformationPreview() {
   return (
-    <div className="relative min-h-[320px] overflow-hidden rounded-[20px] bg-white p-6 shadow-[0_8px_30px_rgba(24,29,24,0.07)] sm:p-8">
-      <div className="absolute inset-0 opacity-[0.035] [background-image:radial-gradient(circle_at_center,#181d17_1px,transparent_1px)] [background-size:18px_18px]" />
-      <div className="relative flex min-h-[256px] items-center gap-5">
-        <div className="w-[35%] space-y-3">
-          <PreviewFile name="Lecture.pdf" type="pdf" className="-rotate-3" />
+    <div className="relative min-h-[350px] overflow-hidden rounded-xl border border-[var(--border-soft)] bg-white p-5 shadow-[var(--shadow-md)] sm:p-7">
+      <div className="absolute inset-x-0 top-0 h-1 bg-[var(--primary)]" />
+      <div className="relative flex min-h-[294px] items-center gap-3 sm:gap-5">
+        <div className="w-[34%] space-y-3">
+          <p className="text-[11px] font-semibold text-[var(--faint)]">Course materials</p>
+          <PreviewFile name="Lecture 4.pdf" type="pdf" className="-rotate-2" />
           <PreviewFile
-            name="Slides.pptx"
+            name="Metabolism.pptx"
             type="pptx"
-            className="translate-x-2 rotate-2"
+            className="translate-x-1 rotate-1"
           />
         </div>
-        <div className="relative flex flex-1 items-center justify-center">
-          <span className="absolute h-20 w-20 rounded-full bg-[var(--accent-soft)]" />
-          <ArrowRight
-            className="relative h-8 w-8 text-[var(--accent)]"
-            strokeWidth={1.7}
-          />
+        <div className="flex flex-1 flex-col items-center justify-center gap-2">
+          <IconFrame tone="primary" size="lg" className="shadow-[var(--shadow-sm)]">
+            <ArrowRight className="h-6 w-6" strokeWidth={1.8} />
+          </IconFrame>
+          <span className="hidden text-center text-[10px] font-semibold text-[var(--faint)] sm:block">
+            Structured
+          </span>
         </div>
-        <div className="w-[42%] rounded-xl border border-[var(--line-soft)] border-t-4 border-t-[var(--accent-bright)] bg-white p-4 shadow-[0_7px_22px_rgba(24,29,24,0.1)]">
-          <p className="text-label-sm uppercase text-[var(--accent)]">
-            Study Guide
+        <div className="w-[48%] rounded-lg border border-[var(--border-soft)] bg-white p-4 shadow-[var(--shadow-sm)] sm:p-5">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] font-semibold text-[var(--primary)]">Study Guide</p>
+            <Badge tone="source" className="hidden sm:inline-flex">2 sources</Badge>
+          </div>
+          <p className="mt-2 font-headline-md text-[17px] font-semibold leading-[1.25] text-[var(--foreground)] sm:text-[19px]">
+            Cellular respiration
           </p>
-          <p className="mt-2 font-headline-md text-[18px] font-semibold leading-[1.2] text-[var(--foreground)]">
-            Structured for focused review
-          </p>
-          <p className="mt-2 text-[11px] text-[var(--text-muted)]">
-            2 sources parsed
-          </p>
-          <div className="mt-5 space-y-3">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="flex items-center gap-2">
-                <CheckCircle2
-                  className="h-3.5 w-3.5 text-[var(--accent)]"
-                  strokeWidth={2}
-                />
-                <span className="h-1.5 flex-1 rounded-full bg-[var(--surface-container-high)]" />
+          <div className="mt-4 rounded-md bg-[var(--primary-soft)] p-3">
+            <p className="text-[10px] font-semibold text-[var(--primary-hover)]">Study first</p>
+            <p className="mt-1 text-[11px] font-medium leading-4 text-[var(--foreground)] sm:text-[12px]">
+              Connect electron transport, the proton gradient, and ATP production.
+            </p>
+          </div>
+          <div className="mt-4 space-y-2.5">
+            {["Chemiosmosis", "ATP synthase"].map((item) => (
+              <div key={item} className="flex items-center gap-2 text-[10px] font-medium text-[var(--text-secondary)] sm:text-[11px]">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[var(--primary)]" strokeWidth={2} />
+                <span>{item}</span>
               </div>
             ))}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-1.5">
+            <Badge tone="source">Slide 18</Badge>
+            <Badge tone="source">Page 7</Badge>
           </div>
         </div>
       </div>
@@ -263,10 +270,9 @@ function PreviewFile({
         )}
         {name}
       </div>
-      <div className="mt-3 space-y-1.5">
-        <span className="block h-1.5 w-full rounded-full bg-[var(--surface-container-high)]" />
-        <span className="block h-1.5 w-3/4 rounded-full bg-[var(--surface-container-high)]" />
-      </div>
+      <p className="mt-2 line-clamp-2 text-[9px] leading-3.5 text-[var(--faint)] sm:text-[10px]">
+        {type === "pdf" ? "Cellular respiration and energy transfer" : "Electron transport and chemiosmosis"}
+      </p>
     </div>
   );
 }
@@ -382,23 +388,20 @@ export default function HomePage() {
       <div className="lg:pl-72">
         <LandingHeader />
         <main className="min-h-screen bg-[var(--background)] pt-20">
-          <div className="px-5 py-6 sm:px-8 lg:px-12 lg:pb-24">
-            <section id="overview" className="mx-auto w-full max-w-[1140px]">
-              <div className="grid items-center gap-10 rounded-[24px] bg-[var(--surface-container-low)] p-7 sm:p-10 lg:min-h-[430px] lg:grid-cols-[0.92fr_1.08fr] lg:gap-14 lg:p-12">
-                <div>
-                  <Badge tone="primary">
-                    New workspace
-                  </Badge>
-                  <h1 className="mt-5 max-w-xl font-display text-[42px] font-extrabold leading-[1.03] text-[var(--foreground)] sm:text-[48px]">
-                    Your course material,{" "}
-                    <span className="highlight-mark">made learnable.</span>
+          <div className="px-5 sm:px-8 lg:px-12">
+            <section id="overview" className="mx-auto w-full max-w-[1140px] border-b border-[var(--border-soft)] py-8 sm:py-14 lg:py-16">
+              <div className="grid items-center gap-10 lg:min-h-[420px] lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+                <div className="max-w-xl">
+                  <Badge tone="primary">Study Guide Maker</Badge>
+                  <h1 className="mt-5 font-display text-[40px] font-extrabold leading-[1.06] text-[var(--foreground)] sm:text-[48px]">
+                    Turn course material into a Guide you can actually study.
                   </h1>
-                  <p className="mt-6 max-w-lg text-[17px] leading-[1.65] text-[var(--text-secondary)]">
-                    Turn text-based PDFs and lecture slides into a focused Study
-                    Guide with priorities, key concepts, relationships, and a
-                    clear place to begin.
+                  <p className="mt-5 max-w-lg text-[17px] leading-[1.65] text-[var(--text-secondary)]">
+                    Upload text-based PDFs and lecture slides. Folveta organizes
+                    the supported material into priorities, key concepts,
+                    relationships, and source-linked review notes.
                   </p>
-                  <div className="mt-8 flex flex-nowrap items-center gap-2 sm:gap-3">
+                  <div className="mt-7 flex flex-wrap items-center gap-2 sm:gap-3">
                     <a
                       href="#upload"
                       className={buttonClassName({ className: "shrink-0" })}
@@ -420,29 +423,29 @@ export default function HomePage() {
                       See how it works
                     </Link>
                   </div>
+                  <div className="mt-7 flex flex-wrap gap-x-3 gap-y-2 text-[11px] font-medium text-[var(--muted)] sm:gap-x-5 sm:text-[12px]">
+                    <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-[var(--primary)]" />PDF + PPTX</span>
+                    <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-[var(--primary)]" />Source grounded</span>
+                    <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-[var(--primary)]" />Private upload</span>
+                  </div>
                 </div>
-                <TransformationPreview />
+                <div className="hidden lg:block"><TransformationPreview /></div>
               </div>
             </section>
             <section
               id="upload"
-              className="mx-auto mt-16 w-full max-w-[1140px] scroll-mt-24 lg:mt-20"
+              className="mx-auto w-full max-w-[1140px] scroll-mt-24 py-12 sm:py-16 lg:py-20"
             >
-              <div className="mb-8">
-                <p className="text-label-sm uppercase tracking-[0.12em] text-[var(--accent)]">
-                  Your materials
-                </p>
-                <h2 className="mt-3 font-headline-md text-[28px] font-semibold leading-[1.2] text-[var(--foreground)]">
-                  Upload Workspace
-                </h2>
-                <p className="mt-2 max-w-xl text-[14px] leading-6 text-[var(--text-muted)]">
-                  Add readable course files, review the queue, then begin a
-                  private Study Guide session.
-                </p>
-              </div>
-              <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-12">
-                <UploadPanel />
-                <aside className="space-y-6 border-t border-[var(--line-soft)] pt-7 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-1">
+              <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-12">
+                <div>
+                  <div className="mb-7">
+                    <p className="text-label-sm text-[var(--primary)]">Your materials</p>
+                    <h2 className="mt-2 font-headline-md text-[28px] font-semibold leading-[1.2] text-[var(--foreground)]">Upload Workspace</h2>
+                    <p className="mt-2 max-w-xl text-[14px] leading-6 text-[var(--muted)]">Add readable course files, review the queue, then continue to generation.</p>
+                  </div>
+                  <UploadPanel />
+                </div>
+                <aside className="space-y-6 border-t border-[var(--border-soft)] pt-7 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-2">
                   <div>
                     <p className="text-label-sm uppercase tracking-[0.12em] text-[var(--text-muted)]">
                       Supported now
@@ -464,7 +467,7 @@ export default function HomePage() {
                       </p>
                     </div>
                   </div>
-                  <div className="rounded-lg bg-white/70 p-4">
+                  <div className="ui-surface ui-surface--info p-4">
                     <div className="flex items-start gap-3">
                       <LockKeyhole
                         className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[var(--accent)]"
@@ -504,6 +507,10 @@ export default function HomePage() {
                     </div>
                   </dl>
                 </aside>
+              </div>
+              <div className="mt-10 lg:hidden">
+                <p className="mb-3 text-label-sm text-[var(--muted)]">What Folveta builds</p>
+                <TransformationPreview />
               </div>
             </section>
           </div>

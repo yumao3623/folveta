@@ -130,6 +130,19 @@ Controls use stable heights and icon dimensions. Long topic names truncate in si
 - Foundation contract tests: `tests/ui-foundation.test.ts`
 - First consumers: Landing navigation/actions, Upload, parsing/generation feedback, Guide and Assessment shells, source references, Quick Check controls, and Results cards.
 
-## 9. Remaining Phase 1 work
+## 9. Page-level composition rules
 
-The foundation is ready for `ui-polish-v2-pages`. That task owns deeper Landing/Upload composition, real product visual evidence, page-specific hierarchy, remaining legacy class migration, full state screenshot coverage, and detailed Study Guide/Quick Check/Results page polish. Product-3, billing, SEO v2, and product logic remain out of scope.
+- Landing uses an unframed first-viewport composition: literal Study Guide Maker positioning, primary upload action, and representative Folveta output. On mobile, the actual Upload Workspace precedes the taller product transformation preview.
+- Product transformation evidence must use readable source names, representative course snippets, actual Guide hierarchy, and source badges. Anonymous gray skeleton lines are not sufficient product proof.
+- Upload is one framed tool with title, dropzone, queue, progress, status, and a stable continuation action. Parsing and generation remain separate real states; presentation must not imply that upload alone has generated the Guide.
+- Study Guide page hierarchy is context header -> Study First -> key concepts -> real priority Study Path -> topic content -> evidence. The right rail is one quiet context surface, not a stack of decorative note cards.
+- Process visuals may only represent structure present in the Guide schema. Grounded claim lists remain prose/list surfaces; topic priority order may be shown as a Study Path.
+- Quick Check uses the question as the dominant visual element. Mobile has a fixed, safe-area-aware Previous/Next or Submit control region; results are never disclosed before submission.
+- Results use sampled-performance language. Score, Learning Loop, needs-review topics, performed-well sampled items, answer correction, and evidence remain visually distinct without implying longitudinal mastery.
+- Core page compositions must be checked at 390px and 1440px at minimum. Tablet and wide desktop checks remain part of the cross-page pass.
+
+## 10. Phase 1 implementation record
+
+Foundation and page-level polish are complete on their dedicated feature branches. Landing/Upload, Study Guide, Quick Check, Results, parsing/generation states, shared navigation, semantic headings, mobile actions, source/warning treatments, hover/focus/selected/loading/error/success/progress states, reduced-motion fallback, and responsive overflow checks now use this system.
+
+No additional icon, illustration, animation, or component dependency was added. The Landing transformation preview uses existing Lucide icons and representative synthetic Folveta content. Product-3, billing, full SEO v2, and product logic remain out of scope.

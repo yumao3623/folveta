@@ -679,6 +679,21 @@ button:disabled,
   }
 }
 
+.quick-question-enter {
+  animation: quick-question-enter var(--motion-base) var(--ease-emphasized);
+}
+
+@keyframes quick-question-enter {
+  from {
+    opacity: 0.65;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 639px) {
   :root {
     --type-display-size: 2.375rem;

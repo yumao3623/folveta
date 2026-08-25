@@ -165,24 +165,24 @@ export function QuickCheckRunner({
             <IconFrame size="lg" tone="primary">
               <Sparkles aria-hidden="true" className="h-6 w-6" strokeWidth={1.8} />
             </IconFrame>
-            <p className="mt-7 text-label-sm uppercase tracking-[0.14em] text-[var(--accent)]">Optional learning check</p>
+            <p className="mt-7 text-label-sm text-[var(--accent)]">Optional learning check</p>
             <h1 className="mt-3 font-display text-[42px] font-extrabold leading-[1.08] text-[var(--foreground)] sm:text-[48px]">
               Quick Check
             </h1>
             <p className="mt-4 max-w-2xl text-[17px] leading-7 text-[var(--text-secondary)]">
               Test a focused sample from this Study Guide, then return directly to the sections that need another pass.
             </p>
-            <div className="mt-7 grid gap-3 sm:grid-cols-3">
-              <div className="flex items-center gap-3 rounded-lg bg-[var(--surface-container-low)] p-4">
-                <FileCheck2 aria-hidden="true" className="h-5 w-5 text-[var(--accent)]" strokeWidth={1.8} />
+            <div className="mt-7 grid divide-y divide-[var(--border-soft)] border-y border-[var(--border-soft)] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+              <div className="flex items-center gap-3 py-4 sm:px-4">
+                <IconFrame size="sm" tone="primary"><FileCheck2 aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} /></IconFrame>
                 <span className="text-[14px] font-medium text-[var(--foreground)]">{count} questions</span>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-[var(--surface-container-low)] p-4">
-                <Clock3 aria-hidden="true" className="h-5 w-5 text-[var(--tertiary)]" strokeWidth={1.8} />
+              <div className="flex items-center gap-3 py-4 sm:px-4">
+                <IconFrame size="sm" tone="source"><Clock3 aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} /></IconFrame>
                 <span className="text-[14px] font-medium text-[var(--foreground)]">About 5 minutes</span>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-[var(--surface-container-low)] p-4">
-                <ShieldCheck aria-hidden="true" className="h-5 w-5 text-[var(--warning)]" strokeWidth={1.8} />
+              <div className="flex items-center gap-3 py-4 sm:px-4">
+                <IconFrame size="sm" tone="warning"><ShieldCheck aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} /></IconFrame>
                 <span className="text-[14px] font-medium text-[var(--foreground)]">Source grounded</span>
               </div>
             </div>
@@ -228,13 +228,14 @@ export function QuickCheckRunner({
 
   return (
     <AssessmentShell guidePath={guidePath} topics={shellTopics} activeTopicId={question.topic_id}>
-      <div className="relative min-h-[calc(100vh-5rem)] overflow-hidden px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
+      <div className="relative min-h-[calc(100vh-5rem)] overflow-hidden px-5 pb-32 pt-8 sm:px-8 sm:py-10 lg:px-10">
         <div className="relative z-10 mx-auto flex w-full max-w-[800px] flex-col">
+          <h1 className="sr-only">Quick Check question {currentIndex + 1} of {quickCheck.question_count}</h1>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.15em] text-[var(--text-muted)]">
+            <p className="text-[12px] font-semibold text-[var(--text-muted)]">
               Question {currentIndex + 1} of {quickCheck.question_count}
             </p>
-            <span className="inline-flex max-w-full items-center gap-2 self-start rounded-full bg-[var(--surface-container-low)] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--tertiary)] shadow-[0_2px_8px_rgba(24,29,24,0.04)] sm:self-auto">
+            <span className="inline-flex max-w-full items-center gap-2 self-start rounded-full bg-[var(--source-blue)] px-4 py-2 text-[11px] font-semibold text-[var(--source-blue-strong)] sm:self-auto">
               <BookOpen aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} />
               <span className="truncate">Related to: {relatedTopic}</span>
             </span>
@@ -253,7 +254,7 @@ export function QuickCheckRunner({
             </Alert>
           )}
 
-          <section className="py-10 sm:py-12">
+          <section key={question.id} className="quick-question-enter py-8 sm:py-11">
             <fieldset>
               <legend className="mx-auto block max-w-[720px] text-center font-headline-lg text-[28px] font-bold leading-[1.25] text-[var(--foreground)] sm:text-[32px]">
                 {question.stem}
@@ -261,7 +262,7 @@ export function QuickCheckRunner({
               <p className="mx-auto mt-4 max-w-[580px] text-center text-[14px] leading-6 text-[var(--text-muted)]">
                 Choose the single best answer supported by your course materials.
               </p>
-              <div className="mt-9 space-y-3">
+              <div className="mt-8 space-y-3">
                 {question.options.map((option) => {
                   const checked = answers[question.id] === option.id;
                   return (
@@ -269,7 +270,7 @@ export function QuickCheckRunner({
                       key={option.id}
                       className={`group relative flex min-h-[74px] cursor-pointer items-center gap-4 overflow-hidden rounded-lg border bg-white px-5 py-4 shadow-[var(--shadow-xs)] transition-[background-color,border-color,box-shadow,transform] focus-within:outline focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-[var(--focus-ring)] active:translate-y-px sm:gap-5 sm:px-6 ${
                         checked
-                          ? "border-[var(--accent-bright)] bg-[var(--surface-bright)] shadow-[0_5px_16px_rgba(24,29,24,0.07)] ring-1 ring-[var(--accent-bright)]"
+                          ? "border-[var(--accent-bright)] bg-[var(--primary-soft)]/35 shadow-[0_5px_16px_rgba(24,29,24,0.07)] ring-1 ring-[var(--accent-bright)]"
                           : "border-[var(--line-soft)] hover:border-[var(--accent)]/55 hover:bg-[var(--surface-bright)] hover:shadow-[0_5px_16px_rgba(24,29,24,0.065)]"
                       }`}
                     >
@@ -298,6 +299,10 @@ export function QuickCheckRunner({
                   );
                 })}
               </div>
+              <aside className="mt-6 flex items-start gap-3 border-l-2 border-[var(--source-blue-strong)] bg-[var(--source-blue)] px-4 py-3 text-[13px] leading-5 text-[#214e72]">
+                <BookOpen aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.8} />
+                <p><strong>Study note:</strong> This question checks the Guide&apos;s {sectionLabel(question.related_section.section_type)} section for {relatedTopic}.</p>
+              </aside>
             </fieldset>
           </section>
 
@@ -305,13 +310,14 @@ export function QuickCheckRunner({
             <Alert tone="destructive" className="mb-4">{error}</Alert>
           )}
 
-          <div className="flex flex-col gap-4 border-t border-[var(--line)]/55 pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="fixed bottom-0 left-0 right-0 z-30 flex flex-col gap-3 border-t border-[var(--line)]/55 bg-white/95 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgb(23_32_25_/_0.08)] backdrop-blur-xl sm:static sm:flex-row sm:items-center sm:justify-between sm:bg-transparent sm:px-0 sm:pb-0 sm:pt-5 sm:shadow-none sm:backdrop-blur-none lg:left-72">
             <p className="text-[13px] text-[var(--text-muted)]">{answeredCount} of {quickCheck.question_count} answered</p>
-            <div className="flex items-center gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center">
               <Button
                 onClick={() => setCurrentIndex((index) => Math.max(0, index - 1))}
                 disabled={currentIndex === 0 || busy}
                 variant="secondary"
+                className="w-full sm:w-auto"
               >
                 <ArrowLeft aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} />
                 Previous
@@ -322,6 +328,7 @@ export function QuickCheckRunner({
                   disabled={!allAnswered || busy}
                   loading={busy}
                   loadingLabel="Checking..."
+                  className="w-full sm:w-auto"
                 >
                   Submit answers
                   <CheckCircle2 aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} />
@@ -330,6 +337,7 @@ export function QuickCheckRunner({
                 <Button
                   onClick={() => setCurrentIndex((index) => Math.min(quickCheck.question_count - 1, index + 1))}
                   disabled={!currentAnswered || busy}
+                  className="w-full sm:w-auto"
                 >
                   Next
                   <ArrowRight aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} />
@@ -339,12 +347,6 @@ export function QuickCheckRunner({
           </div>
         </div>
 
-        <aside className="fixed right-8 top-1/3 hidden w-[190px] rounded-lg border border-[var(--line-soft)] bg-white/88 p-4 shadow-[0_3px_12px_rgba(24,29,24,0.045)] 2xl:block">
-          <p className="border-b border-[var(--line)]/60 pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">Study note</p>
-          <p className="mt-3 text-[13px] leading-5 text-[var(--text-secondary)]">
-            This question checks the Guide&apos;s {sectionLabel(question.related_section.section_type)} section for {relatedTopic}.
-          </p>
-        </aside>
       </div>
     </AssessmentShell>
   );

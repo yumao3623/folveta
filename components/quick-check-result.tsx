@@ -43,25 +43,21 @@ export function QuickCheckResultView({
   return (
     <AssessmentShell guidePath={guidePath} topics={topics} activeTopicId={activeTopicId}>
       <div className="mx-auto flex w-full max-w-[1140px] flex-col px-5 pb-20 pt-10 sm:px-8 sm:pt-12 lg:px-10">
-        <header className="relative border-b border-[var(--line)]/65 pb-9">
-          <p className="text-label-sm uppercase tracking-[0.14em] text-[var(--accent)]">Quick Check result</p>
-          <h1 className="mt-3 font-display text-[42px] font-extrabold leading-[1.08] text-[var(--foreground)] sm:text-[48px]">
-            Quiz Complete.
+        <header className="relative border-b border-[var(--line)]/65 pb-8">
+          <p className="text-label-sm text-[var(--accent)]">Quick Check result</p>
+          <h1 className="mt-3 font-display text-[40px] font-extrabold leading-[1.08] text-[var(--foreground)] sm:text-[48px]">
+            Quick Check complete
           </h1>
           <p className="mt-4 max-w-2xl text-[16px] leading-7 text-[var(--text-secondary)] sm:text-[17px]">
             {result.wrong_items.length === 0
               ? "You answered every sampled question correctly. Keep using the Study Guide priorities for topics this short check did not sample."
               : `You answered ${result.correct_count} of ${result.scored_count} sampled questions correctly. Review the ${result.review_topics.length} related ${result.review_topics.length === 1 ? "topic" : "topics"} below before moving on.`}
           </p>
-          <span className="absolute right-0 top-2 hidden text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--text-faint)] [writing-mode:vertical-rl] lg:block">
-            Assessment / Review
-          </span>
         </header>
 
-        <section className="grid gap-8 py-10 md:grid-cols-[280px_minmax(0,1fr)] lg:gap-12">
-          <div className="ui-surface ui-surface--subtle relative flex min-h-[320px] flex-col items-center justify-center overflow-hidden p-8 text-center">
-            <div className="absolute inset-8 rounded-full border border-dashed border-[var(--accent)]/15" />
-            <div className="relative flex h-40 w-40 items-center justify-center">
+        <section className="grid gap-8 py-8 md:grid-cols-[250px_minmax(0,1fr)] lg:gap-12">
+          <div className="ui-surface ui-surface--subtle flex items-center gap-5 p-5 text-left md:sticky md:top-28 md:min-h-[292px] md:self-start md:flex-col md:justify-center md:p-7 md:text-center">
+            <div className="relative flex h-28 w-28 shrink-0 items-center justify-center md:h-36 md:w-36">
               <svg aria-hidden="true" className="h-full w-full -rotate-90" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="43" fill="none" stroke="var(--line-soft)" strokeWidth="4" />
                 <circle
@@ -76,17 +72,12 @@ export function QuickCheckResultView({
                   strokeWidth="6"
                 />
               </svg>
-              <p className="absolute font-display text-[44px] font-extrabold leading-none text-[var(--foreground)]">
+              <p className="absolute font-display text-[34px] font-extrabold leading-none text-[var(--foreground)] md:text-[40px]">
                 {result.correct_count}
-                <span className="text-[22px] font-semibold text-[var(--text-muted)]">/{result.scored_count}</span>
+                <span className="text-[18px] font-semibold text-[var(--text-muted)]">/{result.scored_count}</span>
               </p>
             </div>
-            <h2 className="mt-5 font-headline-md text-[23px] font-semibold text-[var(--foreground)]">
-              {scoreLabel(accuracy)}
-            </h2>
-            <p className="mt-2 text-[12px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
-              {accuracy}% accuracy
-            </p>
+            <div><p className="text-[12px] font-semibold text-[var(--muted)]">Score summary</p><h2 className="mt-1 font-headline-md text-[22px] font-semibold text-[var(--foreground)]">{scoreLabel(accuracy)}</h2><p className="mt-1 text-[13px] font-medium text-[var(--text-muted)]">{accuracy}% accuracy</p></div>
           </div>
 
           <div className="min-w-0">
@@ -94,7 +85,7 @@ export function QuickCheckResultView({
               <IconFrame tone="source">
                 <RotateCcw aria-hidden="true" className="h-5 w-5" strokeWidth={1.8} />
               </IconFrame>
-              <h2 className="font-headline-md text-[24px] font-semibold text-[var(--foreground)]">Learning Loop</h2>
+              <div><p className="text-[12px] font-semibold text-[var(--source-blue-strong)]">Next study action</p><h2 className="font-headline-md text-[24px] font-semibold text-[var(--foreground)]">Learning Loop</h2></div>
             </div>
             <p className="mb-5 mt-5 text-[15px] leading-7 text-[var(--text-secondary)]">
               {result.review_topics.length === 0
@@ -114,7 +105,7 @@ export function QuickCheckResultView({
                 return (
                   <article
                     key={topic.topic_id}
-                    className="ui-surface ui-surface--interactive group relative p-5"
+                    className="ui-surface ui-surface--interactive group relative border-l-2 border-l-[var(--destructive)] p-5"
                   >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0">
@@ -149,9 +140,9 @@ export function QuickCheckResultView({
                 <div className="ui-surface flex items-center justify-between gap-4 px-5 py-4 text-[14px]">
                   <div>
                     <Badge tone="success" className="mr-2">
-                      Understood
+                      Performed well
                     </Badge>
-                    Q{result.understood_items.map((item) => (questionsById.get(item.question_id)?.index ?? 0) + 1).join(", Q")}
+                    Sampled questions Q{result.understood_items.map((item) => (questionsById.get(item.question_id)?.index ?? 0) + 1).join(", Q")}
                   </div>
                   <CheckCircle2 aria-hidden="true" className="h-5 w-5 shrink-0 text-[var(--accent)]" strokeWidth={1.8} />
                 </div>
@@ -167,7 +158,7 @@ export function QuickCheckResultView({
                 <CircleAlert aria-hidden="true" className="h-5 w-5" strokeWidth={1.8} />
               </IconFrame>
               <div>
-                <p className="text-label-sm uppercase tracking-[0.12em] text-[var(--warning)]">Review details</p>
+                <p className="text-label-sm text-[var(--warning)]">Review details</p>
                 <h2 className="mt-1 font-headline-md text-[26px] font-semibold text-[var(--foreground)]">Correct the sampled gaps</h2>
               </div>
             </div>
@@ -180,25 +171,25 @@ export function QuickCheckResultView({
                 const correct = question.options.find((option) => option.id === question.correct_option_id);
                 const reviewHref = `${guidePath}?reviewQuestion=${index + 1}&reviewTopic=${encodeURIComponent(question.topic_id)}#${question.related_section.anchor}`;
                 return (
-                  <article key={question.id} className="ui-surface ui-surface--elevated p-5 sm:p-7">
-                    <p className="text-label-sm uppercase tracking-[0.1em] text-[var(--warning)]">
+                  <article key={question.id} className="border-t border-[var(--border)] pt-7">
+                    <p className="text-label-sm text-[var(--warning)]">
                       Question {index + 1} / {topicNames[question.topic_id] ?? "Related Guide topic"}
                     </p>
                     <h3 className="mt-3 max-w-3xl font-headline-md text-[21px] font-semibold leading-[1.4] text-[var(--foreground)]">
                       {question.stem}
                     </h3>
                     <dl className="mt-5 grid gap-3 text-[14px] sm:grid-cols-2">
-                      <div className="rounded-lg bg-[var(--danger-soft)]/55 p-4">
+                      <div className="border-l-2 border-[var(--destructive)] bg-[var(--danger-soft)]/55 p-4">
                         <dt className="font-semibold text-[var(--danger)]">Your answer</dt>
                         <dd className="mt-2 leading-6 text-[var(--text-secondary)]">{selected ? `${selected.id}. ${selected.text}` : "No answer"}</dd>
                       </div>
-                      <div className="rounded-lg bg-[var(--accent-soft)] p-4">
+                      <div className="border-l-2 border-[var(--primary)] bg-[var(--accent-soft)] p-4">
                         <dt className="font-semibold text-[var(--accent)]">Correct answer</dt>
                         <dd className="mt-2 leading-6 text-[var(--text-secondary)]">{correct ? `${correct.id}. ${correct.text}` : question.correct_option_id}</dd>
                       </div>
                     </dl>
                     <div className="mt-5 text-[14px] leading-6 text-[var(--text-secondary)]">
-                      <p className="mb-2 text-label-sm uppercase text-[var(--text-muted)]">Why</p>
+                      <p className="mb-2 text-label-sm text-[var(--text-muted)]">Why</p>
                       {question.explanation.map((claim) => <p key={claim.id}>{claim.text}</p>)}
                     </div>
                     <div className="mt-5 grid gap-2">

@@ -3,10 +3,9 @@ import Link from "next/link";
 import {
   BarChart3,
   BookOpen,
-  CheckCircle2,
   Circle,
   FlaskConical,
-  LibraryBig,
+  Sparkles,
   Target,
   Upload,
 } from "lucide-react";
@@ -76,8 +75,6 @@ export function AssessmentShell({
                 </span>
                 {active ? (
                   <Target aria-hidden="true" className="h-[17px] w-[17px] text-[var(--accent)]" strokeWidth={1.8} />
-                ) : index === 0 ? (
-                  <CheckCircle2 aria-hidden="true" className="h-[17px] w-[17px] text-[var(--text-faint)]" strokeWidth={1.8} />
                 ) : (
                   <Circle aria-hidden="true" className="h-[15px] w-[15px] text-[var(--text-faint)]" strokeWidth={1.6} />
                 )}
@@ -112,7 +109,7 @@ export function AssessmentShell({
               Study Guide
             </Link>
             <span className="flex items-center gap-1.5 px-2 py-2 text-label-sm uppercase text-[var(--text-muted)]">
-              <LibraryBig aria-hidden="true" className="h-[15px] w-[15px]" strokeWidth={1.8} />
+              <Sparkles aria-hidden="true" className="h-[15px] w-[15px]" strokeWidth={1.8} />
               Quick Check
             </span>
           </nav>
@@ -121,6 +118,9 @@ export function AssessmentShell({
           className="ui-mobile-nav fixed left-0 right-0 top-20 z-30 flex gap-2 overflow-x-auto border-b border-[var(--border-soft)] bg-[var(--surface)] px-4 py-2 lg:hidden"
           aria-label="Study guide topics"
         >
+          <span className={buttonClassName({ variant: "soft", size: "sm", className: "shrink-0" })} aria-current="page">
+            <Sparkles className="h-4 w-4" strokeWidth={1.8} /> Quick Check
+          </span>
           {topics.map((topic) => {
             const active = topic.id === activeTopicId;
             return (

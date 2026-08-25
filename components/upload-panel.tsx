@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { FieldLabel, Input } from "@/components/ui/field";
 import { Alert, Progress } from "@/components/ui/feedback";
 import { IconFrame } from "@/components/ui/icon-frame";
+import { Badge } from "@/components/ui/badge";
 
 type FileState = {
   name: string;
@@ -207,8 +208,15 @@ export function UploadPanel() {
   }
 
   return (
-    <div>
-      <div className="grid gap-2">
+    <div className="ui-surface ui-surface--elevated p-5 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-headline-md text-[18px] font-semibold text-[var(--foreground)]">Create your Guide</p>
+          <p className="mt-1 text-[13px] leading-5 text-[var(--muted)]">Name it, then add up to {MVP_LIMITS.maxFiles} course files.</p>
+        </div>
+        <Badge tone={files.length > 0 ? "success" : "neutral"}>{files.length}/{MVP_LIMITS.maxFiles} files</Badge>
+      </div>
+      <div className="mt-5 grid gap-2">
         <FieldLabel htmlFor="guide-title">
           Guide title{" "}
           <span className="font-normal text-[var(--text-muted)]">
@@ -230,7 +238,7 @@ export function UploadPanel() {
         role="button"
         tabIndex={busy ? -1 : 0}
         aria-disabled={busy}
-        className={`group mt-6 flex min-h-[300px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center outline-none transition-[background-color,border-color,box-shadow,transform] focus-visible:border-[var(--primary)] focus-visible:shadow-[0_0_0_4px_rgb(60_149_99_/_0.16)] ${dragging ? "border-[var(--primary)] bg-[var(--primary-soft)] shadow-[var(--shadow-sm)]" : "border-[var(--border)] bg-[var(--surface)] hover:-translate-y-0.5 hover:border-[var(--primary)] hover:shadow-[var(--shadow-sm)]"} ${busy ? "cursor-not-allowed opacity-60" : ""}`}
+        className={`group mt-5 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center outline-none transition-[background-color,border-color,box-shadow,transform] ${files.length > 0 ? "min-h-[190px]" : "min-h-[250px]"} focus-visible:border-[var(--primary)] focus-visible:shadow-[0_0_0_4px_rgb(60_149_99_/_0.16)] ${dragging ? "border-[var(--primary)] bg-[var(--primary-soft)] shadow-[var(--shadow-sm)]" : "border-[var(--border)] bg-[var(--surface-subtle)] hover:-translate-y-0.5 hover:border-[var(--primary)] hover:bg-white hover:shadow-[var(--shadow-sm)]"} ${busy ? "cursor-not-allowed opacity-60" : ""}`}
         onKeyDown={onDropzoneKeyDown}
         onDragEnter={(event) => {
           event.preventDefault();
@@ -251,10 +259,10 @@ export function UploadPanel() {
           <UploadCloud className="h-8 w-8" strokeWidth={1.7} />
         </IconFrame>
         <span className="font-headline-md text-[20px] font-semibold text-[var(--foreground)]">
-          {dragging ? "Drop files to add them" : "Drag & drop files here"}
+          {dragging ? "Drop files to add them" : files.length > 0 ? "Add different files" : "Drop course files here"}
         </span>
         <span className="mt-2 block max-w-sm text-[14px] leading-6 text-[var(--text-muted)]">
-          Text-based PDF and PPTX only. Image-only pages are reported as gaps.
+          PDF and PPTX with selectable text. Visual-only content is reported as a gap.
         </span>
         <span className="ui-button ui-button--secondary ui-button--sm mt-5 group-hover:border-[var(--border-strong)] group-hover:bg-[var(--secondary)]">
           Browse files
@@ -275,8 +283,8 @@ export function UploadPanel() {
 
       {states.length > 0 && (
         <div className="mt-6" aria-live="polite">
-          <p className="mb-3 pl-1 text-label-sm uppercase tracking-[0.12em] text-[var(--text-muted)]">
-            Processing queue
+          <p className="mb-3 pl-1 text-label-sm text-[var(--text-muted)]">
+            File queue
           </p>
           <ul className="space-y-3">
             {states.map((state, index) => (
@@ -305,8 +313,9 @@ export function UploadPanel() {
         className="mt-5 w-full"
       >
         <UploadCloud aria-hidden="true" className="h-[18px] w-[18px]" strokeWidth={1.8} />
-        Upload materials
+        Upload and continue
       </Button>
+      <p className="mt-3 text-center text-[12px] leading-5 text-[var(--faint)]">You will review parsing status before generating the Study Guide.</p>
     </div>
   );
 }
@@ -326,7 +335,7 @@ function QueueItem({
   const working = state.status === "uploading" || state.status === "parsing";
   const ready = state.status === "ready" || state.status === "ready_with_gaps";
   return (
-    <li className="ui-surface ui-surface--elevated flex items-center gap-4 p-3">
+    <li className="ui-surface flex items-center gap-3 p-3 sm:gap-4">
       <IconFrame size="lg" tone={isPdf ? "destructive" : "source"}>
         {isPdf ? (
           <FileText className="h-5 w-5" strokeWidth={1.8} />
@@ -335,12 +344,12 @@ function QueueItem({
         )}
       </IconFrame>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <span className="truncate text-[13px] font-semibold text-[var(--foreground)]">
             {state.name}
           </span>
           <span
-            className={`shrink-0 text-[11px] font-medium ${state.status === "failed" ? "text-[var(--danger)]" : ready ? "text-[var(--accent)]" : "text-[var(--text-muted)]"}`}
+            className={`shrink-0 text-[11px] font-semibold ${state.status === "failed" ? "text-[var(--danger)]" : ready ? "text-[var(--accent)]" : "text-[var(--text-muted)]"}`}
           >
             {state.message}
           </span>

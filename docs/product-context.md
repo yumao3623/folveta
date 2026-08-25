@@ -1,7 +1,7 @@
 # Folveta Current Product Context
 
 Status: **Current v5 context**  
-Last updated: 2026-08-25  
+Last updated: 2026-08-26
 Decision authority: `docs/decisions.md`  
 Delivery roadmap: `docs/v5-master-roadmap.md`
 
@@ -38,7 +38,7 @@ The following exists in the current repository and passed build/typecheck/lint/t
 - Lazy five-question MCQ Quick Check, independent validation/filtering, answer-safe taking payload, deterministic scoring, persisted results, and Guide return links.
 - Anonymous high-entropy session cookie with a default seven-day expiry.
 - About, Privacy, Terms, canonical metadata, social images, JSON-LD, robots, sitemap, and explicit study-route noindex rules.
-- Synthetic demo Guide and Quick Check plus 23 automated tests across schema, parser, Quick Check, and SEO behavior.
+- Synthetic demo Guide and Quick Check plus 28 automated tests across schema, parser, Quick Check, SEO behavior, and UI foundation contracts.
 
 Implemented UI milestones are UI-1 Study Guide Workspace, UI-2 Landing / Upload, and UI-4 Quick Check / Results. They are implementation baselines, not final visual sign-off.
 
@@ -55,7 +55,7 @@ Implemented UI milestones are UI-1 Study Guide Workspace, UI-2 Landing / Upload,
 - No generation lease/checkpoint resume implementation despite those items appearing in the historical technical plan.
 - No full browser E2E suite, Supabase integration test suite, webhook tests, Auth tests, billing tests, or production Core Web Vitals data.
 - `NEXT_PUBLIC_SITE_URL` is not currently configured in `.env.local`; local metadata falls back to `http://localhost:3000`.
-- The homepage still uses `AI Study Guide Maker` in its title and header label; SEO v2 must shift primary ownership to `Study Guide Maker`.
+- Full SEO v2 intent/page-ownership and pre-launch indexing implementation remain pending, although the homepage title, visible capability label, and first-viewport positioning now use `Study Guide Maker` rather than `AI Study Guide Maker`.
 - Current robots/sitemap/public metadata do not implement a controlled pre-launch indexing mode.
 
 ## Current UI context
@@ -70,20 +70,26 @@ Current strengths:
 - Functional upload, parsing queue, Guide, Quick Check, and results states.
 - No observed horizontal overflow at audited desktop/mobile viewports.
 
-Current weaknesses:
+Current page-polish baseline:
 
-- The palette reads as too uniformly green and low-contrast across large surfaces.
-- Many controls and content regions are flat white/green rectangles with similar elevation and border treatment.
-- Small labels, chips, buttons, and disabled/status states need a more deliberate component system.
-- The landing transformation preview is code-drawn and generic rather than strong product evidence.
-- Motion and feedback are limited mainly to hover transitions, spinners, pulse, and anchor highlighting.
-- Mobile homepage places the upload workspace below the first viewport, weakening the core task.
-- Mobile Guide hides the topic sidebar without an equivalent topic-navigation control.
-- Placeholder workspace controls visually imply functionality that does not exist.
+- Landing now leads with `Study Guide Maker`, a literal upload-to-Guide offer, and a product transformation preview built from representative Folveta Guide content rather than anonymous skeleton lines.
+- Mobile Landing exposes the Upload Workspace heading and beginning of the real upload tool in the first viewport; the taller transformation preview follows the upload tool on small screens.
+- Upload title, dropzone, selected-file queue, progress, ready/error feedback, privacy, limits, and continuation action use the shared foundation states without changing the upload/parsing contract.
+- Study Guide now uses a quieter context header, elevated Study First surface, consistent concept cards, a real priority-order Study Path, compact evidence disclosures, friendly confusion treatment, and one consolidated context rail.
+- Quick Check now provides one semantic heading in every state, source/topic context, clearer selected options, a mobile fixed Previous/Next or Submit action area, and an inline Study Note.
+- Results now bring the score and Learning Loop into the mobile first viewport, use sampled-performance language rather than mastery claims, and make review actions prominent without turning the page into a game layer.
+- Landing, Guide, Quick Check, and Results were visually checked at 390, 768, 1440, and 1600 widths with no observed horizontal overflow. Manual desktop/mobile screenshots cover each core page.
+
+Remaining UI limitations:
+
+- The transformation preview uses accurate synthetic demo content, not a captured real-user Guide or external illustration asset.
+- Process/relationship data remains a list of grounded claims. The UI does not invent nodes, edges, or ordered steps; Study Path visualizes only the real topic priority order.
+- Long Guide density still depends on generated topic count and claim length, and there is no automated browser visual-regression suite yet.
+- Authenticated workspace, multi-guide, search, Library, Profile, and persistent navigation remain Product-3 work and are intentionally absent.
 
 UI/UX Polish v2 must establish Folveta-owned tokens and reusable primitives before Product-3 pages multiply the current inconsistencies.
 
-The Foundation v2 task completed that prerequisite on the `ui-polish-v2-foundation` branch: semantic colors/type/spacing/radius/elevation/focus/motion tokens, local Button/IconFrame/Badge/Surface/Field/Alert/Progress/EmptyState primitives, consistent Lucide treatment, mobile Guide topic navigation, and removal of fake Product-3 shell controls. No dependency or product-logic change was introduced. `docs/ui-design-system.md` is the current implementation policy; page-level visual polish remains pending.
+The Foundation v2 task completed the shared prerequisite on the `ui-polish-v2-foundation` branch. The `ui-polish-v2-pages` task then applied it to Landing/Upload, Study Guide, Quick Check, Results, parsing/generation states, and shared navigation. No dependency, schema, API, generation, scoring, ownership, or route change was introduced. `docs/ui-design-system.md` remains the current implementation policy.
 
 ## UI reference resources
 

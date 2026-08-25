@@ -1,7 +1,7 @@
 # Folveta v5 Master Roadmap
 
 Status: **Current roadmap**  
-Last updated: 2026-08-25  
+Last updated: 2026-08-26
 Decision authority: `docs/decisions.md`  
 Baseline audit: `docs/current-state-audit.md`
 
@@ -99,7 +99,7 @@ Create a trusted v5 baseline, eliminate planning ambiguity, and prepare a revers
 
 ## Phase 1 — UI/UX Polish v2
 
-Foundation status: **1A token/primitives implementation complete on feature branch; 1B/1C page-level polish pending.** See `docs/ui-design-system.md`.
+Implementation status: **Phase 1 foundation and page-level polish complete on dedicated feature branches.** See `docs/ui-design-system.md`.
 
 **Goal**
 
@@ -172,7 +172,9 @@ Turn the implemented UI baseline into a coherent, modern, accessible Folveta des
 
 - Yes. Recommended split: 1A token/primitives audit and implementation; 1B Landing/Upload polish; 1C Guide/Quick Check/Results polish and responsive QA.
 
-Phase 1A implementation record (2026-08-26): Folveta-owned semantic tokens and local primitives are implemented without a new dependency; Lucide remains the single icon language; fake Product-3 shell controls are removed; mobile topic navigation is present; component contract tests and reduced-motion rules are included. This does not mark the full Phase 1 exit criteria complete because 1B/1C page-level polish and screenshot coverage remain separate work.
+Phase 1A implementation record (2026-08-26): Folveta-owned semantic tokens and local primitives are implemented without a new dependency; Lucide remains the single icon language; fake Product-3 shell controls are removed; mobile topic navigation is present; component contract tests and reduced-motion rules are included. At the end of 1A, page-level polish and screenshot coverage remained separate work; the 1B/1C record below closes that scope.
+
+Phase 1B/1C implementation record (2026-08-26): Landing/Upload, parsing/generation, Study Guide, Quick Check, and Results now use the foundation page composition rules. The Landing first viewport owns `Study Guide Maker`, mobile upload appears in the first viewport, representative product evidence replaces generic skeleton lines, Study First and Learning Loop have stronger hierarchy, source/warning states are lighter, and Quick Check has stable mobile actions plus a semantic heading in every state. Manual browser QA covered 390, 768, 1440, and 1600 widths, desktop/mobile screenshots for every core page, keyboard focus, reduced-motion rule presence, console output, control sizing, and horizontal overflow. No product logic, schema, API, route ownership, dependency, Product-3, or billing change was introduced.
 
 ### UI resource decision for Phase 1
 

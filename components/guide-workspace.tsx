@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
+  ArrowDown,
   BarChart3,
   BookOpen,
   BookmarkCheck,
@@ -116,7 +117,7 @@ function SourceChip({ reference }: { reference: SourceReference }) {
 
 function SectionHeading({ title, icon }: { title: string; icon: string }) {
   return (
-    <div className="mb-6 flex items-center gap-3">
+    <div className="mb-6 flex items-center gap-3 border-b border-[var(--border-soft)] pb-4">
       <IconFrame tone="primary">
         <Icon className="text-[18px]" name={icon} />
       </IconFrame>
@@ -143,10 +144,9 @@ function MarginNote({
         ? "text-[var(--tertiary)]"
         : "text-[var(--accent)]";
   return (
-    <aside className="relative rounded-lg border border-[var(--line-soft)] bg-white/85 p-3.5 shadow-[0_3px_12px_rgba(24,29,24,0.045)] transition-[border-color,box-shadow] hover:border-[var(--line)] hover:shadow-[0_4px_16px_rgba(24,29,24,0.07)]">
-      <div className="absolute -left-3 top-4 hidden w-3 border-t border-dashed border-[var(--line)] lg:block" />
+    <aside className="border-b border-[var(--border-soft)] py-4 last:border-b-0">
       <div
-        className={`mb-2 border-b border-[var(--line)] pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${color}`}
+        className={`mb-2 text-[11px] font-semibold ${color}`}
       >
         {label}
       </div>
@@ -167,11 +167,12 @@ function ConceptCard({
   reference?: SourceReference;
 }) {
   return (
-    <div className="rounded-lg border border-[var(--line-soft)] bg-[var(--surface-container)] p-5 transition-[border-color,box-shadow] hover:border-[var(--accent)]/45 hover:shadow-[0_4px_16px_rgba(24,29,24,0.05)]">
-      <h3 className="font-headline-md text-[18px] font-semibold leading-[1.35] text-[var(--foreground)]">
-        {name}
-      </h3>
-      <div className="mt-2.5">
+    <div className="ui-surface ui-surface--interactive flex h-full flex-col p-5 sm:p-6">
+      <div className="flex items-start gap-3">
+        <IconFrame size="sm" tone="primary"><Lightbulb className="h-4 w-4" strokeWidth={1.8} /></IconFrame>
+        <h3 className="font-headline-md text-[18px] font-semibold leading-[1.35] text-[var(--foreground)]">{name}</h3>
+      </div>
+      <div className="mt-3 flex-1">
         <ClaimList claims={explanation} compact />
       </div>
       {reference && (
@@ -202,14 +203,14 @@ function TopicDetails({
         <>
           <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-label-sm uppercase text-[var(--accent)]">
+              <p className="text-label-sm text-[var(--accent)]">
                 {priorityMeta[topic.priority].label} · Topic {index + 1}
               </p>
               <h2 className="mt-2 max-w-3xl font-headline-lg text-[32px] font-bold leading-[1.2] text-[var(--foreground)]">
                 {topic.title}
               </h2>
             </div>
-            <span className="inline-flex items-center gap-1 rounded border border-[var(--line)] bg-[var(--surface-container-low)] px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+            <span className="inline-flex items-center gap-1 rounded border border-[var(--line)] bg-[var(--surface-container-low)] px-2 py-1 text-[11px] font-semibold text-[var(--muted)]">
               <Icon
                 className="text-[14px]"
                 name={priorityMeta[topic.priority].icon}
@@ -217,8 +218,8 @@ function TopicDetails({
               {priorityMeta[topic.priority].label}
             </span>
           </div>
-          <p className="mb-10 border-l-2 border-[var(--secondary)] bg-[var(--secondary-container)]/35 px-5 py-4 text-[15px] leading-7 text-[var(--text-secondary)]">
-            <span className="mr-2 text-label-sm uppercase text-[var(--text-muted)]">
+          <p className="mb-10 border-l-2 border-[var(--primary)] bg-[var(--primary-soft)]/55 px-5 py-4 text-[15px] leading-7 text-[var(--text-secondary)]">
+            <span className="mr-2 text-label-sm text-[var(--primary-hover)]">
               Why focus here
             </span>
             {topic.focus_reason}
@@ -252,7 +253,7 @@ function TopicDetails({
             title="Processes / Relationships"
             icon="account_tree"
           />
-          <div className="rounded-lg border border-[var(--line-soft)] bg-white/80 p-6">
+          <div className="ui-surface ui-surface--info p-5 sm:p-6">
             <ClaimList claims={topic.processes_relationships} />
           </div>
         </section>
@@ -260,12 +261,12 @@ function TopicDetails({
       {topic.definitions.length > 0 && (
         <section className="mb-12">
           <SectionHeading title="Glossary" icon="menu_book" />
-          <dl className="space-y-6">
+          <dl className="divide-y divide-[var(--border-soft)] border-y border-[var(--border-soft)]">
             {topic.definitions.map((definition) => (
               <div
                 id={guideSectionAnchor(topic.id, "definition", definition.id)}
                 key={definition.id}
-                className="grid gap-3 border-b border-[var(--line)] pb-6 sm:grid-cols-[13rem_1fr] sm:gap-6"
+                className="grid gap-3 py-5 sm:grid-cols-[13rem_1fr] sm:gap-8"
               >
                 <dt className="font-body-lg text-[18px] font-semibold text-[var(--foreground)]">
                   {definition.term}
@@ -279,10 +280,10 @@ function TopicDetails({
         </section>
       )}
       {topic.common_confusions.length > 0 && (
-        <section className="mb-12 rounded-lg border border-[var(--secondary-fixed-dim)]/35 bg-[var(--secondary-container)]/20 p-6 sm:p-8">
-          <div className="mb-5 flex items-center gap-3 text-[var(--warning)]">
-            <Icon className="text-[22px]" name="warning" />
-            <h3 className="font-body-lg text-[18px] font-bold">
+        <section className="ui-surface ui-surface--warning mb-12 p-6 sm:p-8">
+          <div className="mb-5 flex items-center gap-3">
+            <IconFrame tone="warning"><Icon className="text-[20px]" name="warning" /></IconFrame>
+            <h3 className="font-headline-md text-[19px] font-semibold text-[var(--foreground)]">
               Common Confusions
             </h3>
           </div>
@@ -292,13 +293,13 @@ function TopicDetails({
               key={item.id}
               className="mb-6 last:mb-0"
             >
-              <p className="text-label-sm uppercase text-[var(--warning)]">
+              <p className="text-label-sm text-[var(--warning)]">
                 Common mix-up
               </p>
               <div className="mt-2">
                 <ClaimList claims={item.confusion} compact />
               </div>
-              <p className="mb-2 mt-5 text-label-sm uppercase text-[var(--accent)]">
+              <p className="mb-2 mt-5 text-label-sm text-[var(--accent)]">
                 Clarification
               </p>
               <ClaimList claims={item.clarification} compact />
@@ -307,10 +308,10 @@ function TopicDetails({
         </section>
       )}
       {topic.source_references.length > 0 && (
-        <section className="mb-4">
+        <section id={lead ? "sources" : undefined} className="mb-4 scroll-mt-36">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-label-sm uppercase text-[var(--text-muted)]">
-              Sources
+            <p className="text-label-sm text-[var(--text-muted)]">
+              Source evidence · {topic.source_references.length}
             </p>
             <div className="flex flex-wrap justify-end gap-2">
               {topic.source_references.slice(0, 4).map((reference) => (
@@ -474,6 +475,11 @@ export function GuideWorkspace({
           <a href="#overview" className={buttonClassName({ variant: "soft", size: "sm", className: "shrink-0" })}>
             Overview
           </a>
+          {quickCheckHref && (
+            <Link href={quickCheckHref} className={buttonClassName({ variant: "secondary", size: "sm", className: "shrink-0" })}>
+              <Sparkles className="h-4 w-4" strokeWidth={1.8} /> Quick Check
+            </Link>
+          )}
           {guide.topics.map((topic) => (
             <a
               key={topic.id}
@@ -489,7 +495,7 @@ export function GuideWorkspace({
             id="overview"
             className="mx-auto flex w-full max-w-[1140px] flex-col px-6"
           >
-            <div className="pb-6 pt-12">
+            <div className="pb-7 pt-10 sm:pt-12">
               <div className="mb-3 flex flex-wrap items-center gap-3">
                 <Badge tone="source">
                   Study Guide
@@ -508,6 +514,11 @@ export function GuideWorkspace({
               <p className="mt-4 max-w-3xl font-body-lg text-[18px] leading-[1.6] text-[var(--text-secondary)]">
                 {guide.priority_method_summary}
               </p>
+              <dl className="mt-6 flex flex-wrap gap-x-7 gap-y-3 text-[13px]">
+                <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-[var(--source-blue-strong)]" /><dt className="sr-only">Sources</dt><dd><strong className="text-[var(--foreground)]">{guide.source_count}</strong> sources</dd></div>
+                <div className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-[var(--primary)]" /><dt className="sr-only">Topics</dt><dd><strong className="text-[var(--foreground)]">{guide.topics.length}</strong> study topics</dd></div>
+                <div className="flex items-center gap-2"><Target className="h-4 w-4 text-[var(--warning)]" /><dt className="sr-only">Priority</dt><dd>Priority is a <strong className="text-[var(--foreground)]">study suggestion</strong></dd></div>
+              </dl>
             </div>
             <div className="border-t border-[var(--line)]/70" />
             {reviewQuestion && (
@@ -519,18 +530,17 @@ export function GuideWorkspace({
                 related section is highlighted below.
               </section>
             )}
-            <div className="grid gap-16 pb-20 pt-12 lg:grid-cols-[minmax(0,1fr)_200px] lg:gap-20">
+            <div className="grid gap-12 pb-20 pt-10 lg:grid-cols-[minmax(0,1fr)_240px] lg:gap-16">
               <div className="min-w-0">
                 <section className="relative mb-16">
-                  <div className="absolute -left-4 top-0 h-full w-1 rounded-r bg-[var(--accent)]" />
-                  <div className="relative rounded border border-[var(--line)] bg-white p-6 shadow-[0_2px_10px_rgba(24,29,24,0.05)] transition-colors hover:border-[var(--accent)]">
-                    <div className="mb-3 flex items-center gap-3">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
-                        <Icon className="text-[20px]" name="bookmark_star" />
-                      </span>
-                      <h2 className="font-headline-md text-[24px] font-semibold">
-                        Study First
-                      </h2>
+                  <div className="absolute -bottom-5 -left-1 top-5 w-1 rounded-full bg-[var(--primary)]" />
+                  <div className="ui-surface ui-surface--elevated relative overflow-hidden p-6 sm:p-8">
+                    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <IconFrame size="lg" tone="primary"><Icon className="text-[22px]" name="bookmark_star" /></IconFrame>
+                        <div><p className="text-[11px] font-semibold text-[var(--primary)]"><span className="sm:hidden">Start here</span><span className="hidden sm:inline">Recommended starting point</span></p><h2 className="font-headline-md text-[25px] font-semibold">Study First</h2></div>
+                      </div>
+                      <Badge tone="primary">Priority 01</Badge>
                     </div>
                     <p className="text-[16px] leading-[1.65] text-[var(--text-secondary)]">
                       {firstTopic.focus_reason}{" "}
@@ -573,31 +583,16 @@ export function GuideWorkspace({
                 {stageTopics.length > 1 && (
                   <section className="mb-16">
                     <SectionHeading title="Study Path" icon="account_tree" />
-                    <div className="relative flex flex-col items-center justify-between gap-6 overflow-hidden rounded-lg border border-[var(--line-soft)] bg-[var(--surface-bright)] p-8 md:flex-row md:gap-2 lg:p-10">
-                      <div
-                        className="pointer-events-none absolute inset-0 opacity-[0.04]"
-                        style={{
-                          backgroundImage:
-                            "radial-gradient(circle at center, #181d17 1px, transparent 1px)",
-                          backgroundSize: "16px 16px",
-                        }}
-                      />
+                    <div className="ui-surface ui-surface--subtle relative flex flex-col items-stretch justify-between gap-2 p-5 md:flex-row md:items-center md:gap-3 lg:p-6">
                       {stageTopics.map((topic, index) => (
-                        <div
-                          key={topic.id}
-                          className="relative z-10 flex w-full flex-col items-center px-2 py-3 text-center md:w-1/3"
-                        >
-                          <div
-                            className={`mb-3 flex h-14 w-14 items-center justify-center rounded-full font-headline-md text-[24px] font-semibold shadow-sm ring-4 ring-[var(--background)] ${index === 0 ? "bg-[var(--accent-bright)] text-white" : index === 1 ? "bg-[var(--tertiary-container)] text-white" : "bg-[var(--secondary-container)] text-[var(--warning)]"}`}
-                          >
-                            {index + 1}
+                        <div key={topic.id} className="contents">
+                          <div className="relative flex flex-1 items-center gap-3 rounded-md bg-white p-3 shadow-[var(--shadow-xs)] md:flex-col md:px-2 md:py-4 md:text-center">
+                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg font-headline-md text-[18px] font-semibold ${index === 0 ? "bg-[var(--primary)] text-white" : index === 1 ? "bg-[var(--source-blue)] text-[var(--source-blue-strong)]" : "bg-[var(--warning-soft)] text-[var(--warning)]"}`}>
+                              {index + 1}
+                            </div>
+                            <div className="min-w-0"><h3 className="text-label-sm text-[var(--foreground)]">{topic.title}</h3><p className="mt-1 text-[12px] text-[var(--muted)]">{priorityMeta[topic.priority].label}</p></div>
                           </div>
-                          <h3 className="text-label-sm uppercase tracking-[0.12em] text-[var(--foreground)]">
-                            {topic.title}
-                          </h3>
-                          <p className="mt-1 font-mono-caption text-[12px] text-[var(--text-muted)]">
-                            {priorityMeta[topic.priority].label}
-                          </p>
+                          {index < stageTopics.length - 1 && <><ArrowDown className="mx-auto h-4 w-4 text-[var(--border-strong)] md:hidden" /><ArrowRight className="hidden h-4 w-4 shrink-0 text-[var(--border-strong)] md:block" /></>}
                         </div>
                       ))}
                     </div>
@@ -623,8 +618,9 @@ export function GuideWorkspace({
                   </section>
                 )}
               </div>
-              <div id="sources" className="hidden lg:block">
-                <div className="sticky top-24 space-y-6">
+              <div className="hidden lg:block">
+                <div className="ui-surface ui-surface--subtle sticky top-24 px-4 py-1">
+                  <p className="border-b border-[var(--border-soft)] py-4 font-headline-md text-[16px] font-semibold text-[var(--foreground)]">Guide context</p>
                   <MarginNote label="Study cue">
                     {firstTopic.focus_reason}
                   </MarginNote>
@@ -660,7 +656,7 @@ export function GuideWorkspace({
             {quickCheckHref && (
               <div className="mb-12 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--line)] pt-6">
                 <div>
-                  <p className="text-label-sm uppercase text-[var(--text-muted)]">
+                  <p className="text-label-sm text-[var(--text-muted)]">
                     Optional learning check
                   </p>
                   <p className="mt-1 text-[14px] text-[var(--text-muted)]">

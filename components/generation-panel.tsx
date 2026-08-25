@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, Progress } from "@/components/ui/feedback";
+import { IconFrame } from "@/components/ui/icon-frame";
 
 const stageLabels: Record<string, string> = {
   extracting_topics: "Extracting topics from each source",
@@ -74,9 +75,8 @@ export function GenerationPanel({
   }
 
   const generating = busy || ["extracting_topics", "merging_topics", "generating_guide", "verifying_guide"].includes(state);
-  return <section className="ui-surface ui-surface--elevated border-t-2 border-t-[var(--primary)] p-6 sm:p-8">
-    <p className="text-label-sm text-[var(--muted)]">Generation</p>
-    <h2 className="mt-3 text-2xl font-bold text-[var(--foreground)]">Build your Study Guide</h2>
+  return <section className="ui-surface ui-surface--elevated p-6 sm:p-8">
+    <div className="flex items-center gap-3"><IconFrame tone="primary" size="lg"><Sparkles className="h-6 w-6" strokeWidth={1.8} /></IconFrame><div><p className="text-label-sm text-[var(--primary)]">Generation</p><h2 className="font-headline-md text-2xl font-semibold text-[var(--foreground)]">Build your Study Guide</h2></div></div>
     <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">The pipeline extracts topics source by source, merges them, writes structured sections, then validates grounding and references.</p>
     {generating && <Alert tone="success" className="mt-5" aria-live="polite">
       <p className="font-semibold">{stageLabels[stage ?? state] ?? "Generating Study Guide"}</p>
