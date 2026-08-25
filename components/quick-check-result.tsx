@@ -7,6 +7,9 @@ import {
 } from "lucide-react";
 import { AssessmentShell, type AssessmentTopic } from "@/components/assessment-shell";
 import { SourceReference } from "@/components/source-reference";
+import { Badge } from "@/components/ui/badge";
+import { IconFrame } from "@/components/ui/icon-frame";
+import { buttonClassName } from "@/components/ui/styles";
 import type { OptionId, QuickCheck, QuickCheckResult } from "@/lib/schemas";
 
 function scoreLabel(accuracy: number) {
@@ -56,7 +59,7 @@ export function QuickCheckResultView({
         </header>
 
         <section className="grid gap-8 py-10 md:grid-cols-[280px_minmax(0,1fr)] lg:gap-12">
-          <div className="relative flex min-h-[320px] flex-col items-center justify-center overflow-hidden rounded-[20px] bg-[var(--surface-container)] p-8 text-center">
+          <div className="ui-surface ui-surface--subtle relative flex min-h-[320px] flex-col items-center justify-center overflow-hidden p-8 text-center">
             <div className="absolute inset-8 rounded-full border border-dashed border-[var(--accent)]/15" />
             <div className="relative flex h-40 w-40 items-center justify-center">
               <svg aria-hidden="true" className="h-full w-full -rotate-90" viewBox="0 0 100 100">
@@ -88,9 +91,9 @@ export function QuickCheckResultView({
 
           <div className="min-w-0">
             <div className="flex items-center gap-3 border-b border-[var(--line)]/70 pb-4">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--surface-container)] text-[var(--tertiary)]">
+              <IconFrame tone="source">
                 <RotateCcw aria-hidden="true" className="h-5 w-5" strokeWidth={1.8} />
-              </span>
+              </IconFrame>
               <h2 className="font-headline-md text-[24px] font-semibold text-[var(--foreground)]">Learning Loop</h2>
             </div>
             <p className="mb-5 mt-5 text-[15px] leading-7 text-[var(--text-secondary)]">
@@ -111,14 +114,14 @@ export function QuickCheckResultView({
                 return (
                   <article
                     key={topic.topic_id}
-                    className="group relative rounded-xl border border-[var(--line-soft)] bg-white p-5 shadow-[0_2px_10px_rgba(24,29,24,0.04)] transition-[border-color,box-shadow] hover:border-[var(--accent)]/45 hover:shadow-[0_5px_16px_rgba(24,29,24,0.07)]"
+                    className="ui-surface ui-surface--interactive group relative p-5"
                   >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="rounded-md bg-[var(--danger-soft)] px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--danger)]">
+                          <Badge tone="destructive">
                             Needs review
-                          </span>
+                          </Badge>
                           <span className="text-[12px] font-medium text-[var(--text-muted)]">{questionNumbers.join(", ")}</span>
                         </div>
                         <h3 className="mt-2 font-headline-md text-[21px] font-semibold text-[var(--foreground)] transition-colors group-hover:text-[var(--accent)]">
@@ -132,7 +135,7 @@ export function QuickCheckResultView({
                       </div>
                       <Link
                         href={reviewHref}
-                        className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--surface-container)] px-4 text-[13px] font-semibold text-[var(--accent)] hover:bg-[var(--accent-soft)] active:translate-y-px"
+                        className={buttonClassName({ variant: "soft", size: "sm", className: "shrink-0" })}
                       >
                         Review Section
                         <ArrowRight aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} />
@@ -143,11 +146,11 @@ export function QuickCheckResultView({
               })}
 
               {result.understood_items.length > 0 && (
-                <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--line-soft)]/75 bg-white/65 px-5 py-4 text-[14px] text-[var(--text-secondary)]">
+                <div className="ui-surface flex items-center justify-between gap-4 px-5 py-4 text-[14px]">
                   <div>
-                    <span className="mr-2 rounded-md bg-[var(--accent-soft)] px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--accent)]">
+                    <Badge tone="success" className="mr-2">
                       Understood
-                    </span>
+                    </Badge>
                     Q{result.understood_items.map((item) => (questionsById.get(item.question_id)?.index ?? 0) + 1).join(", Q")}
                   </div>
                   <CheckCircle2 aria-hidden="true" className="h-5 w-5 shrink-0 text-[var(--accent)]" strokeWidth={1.8} />
@@ -160,9 +163,9 @@ export function QuickCheckResultView({
         {result.wrong_items.length > 0 && (
           <section className="border-t border-[var(--line)]/70 pt-10">
             <div className="mb-7 flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--warning-soft)] text-[var(--warning)]">
+              <IconFrame tone="warning">
                 <CircleAlert aria-hidden="true" className="h-5 w-5" strokeWidth={1.8} />
-              </span>
+              </IconFrame>
               <div>
                 <p className="text-label-sm uppercase tracking-[0.12em] text-[var(--warning)]">Review details</p>
                 <h2 className="mt-1 font-headline-md text-[26px] font-semibold text-[var(--foreground)]">Correct the sampled gaps</h2>
@@ -177,7 +180,7 @@ export function QuickCheckResultView({
                 const correct = question.options.find((option) => option.id === question.correct_option_id);
                 const reviewHref = `${guidePath}?reviewQuestion=${index + 1}&reviewTopic=${encodeURIComponent(question.topic_id)}#${question.related_section.anchor}`;
                 return (
-                  <article key={question.id} className="rounded-xl border border-[var(--line-soft)] bg-white p-5 shadow-[0_2px_10px_rgba(24,29,24,0.035)] sm:p-7">
+                  <article key={question.id} className="ui-surface ui-surface--elevated p-5 sm:p-7">
                     <p className="text-label-sm uppercase tracking-[0.1em] text-[var(--warning)]">
                       Question {index + 1} / {topicNames[question.topic_id] ?? "Related Guide topic"}
                     </p>
@@ -204,7 +207,7 @@ export function QuickCheckResultView({
                     <div className="mt-6 flex justify-end">
                       <Link
                         href={reviewHref}
-                        className="inline-flex h-10 items-center gap-2 rounded-lg bg-[var(--accent-bright)] px-4 text-[13px] font-semibold text-white shadow-[0_3px_10px_rgba(0,109,48,0.14)] hover:bg-[var(--accent)] hover:shadow-[0_5px_14px_rgba(0,101,44,0.18)]"
+                        className={buttonClassName({ size: "sm" })}
                       >
                         Review this section
                         <ArrowRight aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} />
@@ -221,7 +224,7 @@ export function QuickCheckResultView({
           <p className="max-w-xl text-[13px] leading-6 text-[var(--text-muted)]">{result.disclaimer}</p>
           <Link
             href={guidePath}
-            className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-[var(--surface-container)] px-6 text-[14px] font-semibold text-[var(--foreground)] shadow-[0_2px_8px_rgba(24,29,24,0.05)] hover:bg-[var(--secondary-container)] active:translate-y-px"
+            className={buttonClassName({ variant: "secondary", size: "lg", className: "shrink-0" })}
           >
             Return to Study Guide
             <ArrowRight aria-hidden="true" className="h-[18px] w-[18px]" strokeWidth={1.8} />

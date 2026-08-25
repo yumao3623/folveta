@@ -13,6 +13,10 @@ import {
   X,
 } from "lucide-react";
 import { MVP_LIMITS } from "@/lib/config";
+import { Button } from "@/components/ui/button";
+import { FieldLabel, Input } from "@/components/ui/field";
+import { Alert, Progress } from "@/components/ui/feedback";
+import { IconFrame } from "@/components/ui/icon-frame";
 
 type FileState = {
   name: string;
@@ -205,22 +209,19 @@ export function UploadPanel() {
   return (
     <div>
       <div className="grid gap-2">
-        <label
-          className="text-[14px] font-semibold text-[var(--foreground)]"
-          htmlFor="guide-title"
-        >
+        <FieldLabel htmlFor="guide-title">
           Guide title{" "}
           <span className="font-normal text-[var(--text-muted)]">
             (optional)
           </span>
-        </label>
-        <input
+        </FieldLabel>
+        <Input
           id="guide-title"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           disabled={busy}
           placeholder="Biology midterm"
-          className="h-12 w-full rounded-lg border border-[var(--line-soft)] bg-white px-4 text-[16px] text-[var(--foreground)] outline-none transition-[border-color,box-shadow,background-color] placeholder:text-[var(--text-faint)] hover:border-[var(--line)] focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_rgba(21,128,61,0.1)] disabled:cursor-not-allowed disabled:bg-[var(--surface-container)] disabled:opacity-65"
+          className="text-[16px]"
         />
       </div>
 
@@ -229,7 +230,7 @@ export function UploadPanel() {
         role="button"
         tabIndex={busy ? -1 : 0}
         aria-disabled={busy}
-        className={`group mt-6 flex min-h-[300px] cursor-pointer flex-col items-center justify-center rounded-[20px] border-2 border-dashed p-8 text-center outline-none transition-[background-color,border-color,box-shadow] focus-visible:border-[var(--accent)] focus-visible:shadow-[0_0_0_4px_rgba(21,128,61,0.12)] ${dragging ? "border-[var(--accent-bright)] bg-[var(--accent-soft)] shadow-[0_0_0_4px_rgba(21,128,61,0.08)]" : "border-[var(--line)] bg-white/75 hover:border-[var(--accent-bright)] hover:bg-white"} ${busy ? "cursor-not-allowed opacity-65" : ""}`}
+        className={`group mt-6 flex min-h-[300px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center outline-none transition-[background-color,border-color,box-shadow,transform] focus-visible:border-[var(--primary)] focus-visible:shadow-[0_0_0_4px_rgb(60_149_99_/_0.16)] ${dragging ? "border-[var(--primary)] bg-[var(--primary-soft)] shadow-[var(--shadow-sm)]" : "border-[var(--border)] bg-[var(--surface)] hover:-translate-y-0.5 hover:border-[var(--primary)] hover:shadow-[var(--shadow-sm)]"} ${busy ? "cursor-not-allowed opacity-60" : ""}`}
         onKeyDown={onDropzoneKeyDown}
         onDragEnter={(event) => {
           event.preventDefault();
@@ -242,16 +243,20 @@ export function UploadPanel() {
         }}
         onDrop={onDrop}
       >
-        <span className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--surface-container-high)] text-[var(--text-secondary)] shadow-[0_3px_10px_rgba(24,29,24,0.07)] transition-[background-color,color,transform] group-hover:scale-105 group-hover:bg-[var(--accent-soft)] group-hover:text-[var(--accent)]">
+        <IconFrame
+          size="lg"
+          tone={dragging ? "primary" : "neutral"}
+          className="mb-5 transition-transform group-hover:-translate-y-0.5 group-hover:bg-[var(--primary-soft)] group-hover:text-[var(--primary-hover)]"
+        >
           <UploadCloud className="h-8 w-8" strokeWidth={1.7} />
-        </span>
+        </IconFrame>
         <span className="font-headline-md text-[20px] font-semibold text-[var(--foreground)]">
           {dragging ? "Drop files to add them" : "Drag & drop files here"}
         </span>
         <span className="mt-2 block max-w-sm text-[14px] leading-6 text-[var(--text-muted)]">
           Text-based PDF and PPTX only. Image-only pages are reported as gaps.
         </span>
-        <span className="mt-5 inline-flex h-10 items-center rounded-lg border border-[var(--line-soft)] bg-white px-4 text-[13px] font-semibold text-[var(--foreground)] shadow-[0_2px_7px_rgba(24,29,24,0.06)] transition-[border-color,box-shadow,transform] group-hover:border-[var(--accent)] group-hover:shadow-[0_4px_10px_rgba(24,29,24,0.08)] group-active:translate-y-px group-focus-visible:border-[var(--accent)]">
+        <span className="ui-button ui-button--secondary ui-button--sm mt-5 group-hover:border-[var(--border-strong)] group-hover:bg-[var(--secondary)]">
           Browse files
         </span>
         <input
@@ -287,29 +292,21 @@ export function UploadPanel() {
         </div>
       )}
       {formError && (
-        <p
-          role="alert"
-          className="mt-4 rounded-lg bg-[var(--danger-soft)] px-4 py-3 text-[14px] text-[var(--danger)]"
-        >
+        <Alert tone="destructive" className="mt-4">
           {formError}
-        </p>
+        </Alert>
       )}
-      <button
-        type="button"
+      <Button
         onClick={submit}
         disabled={busy || files.length === 0}
-        className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent-bright)] px-5 text-[14px] font-semibold text-white shadow-[0_3px_10px_rgba(0,109,48,0.16)] transition-[background-color,box-shadow,transform] enabled:hover:bg-[var(--accent)] enabled:hover:shadow-[0_5px_14px_rgba(0,101,44,0.2)] enabled:active:translate-y-px disabled:cursor-not-allowed disabled:bg-[#87b99b] disabled:shadow-none"
+        loading={busy}
+        loadingLabel="Uploading and parsing..."
+        size="lg"
+        className="mt-5 w-full"
       >
-        {busy ? (
-          <LoaderCircle
-            className="h-[18px] w-[18px] animate-spin"
-            strokeWidth={1.8}
-          />
-        ) : (
-          <UploadCloud className="h-[18px] w-[18px]" strokeWidth={1.8} />
-        )}
-        {busy ? "Uploading and parsing..." : "Upload materials"}
-      </button>
+        <UploadCloud aria-hidden="true" className="h-[18px] w-[18px]" strokeWidth={1.8} />
+        Upload materials
+      </Button>
     </div>
   );
 }
@@ -329,16 +326,14 @@ function QueueItem({
   const working = state.status === "uploading" || state.status === "parsing";
   const ready = state.status === "ready" || state.status === "ready_with_gaps";
   return (
-    <li className="flex items-center gap-4 rounded-xl border border-[var(--line-soft)] bg-white p-3 shadow-[0_3px_12px_rgba(24,29,24,0.045)]">
-      <span
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${isPdf ? "bg-red-50 text-red-600" : "bg-sky-50 text-sky-700"}`}
-      >
+    <li className="ui-surface ui-surface--elevated flex items-center gap-4 p-3">
+      <IconFrame size="lg" tone={isPdf ? "destructive" : "source"}>
         {isPdf ? (
           <FileText className="h-5 w-5" strokeWidth={1.8} />
         ) : (
           <Presentation className="h-5 w-5" strokeWidth={1.8} />
         )}
-      </span>
+      </IconFrame>
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-3">
           <span className="truncate text-[13px] font-semibold text-[var(--foreground)]">
@@ -351,8 +346,8 @@ function QueueItem({
           </span>
         </div>
         {working ? (
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--surface-container-high)]">
-            <div className="h-full w-1/2 animate-pulse rounded-full bg-[var(--accent-bright)]" />
+          <div className="mt-2">
+            <Progress label={`${state.name}: ${state.message}`} />
           </div>
         ) : (
           <p className="mt-1 text-[11px] text-[var(--text-faint)]">
@@ -376,15 +371,15 @@ function QueueItem({
           strokeWidth={1.8}
         />
       ) : (
-        <button
-          type="button"
+        <Button
           onClick={onRemove}
           disabled={busy}
           aria-label={`Remove ${state.name}`}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] transition-[background-color,color,transform] hover:bg-[var(--surface-container)] hover:text-[var(--foreground)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+          size="icon-sm"
+          variant="ghost"
         >
           <X className="h-[17px] w-[17px]" strokeWidth={1.8} />
-        </button>
+        </Button>
       )}
     </li>
   );

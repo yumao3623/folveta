@@ -99,6 +99,8 @@ Create a trusted v5 baseline, eliminate planning ambiguity, and prepare a revers
 
 ## Phase 1 — UI/UX Polish v2
 
+Foundation status: **1A token/primitives implementation complete on feature branch; 1B/1C page-level polish pending.** See `docs/ui-design-system.md`.
+
 **Goal**
 
 Turn the implemented UI baseline into a coherent, modern, accessible Folveta design foundation and polish the current Landing/Upload, Study Guide, Quick Check, and Results flows without changing their product logic.
@@ -169,6 +171,8 @@ Turn the implemented UI baseline into a coherent, modern, accessible Folveta des
 **Separate Codex task**
 
 - Yes. Recommended split: 1A token/primitives audit and implementation; 1B Landing/Upload polish; 1C Guide/Quick Check/Results polish and responsive QA.
+
+Phase 1A implementation record (2026-08-26): Folveta-owned semantic tokens and local primitives are implemented without a new dependency; Lucide remains the single icon language; fake Product-3 shell controls are removed; mobile topic navigation is present; component contract tests and reduced-motion rules are included. This does not mark the full Phase 1 exit criteria complete because 1B/1C page-level polish and screenshot coverage remain separate work.
 
 ### UI resource decision for Phase 1
 

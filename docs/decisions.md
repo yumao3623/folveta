@@ -38,6 +38,8 @@ The existing Academic Editorial direction, current Folveta screens, and prior St
 
 The accessible repository `https://github.com/nobruf/shadcn-landing-page` and the ZippyStarter shadcn theme generator are reference resources only. They do not authorize wholesale replacement of Folveta or automatic dependency adoption. Any reused code or new library must pass license, compatibility, accessibility, maintenance, bundle, and visual-consistency review.
 
+Folveta UI Foundation v2 is established in `docs/ui-design-system.md`. It keeps Bricolage Grotesque, Geist, and Lucide; adopts Folveta-owned semantic tokens and local shared primitives; introduces no new runtime dependency; removes visually misleading Product-3 shell controls until their real routes exist; and requires reduced-motion plus visible-focus behavior. Page-level polish remains a separate Phase 1 task.
+
 ### SEO decision
 
 SEO v2 follows `docs/SEO_GUIDE.md` and the Folveta-specific `docs/seo-architecture.md`. The homepage owns `Study Guide Maker`. Folveta will not create a Blog, Pricing page, Use Case hub, Tools hub, comparison cluster, or programmatic SEO inventory without distinct user value and a real product/search requirement. A public Pricing page is justified only by the implemented commercial model.

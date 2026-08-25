@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { buttonClassName } from "@/components/ui/styles";
 import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
@@ -31,8 +32,8 @@ export default function AboutPage() {
             </ul>
           </section>
           <div className="mt-10 flex flex-wrap gap-4">
-            <Link className="rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-bold text-white" href="/#upload">Make My Study Guide</Link>
-            <Link className="rounded-full border border-stone-300 bg-white px-6 py-3 text-sm font-bold text-stone-800" href="/study/demo">See the Example Guide</Link>
+            <Link className={buttonClassName({ size: "lg" })} href="/#upload">Make My Study Guide</Link>
+            <Link className={buttonClassName({ variant: "secondary", size: "lg" })} href="/study/demo">See the Example Guide</Link>
           </div>
         </div>
       </main>

@@ -7,14 +7,11 @@ import {
   BookmarkCheck,
   CheckCircle2,
   Circle,
-  CircleUserRound,
   FileText,
   FlaskConical,
   GitBranch,
-  LibraryBig,
   Lightbulb,
   NotebookText,
-  Search,
   Sparkles,
   Target,
   TriangleAlert,
@@ -30,6 +27,9 @@ import {
   type SourceReference,
 } from "@/lib/schemas";
 import { SourceReference as SourceReferenceView } from "@/components/source-reference";
+import { Badge } from "@/components/ui/badge";
+import { IconFrame } from "@/components/ui/icon-frame";
+import { buttonClassName } from "@/components/ui/styles";
 
 const priorityMeta: Record<Priority, { label: string; icon: string }> = {
   study_first: { label: "Study first", icon: "target" },
@@ -46,15 +46,12 @@ const iconGlyphs: Record<string, LucideIcon> = {
   check_circle: CheckCircle2,
   radio_button_unchecked: Circle,
   upload_file: Upload,
-  search: Search,
-  person: CircleUserRound,
   bookmark_star: BookmarkCheck,
   notes: NotebookText,
   account_tree: GitBranch,
   warning: TriangleAlert,
   source: FileText,
   sparkle: Sparkles,
-  library: LibraryBig,
   arrow_right: ArrowRight,
 };
 
@@ -110,19 +107,19 @@ function SourceChip({ reference }: { reference: SourceReference }) {
         ? "Slide"
         : "Section";
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-md border border-sky-200/70 bg-[var(--source-blue)]/80 px-2 py-1 text-[11px] font-semibold text-sky-900 shadow-[0_1px_2px_rgba(14,29,43,0.04)]">
+    <Badge tone="source">
       <Icon className="text-[13px]" name="source" />
       {kind} {reference.locator.number}
-    </span>
+    </Badge>
   );
 }
 
 function SectionHeading({ title, icon }: { title: string; icon: string }) {
   return (
     <div className="mb-6 flex items-center gap-3">
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
+      <IconFrame tone="primary">
         <Icon className="text-[18px]" name={icon} />
-      </span>
+      </IconFrame>
       <h2 className="font-headline-md text-[24px] font-semibold leading-[1.3] text-[var(--foreground)]">
         {title}
       </h2>
@@ -364,7 +361,7 @@ export function GuideWorkspace({
         <div className="mb-7 flex items-center bg-transparent px-6 pb-5 pt-8">
           <Link
             href="/"
-            className="font-headline-md text-[24px] font-semibold tracking-tight text-[var(--accent-bright)]"
+            className="font-headline-md text-[24px] font-semibold text-[var(--accent-bright)]"
           >
             Folveta
           </Link>
@@ -382,9 +379,9 @@ export function GuideWorkspace({
             className="group flex cursor-pointer items-center justify-between rounded-lg bg-[var(--accent-soft)]/60 px-3 py-3 text-[14px] font-medium text-[var(--foreground)] transition-[background-color,color,transform] hover:bg-[var(--accent-soft)] active:translate-y-px"
           >
             <span className="flex items-center gap-3">
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white/75 text-[var(--accent)] shadow-[0_1px_3px_rgba(24,29,24,0.06)]">
+              <IconFrame size="sm" active>
                 <Icon className="text-[17px]" name="menu_book" />
-              </span>
+              </IconFrame>
               Overview
             </span>
             <Icon className="text-[18px] text-[var(--accent)]" name="target" />
@@ -399,7 +396,7 @@ export function GuideWorkspace({
                   className="group flex cursor-pointer items-center justify-between rounded-lg px-3 py-3 text-[14px] text-[var(--text-secondary)] transition-[background-color,color,transform] hover:bg-[var(--surface-container-high)] hover:text-[var(--foreground)] active:translate-y-px"
                 >
                   <span className="flex min-w-0 items-center gap-3">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white/50 text-[var(--text-muted)] transition-colors group-hover:bg-white group-hover:text-[var(--accent)]">
+                    <IconFrame size="sm" className="bg-white/70 group-hover:bg-[var(--primary-soft)] group-hover:text-[var(--primary-hover)]">
                       <Icon
                         className="text-[17px]"
                         name={
@@ -410,7 +407,7 @@ export function GuideWorkspace({
                               : "lightbulb"
                         }
                       />
-                    </span>
+                    </IconFrame>
                     <span className="truncate">{topic.title}</span>
                   </span>
                   <Icon
@@ -424,7 +421,7 @@ export function GuideWorkspace({
         <div className="mt-auto border-t border-[var(--line)] p-6">
           <Link
             href="/"
-            className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-[var(--accent-bright)] px-4 text-[13px] font-semibold text-white shadow-[0_3px_10px_rgba(0,109,48,0.18)] transition-[background-color,box-shadow,transform] hover:bg-[var(--accent)] hover:shadow-[0_5px_14px_rgba(0,101,44,0.22)] active:translate-y-px active:shadow-sm"
+            className={buttonClassName({ className: "w-full" })}
           >
             <Icon className="text-[18px]" name="upload_file" />
             Upload Document
@@ -433,52 +430,70 @@ export function GuideWorkspace({
       </aside>
       <div className="lg:pl-72">
         <header className="fixed left-0 right-0 top-0 z-40 flex h-20 items-center justify-between gap-3 border-b border-[var(--line)]/70 bg-[var(--surface)]/90 px-4 backdrop-blur-xl sm:px-6 lg:left-72 lg:px-6">
-          <div className="flex min-w-0 flex-1 items-center rounded-full border border-[var(--line)] bg-[var(--surface-container)] px-4 py-2 transition-colors focus-within:border-[var(--accent)] sm:max-w-sm">
-            <Icon
-              className="mr-3 text-[20px] text-[var(--text-muted)]"
-              name="search"
-            />
-            <input
-              aria-label="Search your knowledge"
-              className="w-full bg-transparent text-[14px] text-[var(--text-secondary)] outline-none placeholder:text-[var(--text-faint)]"
-              placeholder="Search your knowledge..."
-            />
-          </div>
+          <Link
+            href="/"
+            className="font-headline-md text-[22px] font-semibold text-[var(--primary)] lg:hidden"
+          >
+            Folveta
+          </Link>
           <nav
-            className="ml-auto mr-4 hidden items-center gap-7 sm:flex"
+            className="ml-auto flex items-center gap-1 sm:gap-2"
             aria-label="Workspace navigation"
           >
             <a
               href="#overview"
-              className="flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-2 text-label-sm uppercase text-[var(--accent)] transition-colors hover:bg-[var(--accent-soft)] active:bg-[var(--surface-container-high)]"
+              className={buttonClassName({ variant: "soft", size: "sm" })}
             >
-              <Icon className="text-[15px]" name="menu_book" /> My Guides
+              <Icon className="text-[15px]" name="menu_book" /> Guide
             </a>
             <a
               href="#sources"
-              className="flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-2 text-label-sm uppercase text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-container)] hover:text-[var(--foreground)] active:bg-[var(--surface-container-high)]"
+              className={buttonClassName({ variant: "ghost", size: "sm" })}
             >
-              <Icon className="text-[15px]" name="library" /> Library
+              <Icon className="text-[15px]" name="source" /> Sources
             </a>
+            {quickCheckHref && (
+              <span className="hidden sm:inline">
+                <Link
+                  href={quickCheckHref}
+                  className={buttonClassName({
+                    variant: "ghost",
+                    size: "sm",
+                  })}
+                >
+                  <Icon className="text-[15px]" name="sparkle" /> Quick Check
+                </Link>
+              </span>
+            )}
           </nav>
-          <button
-            type="button"
-            aria-label="Profile"
-            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-[0_2px_8px_rgba(0,101,44,0.18)] transition-[background-color,box-shadow,transform] hover:bg-[var(--accent-bright)] hover:shadow-[0_4px_12px_rgba(0,101,44,0.24)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-45"
-          >
-            <Icon className="text-[18px]" name="person" />
-          </button>
         </header>
-        <main className="min-h-screen bg-[var(--background)] pt-20">
+        <nav
+          className="ui-mobile-nav fixed left-0 right-0 top-20 z-30 flex gap-2 overflow-x-auto border-b border-[var(--border-soft)] bg-[var(--surface)] px-4 py-2 lg:hidden"
+          aria-label="Study guide topics"
+        >
+          <a href="#overview" className={buttonClassName({ variant: "soft", size: "sm", className: "shrink-0" })}>
+            Overview
+          </a>
+          {guide.topics.map((topic) => (
+            <a
+              key={topic.id}
+              href={`#${guideSectionAnchor(topic.id)}`}
+              className={buttonClassName({ variant: "ghost", size: "sm", className: "shrink-0" })}
+            >
+              {topic.title}
+            </a>
+          ))}
+        </nav>
+        <main className="min-h-screen bg-[var(--background)] pt-[8.25rem] lg:pt-20">
           <div
             id="overview"
             className="mx-auto flex w-full max-w-[1140px] flex-col px-6"
           >
             <div className="pb-6 pt-12">
               <div className="mb-3 flex flex-wrap items-center gap-3">
-                <span className="rounded-full bg-[var(--tertiary-container)] px-3 py-1 text-label-sm uppercase tracking-[0.08em] text-white">
+                <Badge tone="source">
                   Study Guide
-                </span>
+                </Badge>
                 <span className="font-mono-caption text-[12px] font-medium text-[var(--text-muted)]">
                   {isDemo
                     ? "Example guide"
@@ -487,7 +502,7 @@ export function GuideWorkspace({
                   {guide.source_count === 1 ? "" : "s"}
                 </span>
               </div>
-              <h1 className="max-w-4xl font-display text-[38px] font-extrabold leading-[1.1] tracking-[-0.02em] text-[var(--foreground)] sm:text-[48px]">
+              <h1 className="max-w-4xl font-display text-[38px] font-extrabold leading-[1.1] text-[var(--foreground)] sm:text-[48px]">
                 {guide.title}
               </h1>
               <p className="mt-4 max-w-3xl font-body-lg text-[18px] leading-[1.6] text-[var(--text-secondary)]">
@@ -654,7 +669,7 @@ export function GuideWorkspace({
                 </div>
                 <Link
                   href={quickCheckHref}
-                  className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg bg-[var(--accent-bright)] px-5 text-[14px] font-semibold text-white shadow-[0_3px_10px_rgba(0,109,48,0.16)] transition-[background-color,box-shadow,transform] hover:bg-[var(--accent)] hover:shadow-[0_5px_14px_rgba(0,101,44,0.2)] active:translate-y-px active:shadow-sm"
+                  className={buttonClassName()}
                 >
                   Open Quick Check{" "}
                   <Icon className="text-[17px]" name="arrow_right" />

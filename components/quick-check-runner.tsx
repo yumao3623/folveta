@@ -17,6 +17,10 @@ import {
 } from "lucide-react";
 import { AssessmentShell, type AssessmentTopic } from "@/components/assessment-shell";
 import { QuickCheckResultView } from "@/components/quick-check-result";
+import { Button } from "@/components/ui/button";
+import { Alert, Progress } from "@/components/ui/feedback";
+import { IconFrame } from "@/components/ui/icon-frame";
+import { buttonClassName } from "@/components/ui/styles";
 import {
   scoreQuickCheck,
   type OptionId,
@@ -157,10 +161,10 @@ export function QuickCheckRunner({
     return (
       <AssessmentShell guidePath={guidePath} topics={shellTopics} activeTopicId={shellTopics[0]?.id}>
         <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-[900px] items-center px-5 py-10 sm:px-8">
-          <section className="w-full rounded-[20px] border border-[var(--line-soft)] bg-white px-6 py-8 shadow-[0_10px_32px_rgba(24,29,24,0.055)] sm:px-10 sm:py-11">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] shadow-[0_2px_8px_rgba(0,101,44,0.08)]">
+          <section className="ui-surface ui-surface--elevated w-full px-6 py-8 sm:px-10 sm:py-11">
+            <IconFrame size="lg" tone="primary">
               <Sparkles aria-hidden="true" className="h-6 w-6" strokeWidth={1.8} />
-            </div>
+            </IconFrame>
             <p className="mt-7 text-label-sm uppercase tracking-[0.14em] text-[var(--accent)]">Optional learning check</p>
             <h1 className="mt-3 font-display text-[42px] font-extrabold leading-[1.08] text-[var(--foreground)] sm:text-[48px]">
               Quick Check
@@ -186,23 +190,22 @@ export function QuickCheckRunner({
               Results appear only after submission. This short sample does not certify mastery or predict an exam score.
             </div>
             {error && (
-              <p role="alert" className="mt-5 rounded-lg bg-[var(--danger-soft)] px-4 py-3 text-[14px] text-[var(--danger)]">
-                {error}
-              </p>
+              <Alert tone="destructive" className="mt-5">{error}</Alert>
             )}
             <div className="mt-8 flex flex-wrap gap-3">
-              <button
-                type="button"
+              <Button
                 onClick={start}
                 disabled={busy}
-                className="inline-flex h-12 items-center gap-2 rounded-lg bg-[var(--accent-bright)] px-5 text-[14px] font-semibold text-white shadow-[0_3px_10px_rgba(0,109,48,0.16)] hover:bg-[var(--accent)] hover:shadow-[0_5px_14px_rgba(0,101,44,0.2)] disabled:cursor-not-allowed disabled:opacity-55"
+                loading={busy}
+                loadingLabel="Creating supported questions..."
+                size="lg"
               >
                 <PlayCircle aria-hidden="true" className="h-[18px] w-[18px]" strokeWidth={1.8} />
-                {busy ? "Creating supported questions..." : "Start Quick Check"}
-              </button>
+                Start Quick Check
+              </Button>
               <Link
                 href={guidePath}
-                className="inline-flex h-12 items-center gap-2 rounded-lg bg-[var(--surface-container)] px-5 text-[14px] font-semibold text-[var(--foreground)] hover:bg-[var(--surface-container-high)]"
+                className={buttonClassName({ variant: "secondary", size: "lg" })}
               >
                 <ArrowLeft aria-hidden="true" className="h-[18px] w-[18px]" strokeWidth={1.8} />
                 Back to Study Guide
@@ -226,8 +229,6 @@ export function QuickCheckRunner({
   return (
     <AssessmentShell guidePath={guidePath} topics={shellTopics} activeTopicId={question.topic_id}>
       <div className="relative min-h-[calc(100vh-5rem)] overflow-hidden px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
-        <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-1/2 h-[620px] w-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[var(--line)]/15" />
-        <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-1/2 h-[460px] w-[460px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[var(--line)]/10" />
         <div className="relative z-10 mx-auto flex w-full max-w-[800px] flex-col">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-[12px] font-semibold uppercase tracking-[0.15em] text-[var(--text-muted)]">
@@ -239,17 +240,17 @@ export function QuickCheckRunner({
             </span>
           </div>
 
-          <div className="mt-6 h-[3px] overflow-hidden rounded-full bg-[var(--surface-container-high)]" aria-label={`${currentIndex + 1} of ${quickCheck.question_count}`}>
-            <div
-              className="h-full rounded-full bg-[var(--accent-bright)] transition-[width] duration-500"
-              style={{ width: `${((currentIndex + 1) / quickCheck.question_count) * 100}%` }}
+          <div className="mt-6">
+            <Progress
+              label={`${currentIndex + 1} of ${quickCheck.question_count}`}
+              value={((currentIndex + 1) / quickCheck.question_count) * 100}
             />
           </div>
 
           {quickCheck.limited_sample && (
-            <p className="mt-5 rounded-lg bg-[var(--warning-soft)] px-4 py-3 text-[13px] leading-5 text-[var(--warning)]">
+            <Alert tone="warning" className="mt-5">
               Only {quickCheck.question_count} questions passed every evidence and quality check, so this is a shorter sample.
-            </p>
+            </Alert>
           )}
 
           <section className="py-10 sm:py-12">
@@ -266,7 +267,7 @@ export function QuickCheckRunner({
                   return (
                     <label
                       key={option.id}
-                      className={`group relative flex min-h-[74px] cursor-pointer items-center gap-4 overflow-hidden rounded-xl border bg-white px-5 py-4 shadow-[0_2px_8px_rgba(24,29,24,0.035)] transition-[background-color,border-color,box-shadow,transform] focus-within:outline focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-[#78b999] active:translate-y-px sm:gap-5 sm:px-6 ${
+                      className={`group relative flex min-h-[74px] cursor-pointer items-center gap-4 overflow-hidden rounded-lg border bg-white px-5 py-4 shadow-[var(--shadow-xs)] transition-[background-color,border-color,box-shadow,transform] focus-within:outline focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-[var(--focus-ring)] active:translate-y-px sm:gap-5 sm:px-6 ${
                         checked
                           ? "border-[var(--accent-bright)] bg-[var(--surface-bright)] shadow-[0_5px_16px_rgba(24,29,24,0.07)] ring-1 ring-[var(--accent-bright)]"
                           : "border-[var(--line-soft)] hover:border-[var(--accent)]/55 hover:bg-[var(--surface-bright)] hover:shadow-[0_5px_16px_rgba(24,29,24,0.065)]"
@@ -301,43 +302,38 @@ export function QuickCheckRunner({
           </section>
 
           {error && (
-            <p role="alert" className="mb-4 rounded-lg bg-[var(--danger-soft)] px-4 py-3 text-[14px] text-[var(--danger)]">
-              {error}
-            </p>
+            <Alert tone="destructive" className="mb-4">{error}</Alert>
           )}
 
           <div className="flex flex-col gap-4 border-t border-[var(--line)]/55 pt-5 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-[13px] text-[var(--text-muted)]">{answeredCount} of {quickCheck.question_count} answered</p>
             <div className="flex items-center gap-3">
-              <button
-                type="button"
+              <Button
                 onClick={() => setCurrentIndex((index) => Math.max(0, index - 1))}
                 disabled={currentIndex === 0 || busy}
-                className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--text-secondary)] shadow-[0_2px_8px_rgba(24,29,24,0.05)] hover:bg-[var(--surface-container)] disabled:cursor-not-allowed disabled:opacity-40"
+                variant="secondary"
               >
                 <ArrowLeft aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} />
                 Previous
-              </button>
+              </Button>
               {lastQuestion ? (
-                <button
-                  type="button"
+                <Button
                   onClick={submit}
                   disabled={!allAnswered || busy}
-                  className="inline-flex h-11 items-center gap-2 rounded-full bg-[var(--accent-bright)] px-5 text-[12px] font-semibold uppercase tracking-[0.06em] text-white shadow-[0_3px_10px_rgba(0,109,48,0.16)] hover:bg-[var(--accent)] hover:shadow-[0_5px_14px_rgba(0,101,44,0.2)] disabled:cursor-not-allowed disabled:bg-[#87b99b] disabled:shadow-none"
+                  loading={busy}
+                  loadingLabel="Checking..."
                 >
-                  {busy ? "Checking..." : "Submit answers"}
+                  Submit answers
                   <CheckCircle2 aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} />
-                </button>
+                </Button>
               ) : (
-                <button
-                  type="button"
+                <Button
                   onClick={() => setCurrentIndex((index) => Math.min(quickCheck.question_count - 1, index + 1))}
                   disabled={!currentAnswered || busy}
-                  className="inline-flex h-11 items-center gap-2 rounded-full bg-[var(--accent-bright)] px-5 text-[12px] font-semibold uppercase tracking-[0.06em] text-white shadow-[0_3px_10px_rgba(0,109,48,0.16)] hover:bg-[var(--accent)] hover:shadow-[0_5px_14px_rgba(0,101,44,0.2)] disabled:cursor-not-allowed disabled:bg-[#87b99b] disabled:shadow-none"
                 >
                   Next
                   <ArrowRight aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} />
-                </button>
+                </Button>
               )}
             </div>
           </div>

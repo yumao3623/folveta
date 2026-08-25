@@ -14,6 +14,9 @@ import {
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 import { UploadPanel } from "@/components/upload-panel";
+import { Badge } from "@/components/ui/badge";
+import { IconFrame } from "@/components/ui/icon-frame";
+import { buttonClassName } from "@/components/ui/styles";
 import { MVP_LIMITS, formatMegabytes } from "@/lib/config";
 import { absoluteUrl, SITE_NAME } from "@/lib/site";
 
@@ -95,9 +98,12 @@ const navItem =
 
 function NavIcon({ children }: { children: React.ReactNode }) {
   return (
-    <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white/50 text-[var(--text-muted)] transition-colors group-hover:bg-white group-hover:text-[var(--accent)]">
+    <IconFrame
+      size="sm"
+      className="bg-white/70 group-hover:bg-[var(--primary-soft)] group-hover:text-[var(--primary-hover)]"
+    >
       {children}
-    </span>
+    </IconFrame>
   );
 }
 
@@ -142,7 +148,7 @@ function LandingSidebar() {
       <div className="mt-auto border-t border-[var(--line)]/55 p-6">
         <a
           href="#upload"
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent-bright)] px-4 text-[13px] font-semibold text-white shadow-[0_3px_10px_rgba(0,109,48,0.18)] transition-[background-color,box-shadow,transform] hover:bg-[var(--accent)] hover:shadow-[0_5px_14px_rgba(0,101,44,0.22)] active:translate-y-px"
+          className={buttonClassName({ className: "w-full" })}
         >
           <Upload className="h-[18px] w-[18px]" strokeWidth={1.8} />
           Upload Document
@@ -171,13 +177,13 @@ function LandingHeader() {
       >
         <Link
           href="/study/demo"
-          className="rounded-md px-2.5 py-2 text-[13px] font-semibold text-[var(--accent)] transition-colors hover:bg-[var(--accent-soft)] active:bg-[var(--surface-container-high)] sm:px-3"
+          className={buttonClassName({ variant: "soft", size: "sm" })}
         >
           Example guide
         </Link>
         <Link
           href="/about"
-          className="rounded-md px-2.5 py-2 text-[13px] font-semibold text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-container)] hover:text-[var(--foreground)] active:bg-[var(--surface-container-high)] sm:px-3"
+          className={buttonClassName({ variant: "ghost", size: "sm" })}
         >
           About
         </Link>
@@ -380,10 +386,10 @@ export default function HomePage() {
             <section id="overview" className="mx-auto w-full max-w-[1140px]">
               <div className="grid items-center gap-10 rounded-[24px] bg-[var(--surface-container-low)] p-7 sm:p-10 lg:min-h-[430px] lg:grid-cols-[0.92fr_1.08fr] lg:gap-14 lg:p-12">
                 <div>
-                  <span className="inline-flex rounded-full bg-[var(--accent-bright)] px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.08em] text-white">
+                  <Badge tone="primary">
                     New workspace
-                  </span>
-                  <h1 className="mt-5 max-w-xl font-display text-[42px] font-extrabold leading-[1.03] tracking-[-0.02em] text-[var(--foreground)] sm:text-[48px]">
+                  </Badge>
+                  <h1 className="mt-5 max-w-xl font-display text-[42px] font-extrabold leading-[1.03] text-[var(--foreground)] sm:text-[48px]">
                     Your course material,{" "}
                     <span className="highlight-mark">made learnable.</span>
                   </h1>
@@ -395,14 +401,17 @@ export default function HomePage() {
                   <div className="mt-8 flex flex-nowrap items-center gap-2 sm:gap-3">
                     <a
                       href="#upload"
-                      className="inline-flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-lg bg-[var(--accent-bright)] px-4 text-[14px] font-semibold text-white shadow-[0_3px_10px_rgba(0,109,48,0.18)] transition-[background-color,box-shadow,transform] hover:bg-[var(--accent)] hover:shadow-[0_5px_14px_rgba(0,101,44,0.22)] active:translate-y-px sm:px-5"
+                      className={buttonClassName({ className: "shrink-0" })}
                     >
                       <Upload className="h-[17px] w-[17px]" strokeWidth={1.8} />
                       Create Guide
                     </a>
                     <Link
                       href="/study/demo"
-                      className="group inline-flex h-11 min-w-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-[13px] font-semibold text-[var(--text-secondary)] transition-colors hover:bg-white/70 hover:text-[var(--foreground)] active:bg-white sm:px-4 sm:text-[14px]"
+                      className={buttonClassName({
+                        variant: "ghost",
+                        className: "group min-w-0",
+                      })}
                     >
                       <PlayCircle
                         className="h-[18px] w-[18px] text-[var(--accent)]"

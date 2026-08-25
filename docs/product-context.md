@@ -83,6 +83,8 @@ Current weaknesses:
 
 UI/UX Polish v2 must establish Folveta-owned tokens and reusable primitives before Product-3 pages multiply the current inconsistencies.
 
+The Foundation v2 task completed that prerequisite on the `ui-polish-v2-foundation` branch: semantic colors/type/spacing/radius/elevation/focus/motion tokens, local Button/IconFrame/Badge/Surface/Field/Alert/Progress/EmptyState primitives, consistent Lucide treatment, mobile Guide topic navigation, and removal of fake Product-3 shell controls. No dependency or product-logic change was introduced. `docs/ui-design-system.md` is the current implementation policy; page-level visual polish remains pending.
+
 ## UI reference resources
 
 - GitHub reference: `https://github.com/nobruf/shadcn-landing-page`

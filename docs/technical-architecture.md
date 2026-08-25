@@ -42,7 +42,7 @@ Configured OpenAI-compatible Responses API
 | Layer | Implemented choice |
 | --- | --- |
 | Web | Next.js 16.3.2 App Router, React 19.2.8, TypeScript 5 |
-| Styling | Tailwind CSS 4, local CSS variables, Bricolage Grotesque/Geist via `next/font` |
+| Styling | Tailwind CSS 4, Folveta semantic tokens and local UI primitives, Bricolage Grotesque/Geist via `next/font` |
 | Icons | `lucide-react` |
 | Database/storage | Supabase Postgres and private Storage |
 | Validation | Zod 4 strict schemas |

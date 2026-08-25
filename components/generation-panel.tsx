@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Alert, Progress } from "@/components/ui/feedback";
 
 const stageLabels: Record<string, string> = {
   extracting_topics: "Extracting topics from each source",
@@ -71,18 +74,20 @@ export function GenerationPanel({
   }
 
   const generating = busy || ["extracting_topics", "merging_topics", "generating_guide", "verifying_guide"].includes(state);
-  return <section className="border-t-2 border-[var(--accent)] bg-white p-6 sm:p-8">
-    <p className="text-label-sm uppercase text-[var(--muted)]">Generation</p>
+  return <section className="ui-surface ui-surface--elevated border-t-2 border-t-[var(--primary)] p-6 sm:p-8">
+    <p className="text-label-sm text-[var(--muted)]">Generation</p>
     <h2 className="mt-3 text-2xl font-bold text-[var(--foreground)]">Build your Study Guide</h2>
-    <p className="mt-3 max-w-2xl text-sm leading-6 text-stone-600">The pipeline extracts topics source by source, merges them, writes structured sections, then validates grounding and references.</p>
-    {generating && <div className="mt-5 rounded-2xl bg-[var(--accent-soft)] p-5" aria-live="polite">
-      <p className="font-semibold text-emerald-950">{stageLabels[stage ?? state] ?? "Generating Study Guide"}</p>
-      <p className="mt-1 text-sm text-emerald-800">This page checks progress automatically. Successful parsing is preserved if generation needs a retry.</p>
-    </div>}
-    {error && <div role="alert" className="mt-5 rounded-2xl bg-[var(--danger-soft)] p-5 text-sm text-[var(--danger)]"><strong>Generation failed:</strong> {error}</div>}
-    <button type="button" onClick={generate} disabled={!canGenerate || generating} className="mt-5 rounded bg-[var(--accent-bright)] px-6 py-3 text-sm font-bold text-white enabled:hover:bg-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50">
-      {generating ? "Generating…" : state === "failed_retryable" ? "Retry Study Guide generation" : "Generate Study Guide"}
-    </button>
+    <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">The pipeline extracts topics source by source, merges them, writes structured sections, then validates grounding and references.</p>
+    {generating && <Alert tone="success" className="mt-5" aria-live="polite">
+      <p className="font-semibold">{stageLabels[stage ?? state] ?? "Generating Study Guide"}</p>
+      <p className="mt-1 text-sm">This page checks progress automatically. Successful parsing is preserved if generation needs a retry.</p>
+      <div className="mt-3"><Progress label="Study Guide generation in progress" /></div>
+    </Alert>}
+    {error && <Alert tone="destructive" className="mt-5"><strong>Generation failed:</strong> {error}</Alert>}
+    <Button onClick={generate} disabled={!canGenerate || generating} loading={generating} loadingLabel="Generating Study Guide..." size="lg" className="mt-5">
+      <Sparkles aria-hidden="true" className="h-[18px] w-[18px]" strokeWidth={1.8} />
+      {state === "failed_retryable" ? "Retry Study Guide generation" : "Generate Study Guide"}
+    </Button>
     {!canGenerate && <p className="mt-3 text-sm text-[var(--danger)]">At least one source with readable text is required.</p>}
   </section>;
 }

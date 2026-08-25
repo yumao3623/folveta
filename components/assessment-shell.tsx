@@ -5,13 +5,13 @@ import {
   BookOpen,
   CheckCircle2,
   Circle,
-  CircleUserRound,
   FlaskConical,
   LibraryBig,
-  Search,
   Target,
   Upload,
 } from "lucide-react";
+import { IconFrame } from "@/components/ui/icon-frame";
+import { buttonClassName } from "@/components/ui/styles";
 
 export type AssessmentTopic = {
   id: string;
@@ -65,15 +65,13 @@ export function AssessmentShell({
                 }`}
               >
                 <span className="flex min-w-0 items-center gap-3">
-                  <span
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md shadow-[0_1px_3px_rgba(24,29,24,0.04)] transition-colors ${
-                      active
-                        ? "bg-white/85 text-[var(--accent)]"
-                        : "bg-white/55 text-[var(--text-muted)] group-hover:bg-white group-hover:text-[var(--accent)]"
-                    }`}
+                  <IconFrame
+                    size="sm"
+                    active={active}
+                    className={active ? "" : "bg-white/70 group-hover:bg-[var(--primary-soft)] group-hover:text-[var(--primary-hover)]"}
                   >
                     <TopicIcon index={index} />
-                  </span>
+                  </IconFrame>
                   <span className="truncate">{topic.title}</span>
                 </span>
                 {active ? (
@@ -90,7 +88,7 @@ export function AssessmentShell({
         <div className="mt-auto border-t border-[var(--line)]/70 p-6">
           <Link
             href="/"
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent-bright)] px-4 text-[13px] font-semibold text-white shadow-[0_3px_10px_rgba(0,109,48,0.18)] transition-[background-color,box-shadow,transform] hover:bg-[var(--accent)] hover:shadow-[0_5px_14px_rgba(0,101,44,0.22)] active:translate-y-px"
+            className={buttonClassName({ className: "w-full" })}
           >
             <Upload aria-hidden="true" className="h-[18px] w-[18px]" strokeWidth={1.8} />
             Upload Document
@@ -106,15 +104,6 @@ export function AssessmentShell({
           >
             Folveta
           </Link>
-          <div className="hidden min-w-0 flex-1 items-center rounded-full border border-[var(--line)] bg-[var(--surface-container)] px-4 py-2 transition-colors focus-within:border-[var(--accent)] sm:flex sm:max-w-sm">
-            <Search aria-hidden="true" className="mr-3 h-5 w-5 text-[var(--text-muted)]" strokeWidth={1.8} />
-            <input
-              aria-label="Search your knowledge"
-              className="w-full bg-transparent text-[14px] text-[var(--text-secondary)] outline-none placeholder:text-[var(--text-faint)]"
-              placeholder="Search your knowledge..."
-              readOnly
-            />
-          </div>
           <nav className="ml-auto hidden items-center gap-5 sm:flex" aria-label="Assessment navigation">
             <Link
               href={guidePath}
@@ -127,16 +116,30 @@ export function AssessmentShell({
               Quick Check
             </span>
           </nav>
-          <button
-            type="button"
-            aria-label="Profile"
-            disabled
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-[0_2px_8px_rgba(0,101,44,0.18)] disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            <CircleUserRound aria-hidden="true" className="h-[18px] w-[18px]" strokeWidth={1.8} />
-          </button>
         </header>
-        <div className="min-h-screen pt-20">{children}</div>
+        <nav
+          className="ui-mobile-nav fixed left-0 right-0 top-20 z-30 flex gap-2 overflow-x-auto border-b border-[var(--border-soft)] bg-[var(--surface)] px-4 py-2 lg:hidden"
+          aria-label="Study guide topics"
+        >
+          {topics.map((topic) => {
+            const active = topic.id === activeTopicId;
+            return (
+              <Link
+                key={topic.id}
+                href={topic.href}
+                aria-current={active ? "page" : undefined}
+                className={buttonClassName({
+                  variant: active ? "soft" : "ghost",
+                  size: "sm",
+                  className: "shrink-0",
+                })}
+              >
+                {topic.title}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="min-h-screen pt-[8.25rem] lg:pt-20">{children}</div>
       </div>
     </main>
   );
