@@ -13,6 +13,7 @@
     "fixtures:generate": "node scripts/generate-test-fixtures.mjs"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.112.3",
     "file-type": "^22.0.2",
     "lucide-react": "^1.34.0",

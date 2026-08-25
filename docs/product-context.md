@@ -27,7 +27,7 @@ The Guide is the primary artifact. Quick Check is optional and subordinate. Folv
 
 ## Actual implemented baseline
 
-The following exists in the current repository and passed build/typecheck/lint/tests on 2026-08-25:
+The following exists in the current repository and passed build/typecheck/lint/tests on 2026-08-26:
 
 - Next.js 16.3.2 App Router, React 19, TypeScript, Tailwind CSS 4.
 - Folveta landing/upload experience with real PDF/PPTX input.
@@ -36,24 +36,24 @@ The following exists in the current repository and passed build/typecheck/lint/t
 - Structured multi-stage model pipeline for topic extraction, topic merge, Guide generation, grounding verification, and persisted Guide JSON.
 - Study Guide workspace with priorities, concepts, definitions, processes/relationships, confusions, gaps, and source references.
 - Lazy five-question MCQ Quick Check, independent validation/filtering, answer-safe taking payload, deterministic scoring, persisted results, and Guide return links.
-- Anonymous high-entropy session cookie with a default seven-day expiry.
+- Anonymous high-entropy session cookie with a default seven-day expiry, plus repository-level Supabase Auth, owner claim, and persistent Guide foundations from Product-3A.
 - About, Privacy, Terms, canonical metadata, social images, JSON-LD, robots, sitemap, and explicit study-route noindex rules.
-- Synthetic demo Guide and Quick Check plus 28 automated tests across schema, parser, Quick Check, SEO behavior, and UI foundation contracts.
+- Synthetic demo Guide and Quick Check plus 39 automated tests across schema, parser, Quick Check, Auth/persistence, SEO behavior, and UI foundation contracts.
 
 Implemented UI milestones are UI-1 Study Guide Workspace, UI-2 Landing / Upload, and UI-4 Quick Check / Results. They are implementation baselines, not final visual sign-off.
 
 ## Actual limitations and missing launch capabilities
 
-- No persistent user Auth or `user_id` ownership model.
+- The Product-3A Auth/ownership migration is applied in the configured Supabase dev project and the scoped two-user Auth/claim/RLS/persistence flow is verified. Real AI Guide generation in that E2E remains unverified because the configured external model gateway returned retryable Cloudflare 502 responses.
 - A single `sgm_session` cookie represents one anonymous session token; creating another session replaces browser access to the prior session.
-- No My Guides, Recent Guides, real Library, knowledge search, Profile, reopen, rename, archive, delete, or multi-guide management.
+- No My Guides, Recent Guides, real Library, knowledge search, full Profile, rename/archive/restore UI, or multi-guide management UI; Product-3A supplies the owner-safe persistence and reopen API foundation only.
 - The visible Search, My Guides, Library, and Profile controls in the current workspace are placeholders, not implemented Product-3 features.
 - No Payment/Billing, pricing model, entitlement ledger, checkout, subscription status, billing portal, webhooks, or usage enforcement.
-- No scheduled deletion job for expired database rows and private Storage objects.
+- A protected Storage-first retention endpoint exists, but no deployment scheduler has been configured or verified yet.
 - No application rate limiting, abuse controls, analytics decision, real support/privacy-request channel, or production monitoring.
 - No pasted-text input, OCR, handwriting, image/chart/diagram interpretation, audio/video/URL ingestion, or open-web research.
 - No generation lease/checkpoint resume implementation despite those items appearing in the historical technical plan.
-- No full browser E2E suite, Supabase integration test suite, webhook tests, Auth tests, billing tests, or production Core Web Vitals data.
+- No full automated browser E2E suite, automated Supabase integration suite, webhook tests, billing tests, or production Core Web Vitals data. Product-3A has focused automated Auth contract tests plus a completed manual dev Auth/RLS E2E.
 - `NEXT_PUBLIC_SITE_URL` is not currently configured in `.env.local`; local metadata falls back to `http://localhost:3000`.
 - Full SEO v2 intent/page-ownership and pre-launch indexing implementation remain pending, although the homepage title, visible capability label, and first-viewport positioning now use `Study Guide Maker` rather than `AI Study Guide Maker`.
 - Current robots/sitemap/public metadata do not implement a controlled pre-launch indexing mode.
@@ -118,6 +118,8 @@ Product-3 adds persistent identity and a real multi-guide workspace:
 - Clear retention and deletion behavior.
 
 It does not turn Folveta into a general note-taking platform, social network, LMS, flashcard suite, or public content marketplace.
+
+Product-3A repository implementation uses Supabase Auth email/password, preserves anonymous access, atomically claims the current anonymous aggregate after authentication, derives child ownership through `preparation_sessions.owner_user_id`, keeps Guide IDs stable across regeneration, adds persistence/lifecycle timestamps and owner RLS, and provides minimal Auth/account UI plus Guide reopen metadata. My Guides, Recent Guides, Library, Search, and full Profile remain later Product-3 tasks. See `docs/auth-and-persistence.md`.
 
 ## Commercial target
 

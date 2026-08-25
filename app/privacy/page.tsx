@@ -16,7 +16,7 @@ export default function PrivacyPage() {
           <Link className="font-display text-2xl font-extrabold tracking-tight text-[var(--accent)]" href="/">Folveta</Link>
           <p className="mt-12 text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">Privacy</p>
           <h1 className="mt-3 text-4xl font-semibold text-stone-950 sm:text-5xl">How the current MVP handles study materials</h1>
-          <p className="mt-4 text-sm text-stone-500">Last updated: August 25, 2026</p>
+          <p className="mt-4 text-sm text-stone-500">Last updated: August 26, 2026</p>
 
           <div className="mt-10 space-y-10 text-stone-700">
             <section>
@@ -29,12 +29,12 @@ export default function PrivacyPage() {
             </section>
             <section>
               <h2 className="text-2xl font-semibold text-stone-950">Storage and access</h2>
-              <p className="mt-4 leading-7">Original files are uploaded to a private Supabase Storage bucket. Session records and generated artifacts are stored in Supabase Postgres. Browser access is controlled by a high-entropy token stored in an HttpOnly, SameSite=Lax cookie; only a hash of that token is stored in the database.</p>
+              <p className="mt-4 leading-7">Original files are uploaded to a private Supabase Storage bucket. Session records and generated artifacts are stored in Supabase Postgres. Anonymous browser access uses a high-entropy token in an HttpOnly, SameSite=Lax cookie; only its hash is stored. If you create an account, Supabase Auth becomes the owner of claimed and newly created study data.</p>
             </section>
             <section>
               <h2 className="text-2xl font-semibold text-stone-950">Retention status</h2>
               <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-5 leading-7 text-amber-950">
-                The current configuration makes session access expire after 7 days by default. The repository does not yet include the scheduled cleanup job needed to automatically delete expired database records and stored files. Automatic deletion must be implemented and verified before production launch. Until then, do not upload sensitive personal information.
+                Anonymous access expires after 7 days by default. Account-owned study data does not use that anonymous expiry and remains until deletion. The repository includes a protected cleanup endpoint that removes private files before database records, but deployment scheduling and production deletion behavior are not yet verified. Until they are, do not upload sensitive personal information.
               </div>
             </section>
             <section>

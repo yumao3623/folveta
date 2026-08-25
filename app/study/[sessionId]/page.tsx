@@ -33,7 +33,14 @@ export default async function StudyWorkspacePage({ params, searchParams }: PageP
   ]);
   if (sourcesError) throw sourcesError;
   if (guideError) throw guideError;
-  if (guideRow) return <GuideWorkspace guide={guideSchema.parse(guideRow.guide_json)} quickCheckHref={`/study/${sessionId}/quick-check`} reviewQuestion={reviewQuestion} />;
+  if (guideRow) {
+    const accessedAt = new Date().toISOString();
+    await Promise.all([
+      admin.from("study_guides").update({ last_accessed_at: accessedAt }).eq("session_id", sessionId),
+      admin.from("preparation_sessions").update({ last_accessed_at: accessedAt }).eq("id", sessionId),
+    ]);
+    return <GuideWorkspace guide={guideSchema.parse(guideRow.guide_json)} quickCheckHref={`/study/${sessionId}/quick-check`} reviewQuestion={reviewQuestion} />;
+  }
 
   const sourceRows = sources ?? [];
   const usableCount = sourceRows.filter((source) => source.status === "ready" || source.status === "ready_with_gaps").length;

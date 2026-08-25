@@ -23,15 +23,15 @@ Browser
   |-- signed private Storage upload
   v
 Next.js 16 App Router / Node Route Handlers
-  |-- anonymous session-token ownership checks
+  |-- Supabase Auth owner checks plus anonymous session-token compatibility
   |-- PDF/PPTX validation and parsing
   |-- stable source unit/span creation
   |-- model gateway and structured generation
   |-- deterministic reference resolution and MCQ scoring
   v
-Supabase
+Supabase Auth / Postgres / Storage
   |-- private Storage bucket
-  `-- Postgres artifacts and state, closed RLS for browser roles
+  `-- Postgres artifacts and owner-scoped authenticated RLS
 
 Configured OpenAI-compatible Responses API
   `-- task-specific structured outputs and verifier calls
@@ -44,7 +44,7 @@ Configured OpenAI-compatible Responses API
 | Web | Next.js 16.3.2 App Router, React 19.2.8, TypeScript 5 |
 | Styling | Tailwind CSS 4, Folveta semantic tokens and local UI primitives, Bricolage Grotesque/Geist via `next/font` |
 | Icons | `lucide-react` |
-| Database/storage | Supabase Postgres and private Storage |
+| Identity/database/storage | Supabase Auth, Supabase Postgres, private Storage, `@supabase/ssr` |
 | Validation | Zod 4 strict schemas |
 | Model API | OpenAI SDK Responses structured parsing behind `ModelGateway` |
 | Parsing | `unpdf`, `officeparser`, `file-type` |
@@ -64,7 +64,9 @@ There is no ORM, job queue, worker, vector database, component framework, analyt
 | `/terms` | Current pre-launch terms | Currently indexable |
 | `/study/demo` | Synthetic Guide demonstration | `noindex, follow` |
 | `/study/demo/quick-check` | Synthetic Quick Check | Inherits demo `noindex, follow` |
-| `/study/[sessionId]` | Owned anonymous materials/generation/Guide | `noindex, nofollow` |
+| `/auth` | Email/password sign-in and sign-up | `noindex, nofollow` |
+| `/account` | Minimal authenticated account state and sign-out | `noindex, nofollow` |
+| `/study/[sessionId]` | Anonymous-token or account-owned materials/generation/Guide | `noindex, nofollow` |
 | `/study/[sessionId]/quick-check` | Owned Quick Check | `noindex, nofollow` |
 | `/study/[sessionId]/quick-check/[attemptId]/result` | Owned result | `noindex, nofollow` |
 
@@ -72,7 +74,11 @@ There is no ORM, job queue, worker, vector database, component framework, analyt
 
 | Method/path | Responsibility |
 | --- | --- |
-| `POST /api/sessions` | Create an anonymous preparation session and set its token cookie |
+| `POST /api/sessions` | Create an anonymous token session or an authenticated owned session |
+| `GET /auth/callback` | Exchange a Supabase PKCE code, claim current anonymous work, redirect safely |
+| `POST /api/auth/claim` | Claim the current anonymous aggregate for the authenticated user |
+| `GET /api/guides/[guideId]` | Return owner-authorized persistence metadata and reopen path |
+| `POST /api/internal/retention` | Secret-protected Storage-first purge of due aggregates |
 | `POST /api/sessions/[sessionId]/sources/upload-url` | Verify ownership/limits, create source row, issue signed upload URL |
 | `POST /api/sources/[sourceId]/parse` | Verify ownership, download private object, validate/hash/parse, persist units/spans |
 | `POST /api/sources/[sourceId]/upload-failed` | Persist failed upload state |
@@ -85,16 +91,16 @@ There is no ORM, job queue, worker, vector database, component framework, analyt
 
 | Table | Current role |
 | --- | --- |
-| `preparation_sessions` | Anonymous token hash, title, generation state, failure, expiry |
+| `preparation_sessions` | Anonymous token or Auth owner, title/state/failure, claim/access/archive/delete/purge lifecycle |
 | `sources` | Session-owned file metadata, private object path, hash, parse state/counts/warnings |
 | `source_units` | Page/slide raw and normalized text plus readability/warnings |
 | `source_spans` | Stable evidence blocks selected by model output |
 | `generation_runs` | Model stage/status/version/provider/model/usage/error metadata |
-| `study_guides` | One versioned Guide JSON per session |
+| `study_guides` | Stable-ID versioned Guide JSON plus normalized title/access/archive/delete metadata |
 | `quick_checks` | Versioned Quick Check JSON keyed to Guide checksum/requested count |
 | `quick_check_attempts` | Submitted answer and deterministic result JSON |
 
-All tables enable RLS and define no browser policies. Server routes use the Supabase service role only after checking the high-entropy session cookie against a stored SHA-256 token hash and expiry.
+All tables enable RLS. Authenticated select policies compare the aggregate owner to `auth.uid()`; child ownership is derived through the non-deleted parent session. Direct writes to generated artifacts and all anonymous direct table access remain closed. Server routes use the service role only after the shared DAL validates either the Supabase user owner or the high-entropy anonymous cookie hash and expiry.
 
 The private Storage bucket allows PDF/PPTX-related MIME values, a 25 MB object limit, and signed upload. No current route issues a user-facing signed source download/view URL.
 
@@ -107,14 +113,15 @@ The anonymous identity model is intentionally narrow:
 3. The raw token is stored in one HttpOnly, SameSite=Lax cookie named `sgm_session`.
 4. Every owned read/mutation matches token hash and a non-expired session.
 
-Consequences:
+Product-3A adds the durable path:
 
-- There is no persistent user identity.
-- One browser cookie can represent only the most recently created session token.
-- A second Guide session overwrites access to the earlier one in that browser, even though its database row still exists until deletion.
-- There is no cross-device access, account recovery, guide list, or durable customer owner.
+- Supabase Auth `auth.users.id` is the durable owner and future entitlement owner.
+- Email/password sign-up, sign-in, PKCE callback, sign-out, cookie refresh, and minimal account state are implemented.
+- An atomic database function claims only the current unexpired anonymous token into `auth.uid()` and clears the anonymous credential.
+- Account-owned sessions have no anonymous expiry and can be reopened across browser sessions through owner authorization.
+- One unauthenticated browser cookie still represents only its current anonymous session; durable multi-Guide listing belongs to Product-3B.
 
-This model must remain protected until Product-3 replaces it. Product-3 must not weaken token entropy or introduce claim-by-ID behavior.
+The schema and threat model are detailed in `docs/auth-and-persistence.md`. The migration is applied in the configured dev project, and the scoped two-user Auth/claim/RLS/persistence E2E passed on 2026-08-26. Real AI Guide generation in that run did not pass because the configured external model gateway returned retryable Cloudflare 502 responses.
 
 ## 6. Generation and assessment contracts
 
@@ -151,30 +158,30 @@ Important limitations:
 Current gaps:
 
 - No pre-launch indexing flag.
-- No Auth redirect/site configuration contract.
+- Auth redirect uses `NEXT_PUBLIC_SITE_URL` with the existing localhost fallback; the Supabase project must allow the matching callback URL.
 - No payment provider/customer/webhook/price configuration.
 - No cleanup scheduler secret/endpoint or rate-limit configuration.
 - `.env.local` did not contain `NEXT_PUBLIC_SITE_URL` at audit time; no secret values were inspected or recorded.
 
 ## 8. Missing reliability, security, and privacy capabilities
 
-- Scheduled deletion of expired Postgres rows and private Storage objects.
+- Deployment scheduling and monitoring for the implemented retention endpoint.
 - Application rate limits, abuse detection, and per-account/entitlement quotas.
 - Explicit origin/CSRF policy for future authenticated and billing mutations.
 - Durable generation concurrency lease/idempotency and resume strategy.
-- Auth/account lifecycle, token rotation, anonymous claim, and account deletion.
+- Password recovery, full account deletion orchestration, and production support/privacy request handling.
 - Billing signature verification, event idempotency/reconciliation, and entitlement enforcement.
 - Production observability, structured redaction rules, alerting, support/privacy channel, and incident runbook.
-- Supabase integration/RLS tests and full browser E2E.
+- Automated Supabase integration/RLS tests and full release browser E2E beyond the completed Product-3A manual dev checks.
 - Separate production/preview service isolation proof.
 
 ## 9. Product-3 target architecture decisions
 
-The Product-3 design task must decide and document before migrations:
+Product-3A resolved the first identity/persistence decisions; later Product-3 work follows these boundaries:
 
-1. **Durable owner:** use the selected Auth user ID as the stable owner key; add a profile row only for application-specific fields.
-2. **Guide aggregate:** decide whether `preparation_sessions` becomes the durable Guide/workspace record or remains a generation session behind a new `guides` table. Prefer the option that minimizes risky migration while making one user -> many Guides explicit.
-3. **Anonymous claim:** store claim eligibility separately from user ownership; require possession of the existing high-entropy token and an authenticated user; make claim atomic and one-time.
+1. **Durable owner:** Supabase Auth user ID; add a profile row only for real application-specific fields.
+2. **Guide aggregate:** `preparation_sessions` is the aggregate root and `study_guides` is the stable persistent artifact; do not add a parallel Guide container.
+3. **Anonymous claim:** exact token possession plus authenticated `auth.uid()`, atomic and one-time, with no claim-by-ID API.
 4. **Lifecycle:** define active, archived, deleted/pending-deletion, expiry, restore window, and permanent purge behavior.
 5. **Authorization:** every query filters by the durable owner; add appropriate database constraints/indexes and an explicit RLS/server-access strategy.
 6. **Search:** begin with bounded owner-scoped Postgres text search over Guide titles/topics/content if it meets product requirements. Do not add embeddings/vector infrastructure until relevance and scale require it.

@@ -18,6 +18,7 @@ const serverEnvSchema = z.object({
   GUIDE_SCHEMA_VERSION: z.literal("1.0").default("1.0"),
   QUICK_CHECK_SCHEMA_VERSION: z.literal("1.0").default("1.0"),
   SESSION_RETENTION_DAYS: z.coerce.number().int().positive().default(7),
+  RETENTION_JOB_SECRET: z.string().min(32).optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

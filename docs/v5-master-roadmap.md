@@ -199,6 +199,8 @@ Dependency/license constraints:
 
 ## Phase 2 — Product-3 Workspace, Auth, and Persistence
 
+Product-3A implementation record (2026-08-26): the repository now contains Supabase Auth email/password flows, PKCE callback, sign-out, session refresh, logged-in/anonymous states, owner-aware anonymous compatibility, an atomic token-only anonymous claim, stable Guide ID/title/access metadata, owner-derived Source/Quick Check/Result access, authenticated RLS policies, a Guide reopen metadata API, minimal private Auth/account UI, and a protected Storage-first retention endpoint. The migration is applied in the configured dev project; a scoped manual two-user E2E passed for claim, reopen, sign-out isolation, cross-owner denial, RLS, Quick Check, and Results. Real AI Guide generation in that run remains unverified because the configured model gateway returned retryable Cloudflare 502 responses, and deployment retention scheduling remains unconfigured. Product-3A does not implement My Guides, Recent Guides, Library, Search, full Profile, or Payment.
+
 **Goal**
 
 Replace the one-cookie/one-session limitation and visual placeholders with durable account identity, multi-guide ownership, real workspace management, and privacy-safe search.

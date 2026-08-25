@@ -328,7 +328,13 @@ export async function generateGuide(sessionId: string, title: string): Promise<G
     }
     return warnings;
   });
-  const guideId = randomUUID();
+  const { data: existingGuide, error: existingGuideError } = await admin
+    .from("study_guides")
+    .select("id")
+    .eq("session_id", sessionId)
+    .maybeSingle();
+  if (existingGuideError) throw existingGuideError;
+  const guideId = existingGuide?.id ?? randomUUID();
   const overallGaps: GroundedClaim[] = sourceIssues.map((issue, index) => ({
     id: `source-gap-${index + 1}`,
     text: `${issue.source_name}: ${issue.message}`,
@@ -357,6 +363,7 @@ export async function generateGuide(sessionId: string, title: string): Promise<G
   const { error: guideError } = await admin.from("study_guides").upsert({
     id: guideId,
     session_id: sessionId,
+    title,
     schema_version: env.GUIDE_SCHEMA_VERSION,
     prompt_version: env.PROMPT_VERSION,
     source_checksum: sourceChecksum,

@@ -4,6 +4,20 @@
 
 Decision date: 2026-08-25
 
+### Product-3A identity and persistence decision
+
+Decision date: 2026-08-26
+
+- Supabase Auth is the formal account identity; Product-3A uses email/password and PKCE confirmation without social providers.
+- Anonymous Study Guide Maker use remains available through the existing seven-day high-entropy cookie session.
+- `auth.users.id` is the durable owner and future billing/entitlement owner. A separate profile or multi-member workspace model is deferred until real product fields or collaboration require it.
+- `preparation_sessions` remains the ownership aggregate root; Sources, source evidence, generation runs, Guides, Quick Checks, and results derive ownership through `session_id`.
+- `study_guides` remains the independent, stable-ID persistent artifact and receives normalized title/access/lifecycle metadata.
+- Anonymous conversion requires both a verified Supabase user and possession of the current anonymous cookie. The database claim is atomic, uses `auth.uid()`, accepts no Guide ID, clears anonymous credentials, and cannot claim expired, deleted, or already-owned data.
+- Authenticated RLS is owner-scoped; anonymous roles retain no direct table access. Server service-role queries remain behind explicit DAL authorization.
+- Payment is not implemented. Future provider-independent customer, entitlement, plan, and usage records attach to the durable user owner.
+- The full rationale, lifecycle, retention, repair, and privacy contract is in `docs/auth-and-persistence.md`.
+
 ### Product identity and category ownership
 
 - The formal brand is **Folveta**.

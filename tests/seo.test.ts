@@ -7,6 +7,8 @@ import robots from "@/app/robots";
 import sitemap from "@/app/sitemap";
 import { metadata as privateSessionMetadata } from "@/app/study/[sessionId]/layout";
 import { metadata as demoMetadata } from "@/app/study/demo/layout";
+import { metadata as authMetadata } from "@/app/auth/page";
+import { metadata as accountMetadata } from "@/app/account/page";
 import { getSiteUrl } from "@/lib/site";
 
 describe("Study route indexing guardrails", () => {
@@ -22,6 +24,11 @@ describe("Study route indexing guardrails", () => {
       index: false,
       follow: true,
     }));
+  });
+
+  it("keeps auth and account routes private and noindex", () => {
+    expect(authMetadata.robots).toEqual(expect.objectContaining({ index: false, follow: false }));
+    expect(accountMetadata.robots).toEqual(expect.objectContaining({ index: false, follow: false }));
   });
 });
 

@@ -31,6 +31,7 @@ import { SourceReference as SourceReferenceView } from "@/components/source-refe
 import { Badge } from "@/components/ui/badge";
 import { IconFrame } from "@/components/ui/icon-frame";
 import { buttonClassName } from "@/components/ui/styles";
+import { AuthNavigation } from "@/lib/auth-navigation";
 
 const priorityMeta: Record<Priority, { label: string; icon: string }> = {
   study_first: { label: "Study first", icon: "target" },
@@ -466,6 +467,7 @@ export function GuideWorkspace({
                 </Link>
               </span>
             )}
+            {!isDemo && <AuthNavigation nextPath={`/study/${guide.session_id}`} />}
           </nav>
         </header>
         <nav

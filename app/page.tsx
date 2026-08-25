@@ -17,6 +17,7 @@ import { UploadPanel } from "@/components/upload-panel";
 import { Badge } from "@/components/ui/badge";
 import { IconFrame } from "@/components/ui/icon-frame";
 import { buttonClassName } from "@/components/ui/styles";
+import { AuthNavigation } from "@/lib/auth-navigation";
 import { MVP_LIMITS, formatMegabytes } from "@/lib/config";
 import { absoluteUrl, SITE_NAME } from "@/lib/site";
 
@@ -181,12 +182,15 @@ function LandingHeader() {
         >
           Example guide
         </Link>
-        <Link
-          href="/about"
-          className={buttonClassName({ variant: "ghost", size: "sm" })}
-        >
-          About
-        </Link>
+        <span className="hidden sm:inline">
+          <Link
+            href="/about"
+            className={buttonClassName({ variant: "ghost", size: "sm" })}
+          >
+            About
+          </Link>
+        </span>
+        <AuthNavigation />
       </nav>
     </header>
   );

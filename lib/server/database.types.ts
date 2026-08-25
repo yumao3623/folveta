@@ -1,9 +1,10 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 type SessionRow = {
-  id: string; access_token_hash: string; title: string; state: string; current_stage: string | null;
+  id: string; access_token_hash: string | null; owner_user_id: string | null; title: string; state: string; current_stage: string | null;
   failed_stage: string | null; error_code: string | null; error_message: string | null;
-  expires_at: string; created_at: string; updated_at: string;
+  expires_at: string | null; claimed_at: string | null; last_accessed_at: string; archived_at: string | null;
+  deleted_at: string | null; purge_after: string | null; created_at: string; updated_at: string;
 };
 type SourceRow = {
   id: string; session_id: string; display_name: string; kind: "pdf" | "pptx"; mime_type: string;
@@ -27,7 +28,8 @@ type RunRow = {
 };
 type GuideRow = {
   id: string; session_id: string; schema_version: string; prompt_version: string; source_checksum: string;
-  guide_json: Json; validation_warnings: Json; created_at: string; updated_at: string;
+  title: string; guide_json: Json; validation_warnings: Json; last_accessed_at: string;
+  archived_at: string | null; deleted_at: string | null; created_at: string; updated_at: string;
 };
 type QuickCheckRow = {
   id: string; session_id: string; guide_id: string; guide_checksum: string; schema_version: string;
@@ -51,9 +53,10 @@ export type Database = {
   public: {
     Tables: {
       preparation_sessions: Table<SessionRow, {
-        id?: string; access_token_hash: string; title?: string; state?: string; current_stage?: string | null;
+        id?: string; access_token_hash?: string | null; owner_user_id?: string | null; title?: string; state?: string; current_stage?: string | null;
         failed_stage?: string | null; error_code?: string | null; error_message?: string | null;
-        expires_at?: string; created_at?: string; updated_at?: string;
+        expires_at?: string | null; claimed_at?: string | null; last_accessed_at?: string; archived_at?: string | null;
+        deleted_at?: string | null; purge_after?: string | null; created_at?: string; updated_at?: string;
       }>;
       sources: Table<SourceRow, {
         id?: string; session_id: string; display_name: string; kind: "pdf" | "pptx"; mime_type: string;
@@ -76,7 +79,8 @@ export type Database = {
       }>;
       study_guides: Table<GuideRow, {
         id: string; session_id: string; schema_version: string; prompt_version: string; source_checksum: string;
-        guide_json: Json; validation_warnings?: Json; created_at?: string; updated_at?: string;
+        title?: string; guide_json: Json; validation_warnings?: Json; last_accessed_at?: string;
+        archived_at?: string | null; deleted_at?: string | null; created_at?: string; updated_at?: string;
       }>;
       quick_checks: Table<QuickCheckRow, {
         id: string; session_id: string; guide_id: string; guide_checksum: string; schema_version: string;
@@ -90,7 +94,12 @@ export type Database = {
       }>;
     };
     Views: Record<never, never>;
-    Functions: Record<never, never>;
+    Functions: {
+      claim_current_anonymous_session: {
+        Args: { token_hash: string };
+        Returns: string | null;
+      };
+    };
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;
   };

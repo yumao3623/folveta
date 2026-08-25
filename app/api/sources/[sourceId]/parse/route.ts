@@ -30,9 +30,11 @@ async function failSource(sourceId: string, error: unknown) {
 
 export async function POST(_request: Request, context: RouteContext<"/api/sources/[sourceId]/parse">) {
   const { sourceId } = await context.params;
+  let authorized = false;
   try {
     const source = await requireOwnedSource(sourceId);
     if (!source) throw new AppError("SOURCE_NOT_FOUND", "This source is missing or expired.", 404);
+    authorized = true;
     const admin = getSupabaseAdmin();
     await admin.from("sources").update({ status: "parsing", error_code: null, error_message: null }).eq("id", sourceId);
     await admin.from("preparation_sessions").update({ state: "parsing", current_stage: "parsing" }).eq("id", source.session_id);
@@ -121,7 +123,7 @@ export async function POST(_request: Request, context: RouteContext<"/api/source
 
     return Response.json({ source: { id: sourceId, status, unitCount: parsed.units.length, readableUnitCount: readableCount, warnings: parsed.warnings } });
   } catch (error) {
-    await failSource(sourceId, error);
+    if (authorized) await failSource(sourceId, error);
     return errorResponse(error);
   }
 }
