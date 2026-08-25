@@ -4,7 +4,7 @@
 
 Implementation date: 2026-08-25
 
-Primary audit source: `docs/seo-audit.md`
+Primary audit source: `docs/archive/seo-audit.md`
 
 Historical product direction source: v3 in `docs/decisions.md`
 

@@ -1,7 +1,7 @@
 # Folveta Documentation Index
 
 Status: **Active governance index**  
-Last updated: 2026-08-25
+Last updated: 2026-08-26
 
 ## Authority order
 
@@ -27,18 +27,25 @@ If current code contradicts a document's claim that something is implemented, th
 | `technical-architecture.md` | Current code/data/API/security architecture and approved target boundaries |
 | `seo-architecture.md` | Folveta-specific SEO v2 architecture and index policy |
 | `SEO_GUIDE.md` | Reusable SEO standard, not Folveta page ownership by itself |
-| `current-state-audit.md` | Dated audit, hygiene classification, and proposed cleanup list |
+| `current-state-audit.md` | Dated audit, hygiene classification, and approved cleanup execution record |
 | `production-seo-checklist.md` | Operational pre-launch/launch/post-launch checklist |
 
-## Historical and research documents
+## Archived historical documents
 
 | Document | Status |
 | --- | --- |
-| `mvp-ux-spec.md` | Superseded v3 UX plan; historical baseline only |
-| `mvp-technical-plan.md` | Superseded proposed MVP architecture; useful for original intent, not current status |
-| `seo-audit.md` | Historical pre-implementation SEO snapshot |
-| `seo-implementation-report.md` | Historical SEO implementation snapshot |
-| `assessment-validity-plan.md` | Historical v2 Mock Exam validation plan |
+| `archive/mvp-ux-spec.md` | Superseded v3 UX plan; historical baseline only |
+| `archive/mvp-technical-plan.md` | Superseded proposed MVP architecture; useful for original intent, not current status |
+| `archive/seo-audit.md` | Historical pre-implementation SEO snapshot |
+| `archive/seo-implementation-report.md` | Historical SEO implementation snapshot |
+| `archive/assessment-validity-plan.md` | Historical v2 Mock Exam validation plan |
+
+## Research Reference
+
+These documents remain evidence and context. They are not a Current Decision Source and their recommendations defer to the active v5 documents above.
+
+| Document | Status |
+| --- | --- |
 | `user-pain-validation.md` | Research evidence; product recommendations defer to current decisions |
 | `study-guide-maker-competitor-analysis.md` | Research snapshot; recommendations defer to current decisions |
 

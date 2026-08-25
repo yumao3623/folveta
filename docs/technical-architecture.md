@@ -12,7 +12,7 @@ This document distinguishes three states:
 - **Missing** — required or previously planned but not present.
 - **Target** — approved v5 direction that still requires a dedicated design/implementation task.
 
-The historical `mvp-technical-plan.md` is not an implementation report. Where it differs from this document, current code and this architecture are authoritative.
+The historical `archive/mvp-technical-plan.md` is not an implementation report. Where it differs from this document, current code and this architecture are authoritative.
 
 ## 2. Implemented system
 

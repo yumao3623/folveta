@@ -1,10 +1,14 @@
 # Folveta v5 Current State and Cleanup Audit
 
-Status: **Current dated audit and active cleanup proposal**  
-Audit date: 2026-08-25  
+Status: **Current dated audit; approved cleanup completed**
+
+Audit date: 2026-08-25
+
+Cleanup date: 2026-08-26
+
 Repository: `C:\Users\毛彧\Documents\ChatGPT\study guide maker`
 
-No file or dependency was deleted in this audit. Every proposed deletion or archive move requires user approval and post-change verification.
+The original audit made no file or dependency changes. The separately approved archive and dependency cleanup was executed on 2026-08-26 and is recorded in section 11.
 
 ## 1. Audit method
 
@@ -18,7 +22,7 @@ Reviewed:
 - Public GitHub UI reference metadata/package/license/tree and ZippyStarter URL availability.
 - Current test, typecheck, lint, and production build.
 
-The repository has no commits on `main`; all files are currently untracked in Git. This is a release/process risk because there is no recoverable baseline or meaningful diff history yet. It is not permission to delete anything.
+At audit time, the repository had no commits on `main` and all files were untracked. The approved cleanup task resolved this risk by creating the baseline commit recorded in section 11 before making any cleanup changes.
 
 ## 2. Verification result
 
@@ -156,7 +160,7 @@ Launch blockers/gaps:
 
 ## 6. SEO v2 audit
 
-Current foundation is materially better than the historical `seo-audit.md`: canonical metadata, social images, structured data, robots, sitemap, trust pages, and study-route noindex are implemented.
+Current foundation is materially better than the historical `archive/seo-audit.md`: canonical metadata, social images, structured data, robots, sitemap, trust pages, and study-route noindex are implemented.
 
 Current v5 corrections:
 
@@ -194,17 +198,17 @@ No new Blog, Pricing, Use Case, Tools, comparison, or pSEO pages are justified b
 - Historical sections inside `docs/decisions.md`.
 - `docs/user-pain-validation.md`.
 - `docs/study-guide-maker-competitor-analysis.md`.
-- `docs/assessment-validity-plan.md` after explicit historical/archive status.
-- `docs/seo-audit.md` and `docs/seo-implementation-report.md` as dated snapshots after explicit status.
+- `docs/archive/assessment-validity-plan.md` with explicit historical/archive status.
+- `docs/archive/seo-audit.md` and `docs/archive/seo-implementation-report.md` as dated snapshots.
 
-Recommended later organization: move these into `docs/archive/` only in an approved cleanup task that fixes all links. Archiving is organizational, not deletion.
+The approved cleanup moved these historical files into `docs/archive/` and fixed their links. Archiving was organizational, not deletion.
 
 ### D. Superseded/outdated planning — merge or mark
 
-- `docs/mvp-ux-spec.md`: v3 plan claims current status and includes pasted text/source roles/short-answer possibilities not matching current implementation. Mark superseded; preserve as UX history.
-- `docs/mvp-technical-plan.md`: says proposed/awaiting approval although much was implemented and several items were not. Mark superseded; `technical-architecture.md` replaces current status.
-- `docs/seo-audit.md`: pre-SEO snapshot with now-fixed MISSING items. Mark historical/superseded by current audit and SEO architecture.
-- `docs/seo-implementation-report.md`: v3 implementation snapshot. Mark historical; current open work lives in v5 docs.
+- `docs/archive/mvp-ux-spec.md`: superseded v3 plan with pasted text/source roles/short-answer possibilities not matching current implementation; preserved as UX history.
+- `docs/archive/mvp-technical-plan.md`: superseded proposed plan; `technical-architecture.md` replaces current status.
+- `docs/archive/seo-audit.md`: historical pre-SEO snapshot with now-fixed MISSING items.
+- `docs/archive/seo-implementation-report.md`: historical v3 implementation snapshot; current open work lives in v5 docs.
 - Original `docs/product-context.md` v4 and top `decisions.md` v4: updated to v5 while history remains.
 - Root `README.md`: Phase 2 label is outdated; update to a v5 baseline/index without pretending missing features exist.
 - `docs/production-seo-checklist.md`: retain as active checklist but merge in pre-launch protection/noindex and billing launch gates.
@@ -224,15 +228,15 @@ They were not deleted.
 
 ### F. Suspected obsolete, manual confirmation required
 
-- Direct dev dependency `tsx`: no current package script or source import references it. Candidate for removal after confirming no external/manual workflow depends on it, then reinstall/lock update and full verification.
-- Future archive moves for historical docs: useful evidence remains, so move rather than delete.
+- Direct dev dependency `tsx`: removed on 2026-08-26 after package scripts, lockfile, config, tests, migrations, scripts, tooling, CI, README/docs, source references, and dynamic invocation scans found no required use. Vitest declared it only as an optional peer; post-removal verification is recorded in section 11.
+- Historical archive moves: completed on 2026-08-26; useful evidence was moved rather than deleted.
 - Any previous Stitch exports not present in this repository: cannot classify or delete without their actual location.
 
 ### G. Duplicate/conflicting files
 
-- `seo-audit.md`, `seo-implementation-report.md`, and `production-seo-checklist.md` describe different dates/stages but looked collectively current. Resolve with status banners and active `seo-architecture.md`; do not merge away historical evidence.
-- `mvp-ux-spec.md` and current code conflict on pasted text, source roles, short answer, and page behavior.
-- `mvp-technical-plan.md` and current code conflict on status plus leases/checkpoints/pasted text/cleanup/rate limits.
+- `archive/seo-audit.md`, `archive/seo-implementation-report.md`, and `production-seo-checklist.md` describe different dates/stages; archive placement, status banners, and active `seo-architecture.md` now distinguish their authority without removing historical evidence.
+- `archive/mvp-ux-spec.md` and current code conflict on pasted text, source roles, short answer, and page behavior.
+- `archive/mvp-technical-plan.md` and current code conflict on status plus leases/checkpoints/pasted text/cleanup/rate limits.
 - Root `README.md` Phase 2 framing conflicts with completed UI/SEO milestones and v5 roadmap.
 - Decisions/product-context overlap intentionally but now have distinct governance roles.
 
@@ -253,28 +257,29 @@ Keep, verified direct use:
 - `jszip`, `pdf-lib` for fixture/test tooling.
 - `pdfjs-dist` override required by the PDF stack should not be removed without parser verification.
 
-Manual removal candidate:
+Removal result:
 
-- `tsx` only. No other unused direct dependency was established.
+- `tsx` was the only unused direct dependency established and was removed through npm on 2026-08-26. No other dependency was removed.
 
-## 8. Proposed delete/archive/merge list
+## 8. Approved cleanup scope and outcome
 
-### Delete after approval
+### Dependency removal completed
 
-1. Remove `tsx` from `devDependencies` and update `package-lock.json`, only after confirming no manual workflow needs it.
+1. Removed `tsx` from `devDependencies` through npm, updating `package.json`, `package-lock.json`, and the local dependency tree.
 
-There are no file deletion proposals.
+No file deletion was approved or performed.
 
-### Archive after approval
+### Archive completed
 
-Suggested `docs/archive/` moves, retaining Git history and fixing links:
+Moved into `docs/archive/`, retaining Git history and fixing links:
 
-1. `assessment-validity-plan.md`
-2. `mvp-ux-spec.md`
-3. `mvp-technical-plan.md`
-4. `seo-audit.md`
-5. `seo-implementation-report.md`
-6. Optionally research snapshots under `docs/archive/research/`, but keeping them in place is also acceptable because active status is now explicit.
+1. `docs/archive/assessment-validity-plan.md`
+2. `docs/archive/mvp-ux-spec.md`
+3. `docs/archive/mvp-technical-plan.md`
+4. `docs/archive/seo-audit.md`
+5. `docs/archive/seo-implementation-report.md`
+
+Research references remain at `docs/user-pain-validation.md` and `docs/study-guide-maker-competitor-analysis.md`; they were intentionally not archived or deleted.
 
 ### Merge/replace in active governance
 
@@ -286,9 +291,9 @@ Suggested `docs/archive/` moves, retaining Git history and fixing links:
 - Operational launch checks: `production-seo-checklist.md`.
 - Root developer entry: updated `README.md` linking to the active index.
 
-## 9. Cleanup execution protocol
+## 9. Cleanup execution protocol used
 
-After explicit approval:
+After explicit approval, the cleanup task followed this protocol:
 
 1. Record the exact approved file moves/removals and dependency changes.
 2. Re-run reference/import/link scans before changes.
@@ -306,6 +311,17 @@ The highest-value cleanup is therefore:
 
 1. establish and enforce the active v5 document hierarchy;
 2. mark/archive stale plans rather than delete evidence;
-3. remove only the unreferenced `tsx` dependency if approved;
+3. remove only the confirmed-unreferenced `tsx` dependency;
 4. handle fake workspace controls through Phase 1/2 implementation, not file deletion;
-5. create a first Git baseline before broad code changes.
+5. create a first Git baseline before cleanup changes.
+
+## 11. Approved cleanup execution record
+
+Status: **Completed on 2026-08-26**
+
+- Baseline commit created before cleanup: `58249b1` (`chore: establish Folveta v5 baseline`).
+- Archived exactly the five historical documents listed in section 8; no historical or research document was deleted.
+- Updated active-document references and archive-relative Markdown links for the new paths.
+- Removed only `tsx` through `npm uninstall --save-dev tsx`; no package script, config, test, migration, script, tooling, CI file, README/doc workflow, source reference, or dynamic invocation required it. Vitest's declaration was an optional peer dependency, and `npm ls tsx --all` was empty after removal.
+- Kept production code, demo fixtures, placeholder workspace components, assets, CSS, UI components, tests, migrations, Supabase code, research references, and all other dependencies unchanged.
+- Cleanup verification result: 4/4 test files and 23/23 tests passed; typecheck, lint, and production build passed; the final Markdown check reported 0 broken links.

@@ -40,7 +40,7 @@
 
 ### Landing Page Structure
 
-文件：[app/page.tsx](../app/page.tsx)
+文件：[app/page.tsx](../../app/page.tsx)
 
 - 首页有一个唯一 H1：`Turn course materials into a clear study guide.`（第 15 行）。
 - 首页有 H2：`Add your materials`（第 25 行）。
@@ -61,11 +61,11 @@
 
 ### SEO Intent and Product Fit
 
-文件：[docs/product-context.md](../docs/product-context.md)、[docs/mvp-ux-spec.md](../docs/mvp-ux-spec.md)、[app/page.tsx](../app/page.tsx)
+文件：[docs/product-context.md](../product-context.md)、[docs/archive/mvp-ux-spec.md](mvp-ux-spec.md)、[app/page.tsx](../../app/page.tsx)
 
 - `study guide maker` 已被确定为核心关键词，见 `docs/product-context.md` 第 3-5 行。
 - 首页页面形态正确：用户可以直接上传课程资料并生成学习指南，属于工具/交易型落地页。
-- H1 和 CTA 基本符合产品意图，但没有完整落实 UX 规范中指定的 SEO title、H1 文案、subhead 和完整流程文案。规范见 `docs/mvp-ux-spec.md` 第 125-132 行。
+- H1 和 CTA 基本符合产品意图，但没有完整落实 UX 规范中指定的 SEO title、H1 文案、subhead 和完整流程文案。规范见 `docs/archive/mvp-ux-spec.md` 第 125-132 行。
 - 当前首页正文约 95 个英文词，包含品牌、短说明、CTA、上传限制和流程提示；对于竞争性 `study guide maker` SERP，内容深度不足。
 - 首页已有 source-grounded 价值主张，但缺少可验证的产品信任信息、隐私/数据保留说明、About、Terms、Privacy、Contact 等页面。
 
@@ -95,7 +95,7 @@
 
 ### Production Metadata Baseline
 
-根布局文件：[app/layout.tsx](../app/layout.tsx)
+根布局文件：[app/layout.tsx](../../app/layout.tsx)
 
 - 当前 title：`Study Guide Maker`，17 个字符（第 16 行）。
 - 当前 description：`Turn text-based PDFs and PowerPoint slides into a clear, source-grounded study guide.`，约 85 个字符（第 17-18 行）。
