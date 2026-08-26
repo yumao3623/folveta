@@ -5,6 +5,7 @@ import {
   BookOpen,
   CheckCircle2,
   FileText,
+  History,
   Home,
   LockKeyhole,
   PlayCircle,
@@ -18,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { IconFrame } from "@/components/ui/icon-frame";
 import { buttonClassName } from "@/components/ui/styles";
 import { AuthNavigation } from "@/lib/auth-navigation";
+import { RecentGuides } from "@/components/recent-guides";
 import { MVP_LIMITS, formatMegabytes } from "@/lib/config";
 import { absoluteUrl, SITE_NAME } from "@/lib/site";
 
@@ -145,6 +147,12 @@ function LandingSidebar() {
           </NavIcon>
           Example Guide
         </Link>
+        <a href="#recent-guides" className={navItem}>
+          <NavIcon>
+            <History className="h-[17px] w-[17px]" strokeWidth={1.8} />
+          </NavIcon>
+          Recent Guides
+        </a>
       </nav>
       <div className="mt-auto border-t border-[var(--line)]/55 p-6">
         <a
@@ -517,6 +525,7 @@ export default function HomePage() {
                 <TransformationPreview />
               </div>
             </section>
+            <RecentGuides />
           </div>
           <ProductDetails />
         </main>

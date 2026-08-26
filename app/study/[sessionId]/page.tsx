@@ -29,7 +29,7 @@ export default async function StudyWorkspacePage({ params, searchParams }: PageP
   const admin = getSupabaseAdmin();
   const [{ data: sources, error: sourcesError }, { data: guideRow, error: guideError }] = await Promise.all([
     admin.from("sources").select("id, display_name, kind, status, unit_count, readable_unit_count, warnings, error_code, error_message").eq("session_id", sessionId).order("created_at"),
-    admin.from("study_guides").select("guide_json").eq("session_id", sessionId).maybeSingle(),
+    admin.from("study_guides").select("guide_json, title").eq("session_id", sessionId).is("deleted_at", null).maybeSingle(),
   ]);
   if (sourcesError) throw sourcesError;
   if (guideError) throw guideError;
@@ -39,7 +39,7 @@ export default async function StudyWorkspacePage({ params, searchParams }: PageP
       admin.from("study_guides").update({ last_accessed_at: accessedAt }).eq("session_id", sessionId),
       admin.from("preparation_sessions").update({ last_accessed_at: accessedAt }).eq("id", sessionId),
     ]);
-    return <GuideWorkspace guide={guideSchema.parse(guideRow.guide_json)} quickCheckHref={`/study/${sessionId}/quick-check`} reviewQuestion={reviewQuestion} />;
+    return <GuideWorkspace guide={guideSchema.parse(guideRow.guide_json)} displayTitle={guideRow.title} quickCheckHref={`/study/${sessionId}/quick-check`} reviewQuestion={reviewQuestion} />;
   }
 
   const sourceRows = sources ?? [];

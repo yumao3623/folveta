@@ -10,7 +10,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "fixtures:generate": "node scripts/generate-test-fixtures.mjs"
+    "fixtures:generate": "node scripts/generate-test-fixtures.mjs",
+    "e2e:product-3b:setup": "node --env-file=.env.local scripts/product-3b-e2e.mjs setup",
+    "e2e:product-3b:verify": "node --env-file=.env.local scripts/product-3b-e2e.mjs verify",
+    "e2e:product-3b:cleanup": "node --env-file=.env.local scripts/product-3b-e2e.mjs cleanup"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",

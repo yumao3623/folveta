@@ -18,6 +18,22 @@ Decision date: 2026-08-26
 - Payment is not implemented. Future provider-independent customer, entitlement, plan, and usage records attach to the durable user owner.
 - The full rationale, lifecycle, retention, repair, and privacy contract is in `docs/auth-and-persistence.md`.
 
+### Product-3B Guide management decision
+
+Decision date: 2026-08-26
+
+- My Guides is an authenticated private route. Anonymous requests redirect to Auth, and all account/Guide routes remain `noindex,nofollow` and absent from the sitemap.
+- Recent Guides reuses the bounded owner list and never substitutes demo data for signed-out or empty accounts.
+- `study_guides.last_accessed_at DESC`, then `updated_at DESC`, then stable Guide ID defines deterministic recent ordering.
+- List requests are paginated and capped; source counts are aggregated in the list query rather than loaded per Guide.
+- Reopen begins with the stable Guide ID but resolves the session and updates access time only after server-side owner authorization.
+- Rename changes only the normalized `study_guides.title`; generated Guide JSON, Sources, and AI output are not rewritten.
+- Archive is reversible through the minimal Archived filter and removes a Guide from default and Recent lists.
+- Delete is a real soft delete. The aggregate is inaccessible immediately and is scheduled for the existing Storage-first retention flow after a 30-day window; Product-3B does not directly purge Storage or database children.
+- Browser mutations go through owner-authorized, same-origin Route Handlers. Direct authenticated table writes remain closed by RLS.
+- Library, Search, full Profile, Payment, SEO v2, deployment, and public indexing remain outside Product-3B.
+- The detailed contract is in `docs/guide-management.md`.
+
 ### Product identity and category ownership
 
 - The formal brand is **Folveta**.
