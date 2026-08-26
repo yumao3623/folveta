@@ -166,7 +166,7 @@ export function GuideManagementActions({
                   ? `"${title}" will leave My Guides and Recent Guides. You can restore it from Archived.`
                   : action === "restore"
                     ? `"${title}" will return to My Guides.`
-                    : `"${title}" will become unavailable immediately. Its files and records are scheduled for permanent cleanup after 30 days.`}
+                    : `"${title}" will become unavailable immediately. Its files and records become eligible for permanent cleanup after 30 days.`}
               </p>
             )}
             {action !== "rename" && error && <FieldMessage tone="error" className="mt-3">{error}</FieldMessage>}

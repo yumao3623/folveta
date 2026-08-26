@@ -99,6 +99,21 @@ export type Database = {
         Args: { token_hash: string };
         Returns: string | null;
       };
+      search_owned_knowledge: {
+        Args: { search_query: string; result_limit?: number; result_offset?: number };
+        Returns: Array<{
+          result_type: "guide" | "topic" | "source";
+          result_id: string;
+          guide_id: string | null;
+          session_id: string;
+          source_id: string | null;
+          title: string;
+          subtitle: string | null;
+          excerpt: string | null;
+          rank: number;
+          total_count: number;
+        }>;
+      };
     };
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;

@@ -1,6 +1,6 @@
 # Folveta Auth and Persistence
 
-Status: **Current Product-3A identity and Product-3B Guide lifecycle architecture**
+Status: **Current Product-3 identity, ownership, and lifecycle architecture**
 Last updated: 2026-08-26
 
 ## Decision
@@ -33,14 +33,18 @@ The explicit Guide detail API returns only owner-authorized persistence metadata
 
 ## Lifecycle, retention, and deletion
 
-- Anonymous content becomes inaccessible at `expires_at` (seven days by default).
-- Account content has no anonymous TTL and remains until the user deletes it or the account is deleted.
-- `archived_at`, `deleted_at`, and `purge_after` separate workspace visibility from permanent purge.
-- Product-3B archive/restore synchronizes Guide and aggregate lifecycle fields. Archive removes a Guide from active and Recent lists but retains it in the minimal Archived filter.
-- Product-3B delete immediately marks the Guide and aggregate deleted and sets `purge_after` to 30 days later. Deleted Guides cannot reopen or restore.
-- The protected retention endpoint selects expired anonymous sessions and rows whose `purge_after` is due, removes private Storage objects first, and then deletes the aggregate so Postgres cascades remove children.
-- Deployment must configure `RETENTION_JOB_SECRET` and schedule the endpoint. That scheduler is not proven merely by repository code.
-- Future account deletion must first stage owned aggregates for Storage cleanup, then delete the Supabase Auth user. Deleting `auth.users` cascades database rows, but it must not run before private object paths have been cleaned.
+The approved current boundary is:
+
+- **Sign out:** Supabase Auth session state is removed and private routes/data become unavailable in that browser. Sign out does not delete account-owned data.
+- **Session expiry:** the Next.js refresh proxy refreshes valid sessions and clears stale/revoked state. Expiry requires re-authentication; it does not delete account data. Anonymous content separately becomes inaccessible at `expires_at` (seven days by default).
+- **Guide archive and soft delete:** `archived_at`, `deleted_at`, and `purge_after` separate visibility from physical deletion. Archive is reversible. Delete immediately marks both Guide and aggregate unavailable, cannot be reopened/restored, and sets `purge_after` to 30 days later.
+- **30-day purge:** the timestamp makes a deleted aggregate eligible for the protected retention endpoint. The endpoint also selects expired anonymous sessions, removes private Storage objects first, and then deletes `preparation_sessions`, whose foreign-key cascades remove Sources, units/spans, generation runs, Guides, Quick Checks, and attempts/results. A production scheduler is not configured or verified, so the product does not claim automatic physical deletion after exactly 30 days.
+- **Failure and retry:** a Storage error stops before database deletion, keeping the due aggregate available to a later retry. If Storage succeeds and the database delete fails, the due aggregate remains and must be safely retried. Production readiness requires scheduling, idempotency verification, observable failures, bounded retry/backoff, and an operator recovery path.
+- **Account deletion request:** no request endpoint, support/privacy request channel, or Delete Account UI exists today. The product must not imply otherwise.
+- **Account/Auth deletion:** the future orchestration must stop new writes, enumerate and stage every owned aggregate, complete Storage cleanup, delete child database aggregates through the parent, and only then delete the Supabase Auth user. Although `owner_user_id` uses `on delete cascade`, deleting `auth.users` first is forbidden because it can orphan private Storage objects.
+- **Future billing dependency:** before Auth deletion, the future Payment implementation must cancel or settle provider billing state and preserve only retention-required billing records under the approved legal policy. Product-3 contains no billing records or fake plan state.
+
+Full account deletion is therefore deliberately deferred as a mandatory Payment/Production prerequisite. This is a bounded lifecycle decision, not a claim that the workflow already exists.
 
 ## Migration and repair
 
@@ -50,11 +54,15 @@ Rollback after claims is intentionally not a blind down migration: removing `own
 
 ## Dev environment verification
 
-On 2026-08-26, migration `202608260001_product_3a_auth_persistence.sql` was applied to the configured Supabase dev project. A scoped two-account E2E verified anonymous upload and parsing, sign-in claim, credential clearing, owner reopen after refresh, sign-out isolation, cross-account denial, owner-only RLS reads, denial of direct authenticated writes/deletes, Quick Check scoring, Results, and Guide return links. A separate revoked-user check verified that a stale Auth cookie degrades to anonymous access, returns 200 instead of 500, and is cleared by the refresh proxy. The temporary Storage object, aggregate, attempts, and Auth users were removed after verification.
+On 2026-08-26, migration `202608260001_product_3a_auth_persistence.sql` was applied to the configured Supabase dev project. The official CLI history was later reconciled only after read-only schema inspection proved the three pre-existing migrations were present. Local and remote history now match through `202608260005`; new migrations are reviewed with CLI dry-run, applied in filename order, and verified through `migration list`.
+
+A scoped two-account E2E verified anonymous upload and parsing, sign-in claim, credential clearing, owner reopen after refresh, sign-out isolation, cross-account denial, owner-only RLS reads, denial of direct authenticated writes/deletes, Quick Check scoring, Results, and Guide return links. A separate revoked-user check verified that a stale Auth cookie degrades to anonymous access, returns 200 instead of 500, and is cleared by the refresh proxy. The temporary Storage object, aggregate, attempts, and Auth users were removed after verification.
 
 Real Guide generation was attempted twice but the configured external model gateway returned retryable Cloudflare `502 origin_bad_gateway` responses during topic extraction. The Auth/persistence E2E therefore used a clearly marked Guide/Quick Check fixture grounded in the successfully parsed source span; real AI generation is not recorded as passing. Deployment scheduling for the retention endpoint also remains unconfigured.
 
-Product-3B added a second scoped two-account dev run on 2026-08-26. Deterministic schema fixtures verified owner-only list/recent data, stable-ID reopen, rename, archive/restore, soft delete, deleted denial, Quick Check/Results continuity, sign-out isolation, relogin persistence, and Account B denial for Account A reads and mutations. All fixture aggregates and Auth users were removed. The Product-3B index-only migration remains unapplied in dev because this workspace has no database DDL connection or linked Supabase CLI configuration.
+Product-3B added a second scoped two-account dev run on 2026-08-26. Deterministic schema fixtures verified owner-only list/recent data, stable-ID reopen, rename, archive/restore, soft delete, deleted denial, Quick Check/Results continuity, sign-out isolation, relogin persistence, and Account B denial for Account A reads and mutations. Its index migration is now applied, and all fixture aggregates and Auth users were removed.
+
+Product-3C keeps ownership on `auth.users.id` and adds no profile table. Library/Profile server DALs repeat explicit owner filters while direct authenticated reads remain protected by existing RLS. Search runs through the authenticated client under RLS rather than the service role. The Product-3C index/RPC migration, claim-grant hardening migration, and filename-tokenization repair are applied in dev. The final two-account Gate passed owner isolation across pages, APIs, direct authenticated/anonymous Supabase reads, Search RPC, URL guessing, signed-out routes, and relogin persistence. All Gate fixtures and users were cleaned.
 
 ## Privacy and SEO
 

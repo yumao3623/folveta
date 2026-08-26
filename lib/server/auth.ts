@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { isInvalidAuthSessionError } from "@/lib/auth-errors";
 import { SESSION_COOKIE } from "@/lib/config";
@@ -33,7 +34,7 @@ export async function getSessionToken() {
   return store.get(SESSION_COOKIE)?.value ?? null;
 }
 
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async function getCurrentUser() {
   const supabase = await getSupabaseAuth();
   const { data, error } = await supabase.auth.getUser();
   if (error) {
@@ -41,7 +42,7 @@ export async function getCurrentUser() {
     throw error;
   }
   return data.user;
-}
+});
 
 export async function getSessionIdentity(): Promise<SessionIdentity> {
   const [user, token] = await Promise.all([getCurrentUser(), getSessionToken()]);

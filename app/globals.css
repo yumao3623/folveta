@@ -390,6 +390,11 @@ button:disabled,
   border-radius: var(--radius-sm);
 }
 
+.ui-icon-frame--md {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
 .ui-icon-frame--lg {
   width: 3rem;
   height: 3rem;

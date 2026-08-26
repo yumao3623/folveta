@@ -54,6 +54,7 @@ describe("workspace ownership", () => {
 
 describe("auth and persistence contracts", () => {
   const migration = readFileSync("supabase/migrations/202608260001_product_3a_auth_persistence.sql", "utf8");
+  const gateMigration = readFileSync("supabase/migrations/202608260004_product_3_gate_hardening.sql", "utf8");
   const pipeline = readFileSync("lib/ai/pipeline.ts", "utf8");
   const generateRoute = readFileSync("app/api/sessions/[sessionId]/generate/route.ts", "utf8");
   const parseRoute = readFileSync("app/api/sources/[sourceId]/parse/route.ts", "utf8");
@@ -116,5 +117,14 @@ describe("auth and persistence contracts", () => {
     expect(retentionRequestAuthorized("Bearer secret", "secret")).toBe(true);
     expect(retentionRequestAuthorized("Bearer wrong", "secret")).toBe(false);
     expect(retentionRequestAuthorized(null, undefined)).toBe(false);
+  });
+
+  it("does not expose the anonymous claim RPC to the anon role", () => {
+    expect(gateMigration).toContain(
+      "revoke all on function public.claim_current_anonymous_session(text) from anon",
+    );
+    expect(gateMigration).toContain(
+      "grant execute on function public.claim_current_anonymous_session(text) to authenticated",
+    );
   });
 });
