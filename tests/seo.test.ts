@@ -3,8 +3,8 @@ import { metadata as homeMetadata } from "@/app/page";
 import { metadata as aboutMetadata } from "@/app/about/page";
 import { metadata as privacyMetadata } from "@/app/privacy/page";
 import { metadata as termsMetadata } from "@/app/terms/page";
-import robots from "@/app/robots";
-import sitemap from "@/app/sitemap";
+import robots, { buildRobots } from "@/app/robots";
+import sitemap, { buildSitemap } from "@/app/sitemap";
 import { metadata as privateSessionMetadata } from "@/app/study/[sessionId]/layout";
 import { metadata as demoMetadata } from "@/app/study/demo/layout";
 import { metadata as authMetadata } from "@/app/auth/page";
@@ -13,7 +13,7 @@ import { metadata as myGuidesMetadata } from "@/app/my-guides/page";
 import { metadata as libraryMetadata } from "@/app/library/page";
 import { metadata as searchMetadata } from "@/app/search/page";
 import { metadata as profileMetadata } from "@/app/profile/page";
-import { getSiteUrl } from "@/lib/site";
+import { getPublicRobots, getSiteUrl, isPrelaunch } from "@/lib/site";
 
 describe("Study route indexing guardrails", () => {
   it("marks private Study sessions noindex, nofollow", () => {
@@ -23,10 +23,10 @@ describe("Study route indexing guardrails", () => {
     }));
   });
 
-  it("marks the demo noindex while allowing link following", () => {
+  it("marks the demo noindex, nofollow", () => {
     expect(demoMetadata.robots).toEqual(expect.objectContaining({
       index: false,
-      follow: true,
+      follow: false,
     }));
   });
 
@@ -41,6 +41,17 @@ describe("Study route indexing guardrails", () => {
 });
 
 describe("Public SEO routes", () => {
+  it("fails closed unless production indexing is explicitly enabled", () => {
+    expect(isPrelaunch({})).toBe(true);
+    expect(isPrelaunch({ PRELAUNCH: "true", VERCEL_ENV: "production" })).toBe(true);
+    expect(isPrelaunch({ PRELAUNCH: "false", VERCEL_ENV: "preview" })).toBe(true);
+    expect(isPrelaunch({ PRELAUNCH: "false", VERCEL_ENV: "production" })).toBe(false);
+    expect(getPublicRobots({ PRELAUNCH: "true", VERCEL_ENV: "production" })).toEqual({
+      index: false,
+      follow: false,
+    });
+  });
+
   it("defines a metadata base and canonical homepage metadata", () => {
     expect(getSiteUrl().toString()).toBe("http://localhost:3000/");
     expect(homeMetadata.alternates).toEqual(expect.objectContaining({ canonical: "/" }));
@@ -61,11 +72,19 @@ describe("Public SEO routes", () => {
       allow: ["/", "/study/demo"],
       disallow: ["/api/", "/study/"],
     }));
-    expect(output.sitemap).toBe("http://localhost:3000/sitemap.xml");
+    expect(output.sitemap).toBeUndefined();
+
+    const launchOutput = buildRobots({ PRELAUNCH: "false", VERCEL_ENV: "production" });
+    expect(launchOutput.sitemap).toBe("http://localhost:3000/sitemap.xml");
   });
 
-  it("lists only public, indexable pages in the sitemap", () => {
-    const paths = sitemap().map((entry) => new URL(entry.url).pathname);
+  it("publishes no discovery URLs before launch", () => {
+    expect(sitemap()).toEqual([]);
+  });
+
+  it("lists only public, indexable pages after launch", () => {
+    const paths = buildSitemap({ PRELAUNCH: "false", VERCEL_ENV: "production" })
+      .map((entry) => new URL(entry.url).pathname);
     expect(paths).toEqual(["/", "/about", "/privacy", "/terms"]);
     expect(paths.some((path) => path.startsWith("/study/") || path.startsWith("/api/"))).toBe(false);
   });

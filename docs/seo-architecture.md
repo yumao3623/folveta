@@ -17,7 +17,7 @@ The homepage owns the primary transactional/mixed product intent **`Study Guide 
 
 `AI Study Guide Maker` may appear naturally as a supporting variation or capability explanation, but it must not replace the category owner in the title, H1, navigation label, product name, or architecture.
 
-The current homepage title `Folveta | AI Study Guide Maker` and header label `AI Study Guide Maker` are therefore SEO v2 correction items, not final approved ownership.
+The current homepage title and first-viewport positioning now use `Study Guide Maker`. Final SEO v2 copy, schema, and production validation remain later work.
 
 ## 2. Search intent
 
@@ -60,16 +60,13 @@ Implemented:
 - Open Graph/Twitter metadata and generated 1200x630 images.
 - Homepage `WebApplication` and visible-content-backed `FAQPage` JSON-LD.
 - `robots.ts` and `sitemap.ts`.
-- Private study `noindex, nofollow`; demo `noindex, follow`.
-- Automated tests for metadata, canonicals, robots, sitemap, and study-route noindex.
+- Private study and demo routes permanently use `noindex,nofollow`.
+- Fail-closed `PRELAUNCH` handling for public metadata, robots, sitemap, and every Vercel Preview.
+- Automated tests for metadata, canonicals, both index modes, robots, sitemap, and study-route noindex.
 
 Open/corrective:
 
-- Primary title/header ownership still says `AI Study Guide Maker`.
-- Production origin is not configured in `.env.local` at audit time.
-- Current sitemap always includes public routes and has no pre-launch mode.
-- Current public routes are indexable by default and have no environment-controlled noindex.
-- Current robots policy is not a production pre-launch gate.
+- Production origin and `PRELAUNCH=true` are staged in the Vercel import configuration but are not live-verified yet.
 - No public Pricing route or billing facts; do not invent them.
 - No real support/privacy request channel.
 - Privacy states that automatic deletion is missing; cleanup must be implemented.
@@ -111,7 +108,7 @@ Public trust pages must use Folveta consistently rather than generic unnamed `St
 Preferred layered state:
 
 1. Deployment/access protection for the whole test deployment.
-2. A fail-safe environment flag such as `PUBLIC_INDEXING_ENABLED=false` whose missing/invalid production value does not enable indexing.
+2. The implemented server-only `PRELAUNCH` flag, whose missing or invalid value does not enable indexing.
 3. If discovery pages are reachable for testing, their rendered metadata emits `noindex`; sitemap contains no discovery URLs.
 4. Reachable noindex pages must not be blocked by robots before crawlers can read the directive. Access protection, not robots, provides privacy.
 5. Private workspace/account/search/billing routes remain access-controlled and noindex.
@@ -120,7 +117,7 @@ Preferred layered state:
 
 - Explicitly set the approved indexing flag only after Phase 5 sign-off.
 - Make only approved public canonical pages indexable and list only those pages in sitemap.
-- Keep demo/private/account/search/checkout/portal/status routes noindex.
+- Keep demo/private/account/search/checkout/portal/status routes `noindex,nofollow`.
 - Verify the live result before submitting the sitemap or requesting indexing.
 
 ### Rollback

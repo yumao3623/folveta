@@ -1,13 +1,21 @@
 import type { MetadataRoute } from "next";
-import { absoluteUrl } from "@/lib/site";
+import { absoluteUrl, isPrelaunch, type IndexingEnvironment } from "@/lib/site";
 
-export default function robots(): MetadataRoute.Robots {
+export function buildRobots(
+  environment: IndexingEnvironment = process.env,
+): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
       allow: ["/", "/study/demo"],
       disallow: ["/api/", "/study/"],
     },
-    sitemap: absoluteUrl("/sitemap.xml"),
+    ...(!isPrelaunch(environment) && {
+      sitemap: absoluteUrl("/sitemap.xml"),
+    }),
   };
+}
+
+export default function robots(): MetadataRoute.Robots {
+  return buildRobots();
 }

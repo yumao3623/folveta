@@ -431,6 +431,8 @@ Make `https://folveta.com` the canonical, technically sound owner of the `Study 
 
 ## Phase 5 — Production Pre-launch Deployment, Full E2E, and Performance QA
 
+Infrastructure setup record (2026-08-26): work is active on `production-prelaunch-domain-setup`. The repository now contains a fail-closed `PRELAUNCH` index mode, empty pre-launch sitemap, permanent private/demo `noindex,nofollow`, and approved Folveta favicon/app icon assets. GitHub authorization exposes `yumao3623/folveta` to the staged Vercel project `folveta`; native Next.js build/output settings and Production environment variables are prepared but the first Deploy has not been run. Supabase Auth now allows the exact production and localhost callbacks. Domain, DNS, TLS, redirects, live metadata, browser QA, and deployment protection remain unverified. Payment, indexing cutover, Search Console, and final SEO v2 remain out of scope.
+
 **Goal**
 
 Run the complete release candidate on `https://folveta.com` under controlled access/indexing and prove product, billing, privacy, security, accessibility, reliability, and performance before public discovery.

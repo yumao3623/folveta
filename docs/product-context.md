@@ -41,8 +41,9 @@ The following exists in the current repository and passed build/typecheck/lint/t
 - Account-owned Source Library with PDF/PPTX filtering, sorting, pagination, real source metadata, and archived/deleted Guide relationship handling from Product-3C.
 - Private PostgreSQL full-text knowledge Search across active Guide titles/topics/content and Source filenames/spans, with Guide/Topic/Source result types and bounded pagination from Product-3C.
 - A real Profile route with Supabase Auth email/creation date, owner-scoped Guide/Source totals, sign-out, and responsive Workspace navigation from Product-3C.
-- About, Privacy, Terms, canonical metadata, social images, JSON-LD, robots, sitemap, and explicit study-route noindex rules.
-- Synthetic demo Guide and Quick Check plus 69 automated tests across schema, parser, Quick Check, Auth/persistence, Guide management, Library/Search/Profile, SEO behavior, and UI foundation contracts.
+- About, Privacy, Terms, canonical metadata, social images, JSON-LD, robots, sitemap, explicit study-route noindex rules, and fail-closed pre-launch indexing control.
+- Folveta favicon/app icon assets derived from the approved green Folveta wordmark without changing the in-page wordmark or Logo treatment.
+- Synthetic demo Guide and Quick Check plus 71 automated tests across schema, parser, Quick Check, Auth/persistence, Guide management, Library/Search/Profile, SEO behavior, and UI foundation contracts.
 
 Implemented UI milestones are UI-1 Study Guide Workspace, UI-2 Landing / Upload, and UI-4 Quick Check / Results. They are implementation baselines, not final visual sign-off.
 
@@ -54,16 +55,16 @@ Implemented UI milestones are UI-1 Study Guide Workspace, UI-2 Landing / Upload,
 - Product-3C passed a real dev two-account/RLS/browser Gate covering Library, Search, Profile, workspace navigation, cross-owner page/API/direct-client denial, signed-out isolation, relogin persistence, query behavior, and regression paths. All temporary aggregates and Auth users were cleaned.
 - A single `sgm_session` cookie represents one anonymous session token; creating another session replaces browser access to the prior session.
 - Account deletion is deliberately unavailable rather than partially implemented. The required Storage-first, child-record/Auth cleanup, retry, retention, request-channel, and future billing-cancellation orchestration is deferred as a mandatory Payment/Production prerequisite; deleting only `auth.users` is not accepted.
-- Payment, Pricing, SEO v2, production deployment, and public indexing remain unimplemented.
+- Payment, Pricing, final SEO v2, completed production deployment, and public indexing remain unimplemented.
 - No Payment/Billing, pricing model, entitlement ledger, checkout, subscription status, billing portal, webhooks, or usage enforcement.
 - A protected Storage-first retention endpoint exists, but no deployment scheduler has been configured or verified yet.
 - No application rate limiting, abuse controls, analytics decision, real support/privacy-request channel, or production monitoring.
 - No pasted-text input, OCR, handwriting, image/chart/diagram interpretation, audio/video/URL ingestion, or open-web research.
 - No generation lease/checkpoint resume implementation despite those items appearing in the historical technical plan.
 - No reusable automated browser suite, automated migration/RLS CI suite, webhook tests, billing tests, or production Core Web Vitals data. Product-3 now has a completed scoped dev two-account migration/RLS/browser Gate, backed by a deterministic fixture script; the external AI full chain remains outside that fixture.
-- `NEXT_PUBLIC_SITE_URL` is not currently configured in `.env.local`; local metadata falls back to `http://localhost:3000`.
-- Full SEO v2 intent/page-ownership and pre-launch indexing implementation remain pending, although the homepage title, visible capability label, and first-viewport positioning now use `Study Guide Maker` rather than `AI Study Guide Maker`.
-- Current robots/sitemap/public metadata do not implement a controlled pre-launch indexing mode.
+- `PRELAUNCH` now fails closed: a missing value, `PRELAUNCH=true`, or any Vercel non-production environment makes discovery pages `noindex,nofollow`; the sitemap is empty and robots does not advertise it. Only an explicit production `PRELAUNCH=false` restores the approved public index mode.
+- Full SEO v2 intent/page-ownership implementation remains pending, although the homepage title, visible capability label, and first-viewport positioning now use `Study Guide Maker` rather than `AI Study Guide Maker`.
+- Vercel/GitHub import, production environment variables, Supabase Auth URLs, domain, TLS, redirects, and live browser behavior remain staged or unverified until the feature branch is approved for `main` and deployed.
 
 ## Current UI context
 
@@ -139,6 +140,7 @@ Payment is a launch requirement, not yet an implementation choice. The product m
 - Do not create thin Blog, Use Case, Tools, comparison, or pSEO inventories.
 - A public Pricing page exists only if the real billing product needs it.
 - Production deployment for testing may precede launch, under deployment protection and/or fail-safe pre-launch noindex.
+- The current pre-launch configuration reuses the verified `study-guide-maker` Supabase project for localhost and Production while withholding its credentials from Vercel Preview. This is an explicit temporary testing constraint, not proof of full production/preview data isolation.
 - Public canonical pages become indexable only after Product-3, billing, legal/privacy, quality, performance, security, and production gates pass.
 - Private workspace, account, search, and billing workflow routes remain noindex after launch.
 

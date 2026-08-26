@@ -8,11 +8,11 @@ Do not mark local assumptions as production verification. Protected deployment i
 
 ## A. Before protected production testing
 
-- [ ] Confirm `https://folveta.com` is the selected non-`www` canonical origin and document redirects.
-- [ ] Set `NEXT_PUBLIC_SITE_URL=https://folveta.com` in the protected production environment.
+- [x] Confirm `https://folveta.com` is the selected non-`www` canonical origin and document the intended `www` -> apex redirect.
+- [x] Stage `NEXT_PUBLIC_SITE_URL=https://folveta.com` in the Vercel Production environment; live output remains unverified.
 - [ ] Isolate production Supabase, Storage, model, Auth, and billing sandbox/live environments from previews.
 - [ ] Enable deployment/access protection where feasible.
-- [ ] Implement a fail-safe pre-launch index mode whose missing/invalid production value does not enable indexing.
+- [x] Implement and automate-test a fail-safe `PRELAUNCH` index mode whose missing/invalid production value does not enable indexing.
 - [ ] In reachable pre-launch mode, verify public discovery pages emit `noindex` and the sitemap advertises no discovery URLs.
 - [ ] Keep private/account/search/billing routes access-controlled and `noindex` in every mode.
 - [ ] Verify no preview/localhost origin appears in production canonical, OG, JSON-LD, robots, or sitemap output.
@@ -97,7 +97,7 @@ Do not mark local assumptions as production verification. Protected deployment i
 - [ ] `https://folveta.com/sitemap.xml` returns `200 application/xml`.
 - [ ] Sitemap contains only approved canonical/indexable/200 pages: initially `/`, `/about`, `/privacy`, `/terms`, plus `/pricing` only if approved.
 - [ ] No demo, session ID, Guide, Quick Check, result, account, search, checkout, status, billing portal, API, preview, or localhost URL appears.
-- [ ] `/study/demo` remains `noindex, follow` unless a separate decision changes it.
+- [x] `/study/demo` and its Quick Check remain permanently `noindex,nofollow`.
 - [ ] Valid private routes remain `noindex, nofollow` and access-controlled.
 - [ ] Every sitemap URL matches its canonical and intended index state.
 

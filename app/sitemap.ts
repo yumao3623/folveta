@@ -1,7 +1,11 @@
 import type { MetadataRoute } from "next";
-import { absoluteUrl } from "@/lib/site";
+import { absoluteUrl, isPrelaunch, type IndexingEnvironment } from "@/lib/site";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export function buildSitemap(
+  environment: IndexingEnvironment = process.env,
+): MetadataRoute.Sitemap {
+  if (isPrelaunch(environment)) return [];
+
   return [
     {
       url: absoluteUrl("/"),
@@ -24,4 +28,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.4,
     },
   ];
+}
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  return buildSitemap();
 }

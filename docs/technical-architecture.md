@@ -58,12 +58,12 @@ There is no ORM, job queue, worker, vector database, component framework, analyt
 
 | Route | Current responsibility | Index state |
 | --- | --- | --- |
-| `/` | Landing, real upload entry, supporting product/FAQ content | Currently indexable; pre-launch control missing |
-| `/about` | Current product purpose/boundaries | Currently indexable |
-| `/privacy` | Current storage/model/retention disclosure | Currently indexable |
-| `/terms` | Current pre-launch terms | Currently indexable |
-| `/study/demo` | Synthetic Guide demonstration | `noindex, follow` |
-| `/study/demo/quick-check` | Synthetic Quick Check | Inherits demo `noindex, follow` |
+| `/` | Landing, real upload entry, supporting product/FAQ content | `noindex,nofollow` while pre-launch; indexable only after explicit production cutover |
+| `/about` | Current product purpose/boundaries | Same fail-closed public index policy |
+| `/privacy` | Current storage/model/retention disclosure | Same fail-closed public index policy |
+| `/terms` | Current pre-launch terms | Same fail-closed public index policy |
+| `/study/demo` | Synthetic Guide demonstration | Permanently `noindex,nofollow` |
+| `/study/demo/quick-check` | Synthetic Quick Check | Inherits demo `noindex,nofollow` |
 | `/auth` | Email/password sign-in and sign-up | `noindex, nofollow` |
 | `/account` | Compatibility redirect to `/profile` | `noindex, nofollow` |
 | `/my-guides` | Account-owned active/archived Guide list and management UI | `noindex, nofollow` |
@@ -162,18 +162,20 @@ Important limitations:
 `.env.example` declares:
 
 - `NEXT_PUBLIC_SITE_URL`
+- `PRELAUNCH`
 - Supabase URL, anon key, Storage bucket, service-role key
 - OpenAI-compatible base URL/API key
 - task model aliases for topic extraction/merge, Guide, grounding, Quick Check, and question verification
 - prompt/schema versions and session retention days
 
-Current gaps:
+Current behavior and gaps:
 
-- No pre-launch indexing flag.
-- Auth redirect uses `NEXT_PUBLIC_SITE_URL` with the existing localhost fallback; the Supabase project must allow the matching callback URL.
+- `PRELAUNCH` is server-only and fail-closed. Only exact `false` in Vercel Production enables discovery-page indexing; Vercel Preview remains pre-launch regardless of the variable.
+- Pre-launch discovery pages emit `noindex,nofollow`, sitemap returns no URLs, and robots omits the sitemap declaration while keeping discovery pages crawlable enough to observe their page directive.
+- Auth redirect uses `NEXT_PUBLIC_SITE_URL` with the localhost fallback. The current Supabase project allows exact callbacks for `https://folveta.com/auth/callback` and `http://localhost:3000/auth/callback`.
 - No payment provider/customer/webhook/price configuration.
 - No deployed cleanup scheduler or verified production retention secret; no rate-limit configuration.
-- `.env.local` did not contain `NEXT_PUBLIC_SITE_URL` at audit time; no secret values were inspected or recorded.
+- Production environment values are staged in Vercel import configuration; no secret values are recorded in the repository.
 
 ## 8. Missing reliability, security, and privacy capabilities
 
@@ -215,10 +217,12 @@ Product-3A resolved identity/persistence, Product-3B implements Guide management
 Use layered controls:
 
 1. Deployment/access protection for non-public production testing where feasible.
-2. A fail-safe environment-controlled public-index mode.
-3. When pre-launch is active and the site is reachable, approved discovery pages emit `noindex`; sitemap excludes them. Do not block those reachable URLs in robots before crawlers can observe `noindex`.
+2. The implemented `PRELAUNCH` switch fails closed and Vercel Preview is always treated as pre-launch.
+3. When pre-launch is active and the site is reachable, approved discovery pages emit `noindex,nofollow`; sitemap excludes them. Do not block those reachable URLs in robots before crawlers can observe `noindex`.
 4. Private/account/search/billing workflow routes remain access-controlled and `noindex` in every environment.
 5. Launch cutover is one explicit configuration change followed by live verification and rollback readiness.
+
+The staged pre-launch currently reuses the verified Supabase `study-guide-maker` backend for localhost and Vercel Production. Supabase credentials are scoped to Production only and withheld from Preview. This prevents Preview from reaching private production data but does not yet provide fully separate localhost/production data stores; that remaining isolation decision is documented in `docs/production-deployment.md`.
 
 ## 12. Test architecture target
 

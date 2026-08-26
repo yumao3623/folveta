@@ -33,6 +33,7 @@ If current code contradicts a document's claim that something is implemented, th
 | `SEO_GUIDE.md` | Reusable SEO standard, not Folveta page ownership by itself |
 | `current-state-audit.md` | Dated audit, hygiene classification, and approved cleanup execution record |
 | `production-seo-checklist.md` | Operational pre-launch/launch/post-launch checklist |
+| `production-deployment.md` | Vercel, domain, environment, Supabase Auth, PRELAUNCH, and production verification runbook |
 
 ## Supabase migration workflow
 

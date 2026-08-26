@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Geist } from "next/font/google";
-import { getSiteUrl, SITE_NAME } from "@/lib/site";
+import { getPublicRobots, getSiteUrl, SITE_NAME } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,6 +25,7 @@ export const metadata: Metadata = {
     "Turn text-based PDFs and PowerPoint slides into a clear, source-grounded study guide with priorities and an optional Quick Check.",
   applicationName: SITE_NAME,
   category: "education",
+  robots: getPublicRobots(),
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
