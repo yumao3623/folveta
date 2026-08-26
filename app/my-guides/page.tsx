@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Archive, ArrowLeft, BookOpen, CircleUserRound, Plus } from "lucide-react";
+import { Archive, BookOpen, Plus } from "lucide-react";
 import { GuideSummaryCard } from "@/components/guide-summary-card";
+import { WorkspaceShell } from "@/components/workspace-shell";
 import { EmptyState } from "@/components/ui/feedback";
 import { buttonClassName, cn } from "@/components/ui/styles";
 import { guideListOptionsSchema } from "@/lib/schemas/guide-management";
@@ -36,23 +37,9 @@ export default async function MyGuidesPage({ searchParams }: { searchParams: Pro
   const result = await listOwnedGuides(user.id, options);
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-5 py-7 sm:px-8 sm:py-10">
+    <WorkspaceShell active="guides">
       <div className="mx-auto w-full max-w-[1080px]">
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <Link href="/" className="inline-flex items-center gap-2 text-[14px] font-medium text-[var(--text-secondary)] hover:text-[var(--foreground)]">
-            <ArrowLeft className="h-4 w-4" strokeWidth={1.8} /> Study Guide Maker
-          </Link>
-          <nav className="flex items-center gap-2" aria-label="Account workspace">
-            <Link href="/account" className={buttonClassName({ variant: "ghost", size: "sm" })}>
-              <CircleUserRound className="h-4 w-4" strokeWidth={1.8} /> Account
-            </Link>
-            <Link href="/#upload" className={buttonClassName({ size: "sm" })}>
-              <Plus className="h-4 w-4" strokeWidth={1.8} /> New Guide
-            </Link>
-          </nav>
-        </header>
-
-        <section className="mt-8 border-b border-[var(--border)] pb-7 sm:mt-10">
+        <section className="border-b border-[var(--border)] pb-7">
           <p className="text-label-sm text-[var(--primary)]">Folveta workspace</p>
           <h1 className="mt-2 font-display text-[36px] font-extrabold leading-tight text-[var(--foreground)] sm:text-[44px]">My Guides</h1>
           <p className="mt-3 max-w-2xl text-[15px] leading-6 text-[var(--muted)]">Open and manage the Study Guides owned by your account.</p>
@@ -98,6 +85,6 @@ export default async function MyGuidesPage({ searchParams }: { searchParams: Pro
           </nav>
         )}
       </div>
-    </main>
+    </WorkspaceShell>
   );
 }

@@ -27,6 +27,7 @@ If current code contradicts a document's claim that something is implemented, th
 | `technical-architecture.md` | Current code/data/API/security architecture and approved target boundaries |
 | `auth-and-persistence.md` | Product-3A identity, anonymous claim, RLS, persistence, and retention architecture |
 | `guide-management.md` | Product-3B My Guides, Recent Guides, management API, lifecycle, pagination, and privacy architecture |
+| `library-search-profile.md` | Product-3C Library, PostgreSQL search, Profile, navigation, authorization, migration, and verification architecture |
 | `ui-design-system.md` | Current Folveta UI Foundation v2 tokens, primitives, states, icon policy, and asset policy |
 | `seo-architecture.md` | Folveta-specific SEO v2 architecture and index policy |
 | `SEO_GUIDE.md` | Reusable SEO standard, not Folveta page ownership by itself |

@@ -5,13 +5,16 @@ import {
   BookOpen,
   CheckCircle2,
   FileText,
+  FolderOpen,
   History,
   Home,
   LockKeyhole,
   PlayCircle,
   Presentation,
+  Search,
   Sparkles,
   Upload,
+  UserRound,
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 import { UploadPanel } from "@/components/upload-panel";
@@ -22,6 +25,7 @@ import { AuthNavigation } from "@/lib/auth-navigation";
 import { RecentGuides } from "@/components/recent-guides";
 import { MVP_LIMITS, formatMegabytes } from "@/lib/config";
 import { absoluteUrl, SITE_NAME } from "@/lib/site";
+import { getCurrentUser } from "@/lib/server/auth";
 
 const title = "Folveta | Study Guide Maker";
 const description =
@@ -110,6 +114,20 @@ function NavIcon({ children }: { children: React.ReactNode }) {
   );
 }
 
+async function LandingWorkspaceLinks() {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  return (
+    <>
+      <div className="my-4 border-t border-[var(--border-soft)]" />
+      <Link href="/my-guides" className={navItem}><NavIcon><BookOpen className="h-[17px] w-[17px]" strokeWidth={1.8} /></NavIcon>My Guides</Link>
+      <Link href="/library" className={navItem}><NavIcon><FolderOpen className="h-[17px] w-[17px]" strokeWidth={1.8} /></NavIcon>Library</Link>
+      <Link href="/search" className={navItem}><NavIcon><Search className="h-[17px] w-[17px]" strokeWidth={1.8} /></NavIcon>Search</Link>
+      <Link href="/profile" className={navItem}><NavIcon><UserRound className="h-[17px] w-[17px]" strokeWidth={1.8} /></NavIcon>Profile</Link>
+    </>
+  );
+}
+
 function LandingSidebar() {
   return (
     <aside className="fixed left-0 top-0 z-50 hidden h-full w-72 flex-col border-r border-[var(--line)]/55 bg-[var(--surface-container-low)] lg:flex">
@@ -153,6 +171,7 @@ function LandingSidebar() {
           </NavIcon>
           Recent Guides
         </a>
+        <LandingWorkspaceLinks />
       </nav>
       <div className="mt-auto border-t border-[var(--line)]/55 p-6">
         <a

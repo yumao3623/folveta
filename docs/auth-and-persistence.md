@@ -1,6 +1,6 @@
 # Folveta Auth and Persistence
 
-Status: **Current Product-3A identity and Product-3B Guide lifecycle architecture**
+Status: **Current Product-3 identity, ownership, and lifecycle architecture**
 Last updated: 2026-08-26
 
 ## Decision
@@ -41,6 +41,7 @@ The explicit Guide detail API returns only owner-authorized persistence metadata
 - The protected retention endpoint selects expired anonymous sessions and rows whose `purge_after` is due, removes private Storage objects first, and then deletes the aggregate so Postgres cascades remove children.
 - Deployment must configure `RETENTION_JOB_SECRET` and schedule the endpoint. That scheduler is not proven merely by repository code.
 - Future account deletion must first stage owned aggregates for Storage cleanup, then delete the Supabase Auth user. Deleting `auth.users` cascades database rows, but it must not run before private object paths have been cleaned.
+- Product-3C does not expose Delete Account because the complete Storage-first job, retention/audit behavior, failure recovery, and future billing coordination are not yet approved. Account deletion is a Payment/Production prerequisite, not an Auth-user-only button.
 
 ## Migration and repair
 
@@ -55,6 +56,8 @@ On 2026-08-26, migration `202608260001_product_3a_auth_persistence.sql` was appl
 Real Guide generation was attempted twice but the configured external model gateway returned retryable Cloudflare `502 origin_bad_gateway` responses during topic extraction. The Auth/persistence E2E therefore used a clearly marked Guide/Quick Check fixture grounded in the successfully parsed source span; real AI generation is not recorded as passing. Deployment scheduling for the retention endpoint also remains unconfigured.
 
 Product-3B added a second scoped two-account dev run on 2026-08-26. Deterministic schema fixtures verified owner-only list/recent data, stable-ID reopen, rename, archive/restore, soft delete, deleted denial, Quick Check/Results continuity, sign-out isolation, relogin persistence, and Account B denial for Account A reads and mutations. All fixture aggregates and Auth users were removed. The Product-3B index-only migration remains unapplied in dev because this workspace has no database DDL connection or linked Supabase CLI configuration.
+
+Product-3C keeps ownership on `auth.users.id` and adds no profile table. Library/Profile server DALs repeat explicit owner filters while direct authenticated reads remain protected by existing RLS. Search intentionally runs through the authenticated client under RLS rather than the service role. Its migration remains unapplied with Product-3B, so Product-3C two-account/RLS E2E is pending.
 
 ## Privacy and SEO
 

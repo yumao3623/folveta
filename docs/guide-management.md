@@ -5,7 +5,7 @@ Last updated: 2026-08-26
 
 ## Scope
 
-Product-3B implements account-owned My Guides, Landing Recent Guides, stable-ID reopen, rename, archive/restore, and soft delete. It does not implement Library, cross-Guide Search, full Profile, Payment, SEO v2, deployment, or public Guide pages.
+Product-3B implements account-owned My Guides, Landing Recent Guides, stable-ID reopen, rename, archive/restore, and soft delete. Product-3C now consumes this lifecycle in Library/Search/Profile; Payment, SEO v2, deployment, and public Guide pages remain out of scope.
 
 ## Private routes and API
 
@@ -38,6 +38,8 @@ Titles are trimmed server-side, must be non-empty, and are limited to 140 charac
 ## Archive and restore
 
 Archive and restore synchronize the existing `archived_at` fields on `study_guides` and `preparation_sessions`. Archived Guides are excluded from default My Guides and Recent Guides. Product-3B provides one minimal Archived filter with restore and delete actions rather than a separate archive product surface.
+
+Library keeps Sources for archived Guides visible and labels their relationship as Archived rather than reopening an inaccessible Guide. Knowledge Search is limited to active Guides/aggregates. Deleted aggregates are excluded from both surfaces. See `docs/library-search-profile.md`.
 
 ## Delete and retention
 

@@ -65,8 +65,11 @@ There is no ORM, job queue, worker, vector database, component framework, analyt
 | `/study/demo` | Synthetic Guide demonstration | `noindex, follow` |
 | `/study/demo/quick-check` | Synthetic Quick Check | Inherits demo `noindex, follow` |
 | `/auth` | Email/password sign-in and sign-up | `noindex, nofollow` |
-| `/account` | Minimal authenticated account state and sign-out | `noindex, nofollow` |
+| `/account` | Compatibility redirect to `/profile` | `noindex, nofollow` |
 | `/my-guides` | Account-owned active/archived Guide list and management UI | `noindex, nofollow` |
+| `/library` | Account-owned uploaded PDF/PPTX Source inventory | `noindex, nofollow` |
+| `/search` | Account-owned Guide/Topic/Source full-text search | `noindex, nofollow` |
+| `/profile` | Auth account facts, owner-scoped workspace counts, and sign-out | `noindex, nofollow` |
 | `/study/[sessionId]` | Anonymous-token or account-owned materials/generation/Guide | `noindex, nofollow` |
 | `/study/[sessionId]/quick-check` | Owned Quick Check | `noindex, nofollow` |
 | `/study/[sessionId]/quick-check/[attemptId]/result` | Owned result | `noindex, nofollow` |
@@ -83,6 +86,8 @@ There is no ORM, job queue, worker, vector database, component framework, analyt
 | `GET /api/guides/[guideId]/reopen` | Resolve stable Guide ID, update last access, and redirect to the owned workspace |
 | `PATCH /api/guides/[guideId]` | Owner-authorized rename, archive, or restore |
 | `DELETE /api/guides/[guideId]` | Owner-authorized soft delete and delayed purge staging |
+| `GET /api/library` | Return a bounded owner-only Source page with filter/sort metadata |
+| `GET /api/search` | Return a bounded authenticated PostgreSQL FTS result page |
 | `POST /api/internal/retention` | Secret-protected Storage-first purge of due aggregates |
 | `POST /api/sessions/[sessionId]/sources/upload-url` | Verify ownership/limits, create source row, issue signed upload URL |
 | `POST /api/sources/[sourceId]/parse` | Verify ownership, download private object, validate/hash/parse, persist units/spans |
@@ -107,7 +112,9 @@ There is no ORM, job queue, worker, vector database, component framework, analyt
 
 All tables enable RLS. Authenticated select policies compare the aggregate owner to `auth.uid()`; child ownership is derived through the non-deleted parent session. Direct writes to generated artifacts and all anonymous direct table access remain closed. Server routes use the service role only after the shared DAL validates either the Supabase user owner or the high-entropy anonymous cookie hash and expiry.
 
-The private Storage bucket allows PDF/PPTX-related MIME values, a 25 MB object limit, and signed upload. No current route issues a user-facing signed source download/view URL. Product-3B Guide lists use bounded page/limit input, deterministic last-access ordering, an embedded source count, and partial indexes for active/archive/recent and cleanup paths.
+The private Storage bucket allows PDF/PPTX-related MIME values, a 25 MB object limit, and signed upload. No current route issues a user-facing signed source download/view URL. Product-3B Guide lists use bounded page/limit input, deterministic last-access ordering, an embedded source count, and partial indexes for active/archive/recent and cleanup paths. Product-3C Library starts from `sources`, joins the owner aggregate and related Guide in one request, and uses look-ahead pagination without N+1 reads.
+
+Product-3C Search calls `search_owned_knowledge` through the authenticated Supabase server client. The `security invoker` function requires `auth.uid()`, relies on existing owner RLS, excludes archived/deleted aggregates, unions Guide title, structured Topic, Source filename, and Source span matches, and caps page size at 24. GIN FTS indexes support Guide JSON/title, Source filename, and span text. No search content is loaded wholesale into the browser.
 
 ## 5. Identity and ownership reality
 
@@ -177,19 +184,19 @@ Current gaps:
 - Password recovery, full account deletion orchestration, and production support/privacy request handling.
 - Billing signature verification, event idempotency/reconciliation, and entitlement enforcement.
 - Production observability, structured redaction rules, alerting, support/privacy channel, and incident runbook.
-- Automated migration/RLS integration and full release browser E2E beyond the completed scoped Product-3A and Product-3B dev checks.
+- Automated migration/RLS integration and full release browser E2E beyond the completed scoped Product-3A and Product-3B dev checks. Product-3C migration-backed E2E is pending because migrations `202608260002` and `202608260003` are not applied in dev.
 - Separate production/preview service isolation proof.
 
 ## 9. Product-3 target architecture decisions
 
-Product-3A resolved identity/persistence and Product-3B implements Guide management; later Product-3 work follows these boundaries:
+Product-3A resolved identity/persistence, Product-3B implements Guide management, and Product-3C implements Library/Search/Profile within these boundaries:
 
 1. **Durable owner:** Supabase Auth user ID; add a profile row only for real application-specific fields.
 2. **Guide aggregate:** `preparation_sessions` is the aggregate root and `study_guides` is the stable persistent artifact; do not add a parallel Guide container.
 3. **Anonymous claim:** exact token possession plus authenticated `auth.uid()`, atomic and one-time, with no claim-by-ID API.
 4. **Lifecycle:** define active, archived, deleted/pending-deletion, expiry, restore window, and permanent purge behavior.
 5. **Authorization:** every query filters by the durable owner; add appropriate database constraints/indexes and an explicit RLS/server-access strategy.
-6. **Search:** begin with bounded owner-scoped Postgres text search over Guide titles/topics/content if it meets product requirements. Do not add embeddings/vector infrastructure until relevance and scale require it.
+6. **Search:** bounded owner-scoped Postgres FTS over Guide titles/topics/content and Source filenames/spans is implemented. Embeddings/vector infrastructure remains deferred until relevance and scale require it.
 7. **Storage:** preserve private object paths and verify ownership before issuing any view/download URL.
 8. **Deletion:** account/Guide deletion must cascade to generated artifacts and Storage through a reliable, observable cleanup workflow.
 

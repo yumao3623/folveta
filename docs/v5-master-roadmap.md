@@ -203,6 +203,8 @@ Product-3A implementation record (2026-08-26): the repository now contains Supab
 
 Product-3B implementation record (2026-08-26): the repository now contains authenticated My Guides, real owner-only Landing Recent Guides, bounded active/archive pagination, embedded source counts, stable recent ordering, server-authorized reopen, title-only rename, archive/restore, and 30-day soft-delete staging behind Guide management Route Handlers. Private metadata remains `noindex,nofollow`; no user content enters public metadata or the sitemap. Automated coverage is 54 tests plus typecheck, lint, and production build. A scoped real dev Supabase two-account E2E and 1440px/390px browser QA passed, and all temporary fixtures were cleaned. The index-only Product-3B migration is committed but not applied in dev because the workspace has no DDL connection or linked Supabase CLI configuration. Library, Search, full Profile, Payment, SEO v2, deployment, indexing, and retention scheduling remain out of scope. See `docs/guide-management.md` for the query, verification, and lifecycle contract.
 
+Product-3C implementation record (2026-08-26): the repository now contains a Source-owned PDF/PPTX Library, owner-scoped sorting/filtering/pagination, archived/deleted relationship handling, PostgreSQL FTS over Guide/Topic/Source data, bounded authenticated search, a real Profile summary, two authenticated read APIs, and responsive My Guides/Library/Search/Profile navigation. All new routes are `noindex,nofollow`. Automated coverage is 66 tests. The Product-3C FTS/index migration and the earlier Product-3B index migration are not applied in dev because the workspace still has no formal migration channel; migration-backed two-account Search/RLS E2E is not passed. Account deletion remains a required lifecycle decision before Payment/Production. See `docs/library-search-profile.md`.
+
 **Goal**
 
 Replace the one-cookie/one-session limitation and visual placeholders with durable account identity, multi-guide ownership, real workspace management, and privacy-safe search.
@@ -277,6 +279,8 @@ Replace the one-cookie/one-session limitation and visual placeholders with durab
 - Cross-user access tests fail closed.
 - Expired/deleted content and Storage objects follow documented retention behavior.
 - Private routes are noindex and absent from sitemap.
+
+Current exit judgment: repository Product-3 feature scope is implemented, but Phase 2 is not fully exited until the pending Product-3B/Product-3C migrations are applied through the formal channel, the Product-3C two-account/RLS/browser matrix passes against dev, and account deletion/recovery hardening is resolved in the Product-3 security task.
 
 **Separate Codex task**
 

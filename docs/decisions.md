@@ -34,6 +34,20 @@ Decision date: 2026-08-26
 - Library, Search, full Profile, Payment, SEO v2, deployment, and public indexing remain outside Product-3B.
 - The detailed contract is in `docs/guide-management.md`.
 
+### Product-3C Library, Search, and Profile decision
+
+Decision date: 2026-08-26
+
+- Library is the private, account-owned inventory of uploaded Sources, not a second Guide manager. It supports only the real PDF/PPTX formats, bounded pagination, type filtering, sorting, source status/count metadata, and related Guide navigation.
+- Sources belonging to archived Guides remain visible in Library with an archived relationship; deleted aggregates are excluded. A deleted Guide relationship is never linked or exposed.
+- Knowledge Search is an authenticated PostgreSQL full-text search over active Guide titles, Guide topics/structured content, Source filenames, and Source spans. It returns Guide, Topic, and Source results with bounded pagination and real private destinations.
+- Search executes under the authenticated Supabase session through a `security invoker` RPC and existing owner RLS. It does not use embeddings, a vector database, RAG, or new AI calls.
+- Profile is an account page backed by Supabase Auth and owner-scoped counts. It shows only email, account creation date, Guide count, Source count, and sign-out. No profile table, social fields, or invented plan state is added.
+- `/account` remains a compatibility redirect to `/profile`. My Guides, Library, Search, and Profile share a real responsive Workspace navigation.
+- Account deletion is intentionally not implemented. A complete design must stage owned aggregates, remove private Storage first, handle spans/Quick Checks/results and retention observably, then delete the Auth user, and later coordinate billing state. This lifecycle decision is required before Payment/Production completion.
+- `202608260003_product_3c_library_search_profile.sql` is the formal Product-3C migration. It and the earlier Product-3B migration remain unapplied in dev while this workspace lacks a linked Supabase CLI or database connection; migration-dependent E2E is not considered passed.
+- The detailed contract is in `docs/library-search-profile.md`.
+
 ### Product identity and category ownership
 
 - The formal brand is **Folveta**.

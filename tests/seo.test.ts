@@ -10,6 +10,9 @@ import { metadata as demoMetadata } from "@/app/study/demo/layout";
 import { metadata as authMetadata } from "@/app/auth/page";
 import { metadata as accountMetadata } from "@/app/account/page";
 import { metadata as myGuidesMetadata } from "@/app/my-guides/page";
+import { metadata as libraryMetadata } from "@/app/library/page";
+import { metadata as searchMetadata } from "@/app/search/page";
+import { metadata as profileMetadata } from "@/app/profile/page";
 import { getSiteUrl } from "@/lib/site";
 
 describe("Study route indexing guardrails", () => {
@@ -31,6 +34,9 @@ describe("Study route indexing guardrails", () => {
     expect(authMetadata.robots).toEqual(expect.objectContaining({ index: false, follow: false }));
     expect(accountMetadata.robots).toEqual(expect.objectContaining({ index: false, follow: false }));
     expect(myGuidesMetadata.robots).toEqual(expect.objectContaining({ index: false, follow: false }));
+    expect(libraryMetadata.robots).toEqual(expect.objectContaining({ index: false, follow: false }));
+    expect(searchMetadata.robots).toEqual(expect.objectContaining({ index: false, follow: false }));
+    expect(profileMetadata.robots).toEqual(expect.objectContaining({ index: false, follow: false }));
   });
 });
 
