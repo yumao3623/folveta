@@ -330,7 +330,7 @@ export async function generateGuide(sessionId: string, title: string): Promise<G
   });
   const { data: existingGuide, error: existingGuideError } = await admin
     .from("study_guides")
-    .select("id")
+    .select("id, title")
     .eq("session_id", sessionId)
     .maybeSingle();
   if (existingGuideError) throw existingGuideError;
@@ -345,7 +345,7 @@ export async function generateGuide(sessionId: string, title: string): Promise<G
     schema_version: "1.0",
     id: guideId,
     session_id: sessionId,
-    title,
+    title: existingGuide?.title ?? title,
     based_on_uploaded_materials: true,
     source_count: usableSources.length,
     priority_method_summary: "Priority bands reflect supported topic coverage and course structure in the uploaded materials. They are study suggestions, not probabilities of appearing on an exam.",
@@ -363,7 +363,7 @@ export async function generateGuide(sessionId: string, title: string): Promise<G
   const { error: guideError } = await admin.from("study_guides").upsert({
     id: guideId,
     session_id: sessionId,
-    title,
+    title: existingGuide?.title ?? title,
     schema_version: env.GUIDE_SCHEMA_VERSION,
     prompt_version: env.PROMPT_VERSION,
     source_checksum: sourceChecksum,

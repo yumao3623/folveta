@@ -36,3 +36,10 @@ export function errorResponse(error: unknown) {
     { status: 500 },
   );
 }
+
+export function requireSameOrigin(request: Request) {
+  const origin = request.headers.get("origin");
+  if (origin && origin !== new URL(request.url).origin) {
+    throw new AppError("INVALID_ORIGIN", "This request did not come from Folveta.", 403);
+  }
+}

@@ -335,11 +335,13 @@ function TopicDetails({
 }
 
 export function GuideWorkspace({
+  displayTitle,
   guide,
   isDemo = false,
   quickCheckHref,
   reviewQuestion,
 }: {
+  displayTitle?: string;
   guide: Guide;
   isDemo?: boolean;
   quickCheckHref?: string;
@@ -511,7 +513,7 @@ export function GuideWorkspace({
                 </span>
               </div>
               <h1 className="max-w-4xl font-display text-[38px] font-extrabold leading-[1.1] text-[var(--foreground)] sm:text-[48px]">
-                {guide.title}
+                {displayTitle ?? guide.title}
               </h1>
               <p className="mt-4 max-w-3xl font-body-lg text-[18px] leading-[1.6] text-[var(--text-secondary)]">
                 {guide.priority_method_summary}

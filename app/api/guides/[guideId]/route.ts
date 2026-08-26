@@ -1,17 +1,20 @@
+import { guideMutationSchema } from "@/lib/schemas/guide-management";
+import { getCurrentUser } from "@/lib/server/auth";
 import { requireOwnedGuide } from "@/lib/server/auth";
-import { AppError, errorResponse } from "@/lib/server/http";
-import { getSupabaseAdmin } from "@/lib/server/supabase";
+import {
+  renameOwnedGuide,
+  setOwnedGuideArchived,
+  softDeleteOwnedGuide,
+  touchOwnedGuide,
+} from "@/lib/server/guides";
+import { AppError, errorResponse, requireSameOrigin } from "@/lib/server/http";
 
 export async function GET(_request: Request, context: { params: Promise<{ guideId: string }> }) {
   try {
     const { guideId } = await context.params;
     const guide = await requireOwnedGuide(guideId);
     if (!guide) throw new AppError("GUIDE_NOT_FOUND", "This Guide is unavailable.", 404);
-    const accessedAt = new Date().toISOString();
-    await Promise.all([
-      getSupabaseAdmin().from("study_guides").update({ last_accessed_at: accessedAt }).eq("id", guide.id),
-      getSupabaseAdmin().from("preparation_sessions").update({ last_accessed_at: accessedAt }).eq("id", guide.session_id),
-    ]);
+    const accessedAt = await touchOwnedGuide(guide);
     return Response.json({
       guide: {
         id: guide.id,
@@ -22,6 +25,46 @@ export async function GET(_request: Request, context: { params: Promise<{ guideI
         reopenPath: `/study/${guide.session_id}`,
       },
     });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+export async function PATCH(request: Request, context: RouteContext<"/api/guides/[guideId]">) {
+  try {
+    requireSameOrigin(request);
+    const user = await getCurrentUser();
+    if (!user) throw new AppError("AUTH_REQUIRED", "Sign in to manage your Guides.", 401);
+    const { guideId } = await context.params;
+    const parsed = guideMutationSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      throw new AppError(
+        "INVALID_GUIDE_UPDATE",
+        parsed.error.issues[0]?.message ?? "This Guide update is invalid.",
+        422,
+        parsed.error.issues,
+      );
+    }
+    const input = parsed.data;
+    const result = input.action === "rename"
+      ? await renameOwnedGuide(user.id, guideId, input.title)
+      : await setOwnedGuideArchived(user.id, guideId, input.action === "archive");
+    if (!result) throw new AppError("GUIDE_NOT_FOUND", "This Guide is unavailable.", 404);
+    return Response.json({ guide: result });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+export async function DELETE(request: Request, context: RouteContext<"/api/guides/[guideId]">) {
+  try {
+    requireSameOrigin(request);
+    const user = await getCurrentUser();
+    if (!user) throw new AppError("AUTH_REQUIRED", "Sign in to manage your Guides.", 401);
+    const { guideId } = await context.params;
+    const result = await softDeleteOwnedGuide(user.id, guideId);
+    if (!result) throw new AppError("GUIDE_NOT_FOUND", "This Guide is unavailable.", 404);
+    return Response.json({ guide: result });
   } catch (error) {
     return errorResponse(error);
   }

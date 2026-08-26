@@ -9,6 +9,7 @@ import { metadata as privateSessionMetadata } from "@/app/study/[sessionId]/layo
 import { metadata as demoMetadata } from "@/app/study/demo/layout";
 import { metadata as authMetadata } from "@/app/auth/page";
 import { metadata as accountMetadata } from "@/app/account/page";
+import { metadata as myGuidesMetadata } from "@/app/my-guides/page";
 import { getSiteUrl } from "@/lib/site";
 
 describe("Study route indexing guardrails", () => {
@@ -29,6 +30,7 @@ describe("Study route indexing guardrails", () => {
   it("keeps auth and account routes private and noindex", () => {
     expect(authMetadata.robots).toEqual(expect.objectContaining({ index: false, follow: false }));
     expect(accountMetadata.robots).toEqual(expect.objectContaining({ index: false, follow: false }));
+    expect(myGuidesMetadata.robots).toEqual(expect.objectContaining({ index: false, follow: false }));
   });
 });
 

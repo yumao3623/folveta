@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, LogOut, Mail } from "lucide-react";
+import { ArrowLeft, BookOpen, LogOut, Mail } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 import { buttonClassName } from "@/components/ui/styles";
 import { getCurrentUser } from "@/lib/server/auth";
@@ -30,12 +30,17 @@ export default async function AccountPage() {
               <Mail className="h-5 w-5 shrink-0 text-[var(--primary)]" strokeWidth={1.8} />
               <span className="truncate text-[15px] text-[var(--foreground)]">{user.email}</span>
             </div>
-            <form action={signOut}>
-              <button type="submit" className={buttonClassName({ variant: "secondary" })}>
-                <LogOut className="h-4 w-4" strokeWidth={1.8} />
-                Sign out
-              </button>
-            </form>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/my-guides" className={buttonClassName({ variant: "soft" })}>
+                <BookOpen className="h-4 w-4" strokeWidth={1.8} /> My Guides
+              </Link>
+              <form action={signOut}>
+                <button type="submit" className={buttonClassName({ variant: "secondary" })}>
+                  <LogOut className="h-4 w-4" strokeWidth={1.8} />
+                  Sign out
+                </button>
+              </form>
+            </div>
           </div>
         </section>
       </div>

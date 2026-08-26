@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from "react";
+import { forwardRef, type ButtonHTMLAttributes } from "react";
 import { LoaderCircle } from "lucide-react";
 import {
   buttonClassName,
@@ -13,7 +13,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   loadingLabel?: string;
 };
 
-export function Button({
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({
   children,
   className,
   disabled,
@@ -24,10 +24,11 @@ export function Button({
   variant = "primary",
   type = "button",
   ...props
-}: ButtonProps) {
+}, ref) {
   return (
     <button
       type={type}
+      ref={ref}
       className={buttonClassName({ variant, size, className })}
       disabled={disabled || loading}
       {...props}
@@ -43,4 +44,4 @@ export function Button({
       {loading && loadingLabel ? loadingLabel : children}
     </button>
   );
-}
+});

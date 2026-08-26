@@ -1,7 +1,7 @@
 # Folveta Technical Architecture
 
 Status: **Current v5 architecture baseline and target boundaries**  
-Last verified: 2026-08-25  
+Last verified: 2026-08-26
 Decision authority: `docs/decisions.md`
 
 ## 1. Architecture principle
@@ -66,6 +66,7 @@ There is no ORM, job queue, worker, vector database, component framework, analyt
 | `/study/demo/quick-check` | Synthetic Quick Check | Inherits demo `noindex, follow` |
 | `/auth` | Email/password sign-in and sign-up | `noindex, nofollow` |
 | `/account` | Minimal authenticated account state and sign-out | `noindex, nofollow` |
+| `/my-guides` | Account-owned active/archived Guide list and management UI | `noindex, nofollow` |
 | `/study/[sessionId]` | Anonymous-token or account-owned materials/generation/Guide | `noindex, nofollow` |
 | `/study/[sessionId]/quick-check` | Owned Quick Check | `noindex, nofollow` |
 | `/study/[sessionId]/quick-check/[attemptId]/result` | Owned result | `noindex, nofollow` |
@@ -78,6 +79,10 @@ There is no ORM, job queue, worker, vector database, component framework, analyt
 | `GET /auth/callback` | Exchange a Supabase PKCE code, claim current anonymous work, redirect safely |
 | `POST /api/auth/claim` | Claim the current anonymous aggregate for the authenticated user |
 | `GET /api/guides/[guideId]` | Return owner-authorized persistence metadata and reopen path |
+| `GET /api/guides` | Return a bounded owner-only active or archived Guide page with source counts |
+| `GET /api/guides/[guideId]/reopen` | Resolve stable Guide ID, update last access, and redirect to the owned workspace |
+| `PATCH /api/guides/[guideId]` | Owner-authorized rename, archive, or restore |
+| `DELETE /api/guides/[guideId]` | Owner-authorized soft delete and delayed purge staging |
 | `POST /api/internal/retention` | Secret-protected Storage-first purge of due aggregates |
 | `POST /api/sessions/[sessionId]/sources/upload-url` | Verify ownership/limits, create source row, issue signed upload URL |
 | `POST /api/sources/[sourceId]/parse` | Verify ownership, download private object, validate/hash/parse, persist units/spans |
@@ -102,7 +107,7 @@ There is no ORM, job queue, worker, vector database, component framework, analyt
 
 All tables enable RLS. Authenticated select policies compare the aggregate owner to `auth.uid()`; child ownership is derived through the non-deleted parent session. Direct writes to generated artifacts and all anonymous direct table access remain closed. Server routes use the service role only after the shared DAL validates either the Supabase user owner or the high-entropy anonymous cookie hash and expiry.
 
-The private Storage bucket allows PDF/PPTX-related MIME values, a 25 MB object limit, and signed upload. No current route issues a user-facing signed source download/view URL.
+The private Storage bucket allows PDF/PPTX-related MIME values, a 25 MB object limit, and signed upload. No current route issues a user-facing signed source download/view URL. Product-3B Guide lists use bounded page/limit input, deterministic last-access ordering, an embedded source count, and partial indexes for active/archive/recent and cleanup paths.
 
 ## 5. Identity and ownership reality
 
@@ -119,7 +124,7 @@ Product-3A adds the durable path:
 - Email/password sign-up, sign-in, PKCE callback, sign-out, cookie refresh, and minimal account state are implemented.
 - An atomic database function claims only the current unexpired anonymous token into `auth.uid()` and clears the anonymous credential.
 - Account-owned sessions have no anonymous expiry and can be reopened across browser sessions through owner authorization.
-- One unauthenticated browser cookie still represents only its current anonymous session; durable multi-Guide listing belongs to Product-3B.
+- One unauthenticated browser cookie still represents only its current anonymous session. Product-3B provides durable multi-Guide listing only for authenticated owners.
 
 The schema and threat model are detailed in `docs/auth-and-persistence.md`. The migration is applied in the configured dev project, and the scoped two-user Auth/claim/RLS/persistence E2E passed on 2026-08-26. Real AI Guide generation in that run did not pass because the configured external model gateway returned retryable Cloudflare 502 responses.
 
@@ -172,12 +177,12 @@ Current gaps:
 - Password recovery, full account deletion orchestration, and production support/privacy request handling.
 - Billing signature verification, event idempotency/reconciliation, and entitlement enforcement.
 - Production observability, structured redaction rules, alerting, support/privacy channel, and incident runbook.
-- Automated Supabase integration/RLS tests and full release browser E2E beyond the completed Product-3A manual dev checks.
+- Automated migration/RLS integration and full release browser E2E beyond the completed scoped Product-3A and Product-3B dev checks.
 - Separate production/preview service isolation proof.
 
 ## 9. Product-3 target architecture decisions
 
-Product-3A resolved the first identity/persistence decisions; later Product-3 work follows these boundaries:
+Product-3A resolved identity/persistence and Product-3B implements Guide management; later Product-3 work follows these boundaries:
 
 1. **Durable owner:** Supabase Auth user ID; add a profile row only for real application-specific fields.
 2. **Guide aggregate:** `preparation_sessions` is the aggregate root and `study_guides` is the stable persistent artifact; do not add a parallel Guide container.

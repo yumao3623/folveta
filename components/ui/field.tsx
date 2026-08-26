@@ -1,8 +1,9 @@
-import type {
-  HTMLAttributes,
-  InputHTMLAttributes,
-  LabelHTMLAttributes,
-  TextareaHTMLAttributes,
+import {
+  forwardRef,
+  type HTMLAttributes,
+  type InputHTMLAttributes,
+  type LabelHTMLAttributes,
+  type TextareaHTMLAttributes,
 } from "react";
 import { cn } from "@/components/ui/styles";
 
@@ -13,14 +14,14 @@ export function FieldLabel({
   return <label className={cn("ui-field-label", className)} {...props} />;
 }
 
-export function Input({
+export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & {
+  state?: "default" | "error" | "success";
+}>(function Input({
   className,
   state,
   "aria-invalid": ariaInvalid,
   ...props
-}: InputHTMLAttributes<HTMLInputElement> & {
-  state?: "default" | "error" | "success";
-}) {
+}, ref) {
   return (
     <input
       className={cn(
@@ -28,11 +29,12 @@ export function Input({
         state && state !== "default" && `ui-field-control--${state}`,
         className,
       )}
+      ref={ref}
       {...props}
       aria-invalid={state === "error" || ariaInvalid || undefined}
     />
   );
-}
+});
 
 export function Textarea({
   className,
