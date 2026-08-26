@@ -23,6 +23,39 @@
 # misc
 .DS_Store
 *.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.der
+*.cer
+*.crt
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
+
+# local secrets and credentials
+secrets/
+credentials/
+.netrc
+.git-credentials
+.pypirc
+.npmrc.local
+*.secret.local
+*.secrets.local
+*.credentials.local
+
+# local caches and temporary files
+/.cache/
+/.tmp/
+/tmp/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
 
 # debug
 npm-debug.log*
