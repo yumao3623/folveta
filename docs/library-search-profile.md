@@ -9,9 +9,11 @@ Product-3C turns the remaining private Workspace destinations into real features
 
 ## Migration status
 
-The workspace has no Supabase CLI on PATH, `supabase/config.toml`, linked project state, database URL, or migration workflow. Only application URL/keys are configured. Migration `202608260002_product_3b_guide_management.sql` therefore remains unapplied in dev.
+The official Supabase CLI is available through `npx`, and the configured dev project is linked in ignored local CLI state. The remote schema was inspected before repairing history for the three migrations already present. No migration SQL was executed through the service-role client or dashboard editor.
 
-Product-3C adds `202608260003_product_3c_library_search_profile.sql` for Library access indexes, three GIN FTS indexes, and the authenticated `search_owned_knowledge` function. It is also unapplied. Neither migration was executed through an ad hoc service-role or SQL path because that would create untracked database state. Apply both in order through the formal migration channel before migration-backed E2E or release.
+On 2026-08-26 the CLI dry-run and push applied, in order, `202608260002_product_3b_guide_management.sql`, `202608260003_product_3c_library_search_profile.sql`, `202608260004_product_3_gate_hardening.sql`, and `202608260005_product_3c_source_filename_search.sql`. The final local/remote migration list matches through `202608260005`.
+
+The deployed schema contains all Product-3B/Library indexes and three GIN FTS indexes. `search_owned_knowledge` is `stable`, `security invoker`, has an empty `search_path`, and grants execute only to `authenticated`. Migration `004` also removes the Supabase-default anonymous execute grant from the claim RPC. Migration `005` makes filename punctuation and extensions word boundaries in both the Source GIN expression and RPC, so ordinary searches such as `Glial Atlas` match `Glial Atlas.pdf` consistently.
 
 ## Library
 
@@ -28,7 +30,7 @@ Library is the inventory of uploaded Sources. My Guides remains the Guide artifa
 
 Search accepts a trimmed 2-100 character query, defaults to 12 results, and caps pages at 24. The Server Component and `GET /api/search` share the same validator and DAL.
 
-The authenticated Supabase server client invokes a `security invoker` PostgreSQL function. The function requires `auth.uid()`, is executable only by `authenticated`, and relies on owner RLS plus explicit non-archived/non-deleted predicates. Results are ranked and paginated in PostgreSQL; the browser never downloads an account corpus for filtering.
+The authenticated Supabase server client invokes a `security invoker` PostgreSQL function. The function requires `auth.uid()`, is executable only by `authenticated`, and relies on owner RLS plus explicit non-archived/non-deleted predicates. Results are ranked and paginated in PostgreSQL; the browser never downloads an account corpus for filtering. A dev `EXPLAIN` for normalized Source filename search used `Bitmap Index Scan on sources_private_search_idx`, confirming the expected GIN access path rather than an obvious full-table scan.
 
 The first search scope is:
 
@@ -55,10 +57,12 @@ Profile uses Supabase Auth as the account source and adds no profile table. It s
 
 ## Account deletion
 
-Delete Account is deferred. A correct implementation must stage every owned aggregate, remove private Storage objects first, cascade Postgres children including spans/Quick Checks/results, preserve observable retry/retention behavior, then delete the Auth user. Payment will add billing/customer coordination. Deleting only `auth.users` is explicitly not a complete account deletion flow.
+Delete Account is deliberately absent and deferred as a mandatory Payment/Production prerequisite. A correct implementation must stop new writes, stage every owned aggregate, remove private Storage objects first, cascade Postgres children including spans/Quick Checks/results, preserve observable retry/retention behavior, then delete the Auth user. Payment must add billing cancellation/retained-record coordination before Auth deletion. Deleting only `auth.users` is explicitly not a complete account deletion flow. The public Privacy page states that no account-deletion request channel currently exists.
 
 ## Verification boundary
 
-Automated tests cover validators, pagination limits, Source fields, archived/deleted relationships, owner query contracts, three search result types and targets, FTS/RLS/index contracts, empty/invalid/no-result states, Profile fields/count isolation, navigation, API anonymous denial, and private SEO.
+Automated tests cover validators, pagination limits, Source fields, single/object PostgREST relationship mapping, archived/deleted relationships, owner query contracts, three search result types and targets, filename normalization, FTS/RLS/index contracts, empty/invalid/no-result states, Profile fields/count isolation, navigation, API anonymous denial, and private SEO.
 
-Real dev Product-3C two-account E2E is not passed while migrations are unapplied. The required follow-up must validate Account A Library/filter/search/profile/navigation, Account B isolation across page/API/RLS/URL guessing, deleted exclusion, sign-out isolation, and cleanup after applying both pending migrations.
+Real dev Product-3C two-account E2E passed after the migrations were applied. Account A verified My Guides/Recent, Library pagination and PDF/PPTX filters, all real Source fields, archived relationships, Guide title/Topic/content/filename/span FTS, case/special-character/no-result/invalid-query/pagination behavior, rename/archive/delete semantics, Profile counts, Quick Check, Results, sign out, and relogin persistence. Account B was denied Account A data across My Guides, Library, Search, direct Guide URL, application APIs, authenticated Supabase reads, spans, metadata, and Search RPC; anonymous direct reads/RPC also failed closed.
+
+Desktop and 390px browser QA found no horizontal overflow, no private metadata exposure, and no console warnings/errors. The mobile Workspace navigation uses a stable four-column layout so all destinations remain visible. The E2E used deterministic database fixtures and did not call the model pipeline; all four aggregates and both temporary Auth users were cleaned. The `portdan.com` Cloudflare 502 means real AI full-chain E2E remains a Production Readiness item, not a Product-3C pass claim.

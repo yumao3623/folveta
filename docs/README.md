@@ -34,6 +34,12 @@ If current code contradicts a document's claim that something is implemented, th
 | `current-state-audit.md` | Dated audit, hygiene classification, and approved cleanup execution record |
 | `production-seo-checklist.md` | Operational pre-launch/launch/post-launch checklist |
 
+## Supabase migration workflow
+
+Dev schema changes are applied only through the official Supabase CLI and the ordered files in `supabase/migrations/`. The current dev project is linked in local ignored CLI state; a new workstation must run `npx --yes supabase@latest login` and `npx --yes supabase@latest link --project-ref <dev-project-ref>` locally without sharing credentials in chat. Review with `npx --yes supabase@latest db push --dry-run`, apply with `npx --yes supabase@latest db push`, and confirm local/remote parity with `npx --yes supabase@latest migration list`.
+
+Never execute repository migrations ad hoc through the service-role client or dashboard SQL editor. If history or schema drifts, inspect both first and repair the repository/official migration history rather than creating untracked remote state.
+
 ## Archived historical documents
 
 | Document | Status |

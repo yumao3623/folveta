@@ -34,7 +34,7 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-2xl font-semibold text-stone-950">Retention status</h2>
               <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-5 leading-7 text-amber-950">
-                Anonymous access expires after 7 days by default. Account-owned study data does not use that anonymous expiry and remains until deletion. The repository includes a protected cleanup endpoint that removes private files before database records, but deployment scheduling and production deletion behavior are not yet verified. Until they are, do not upload sensitive personal information.
+                Anonymous access expires after 7 days by default. Account-owned study data does not use that anonymous expiry. Deleting a Guide makes its aggregate unavailable immediately and marks it eligible for permanent cleanup after 30 days; it does not prove that physical deletion has already occurred. The repository includes a protected cleanup endpoint that removes private files before database records, but deployment scheduling, retries, and production deletion behavior are not yet verified. Full account deletion and a privacy-request channel are not currently available. Until those operations are deployed and verified, do not upload sensitive personal information.
               </div>
             </section>
             <section>

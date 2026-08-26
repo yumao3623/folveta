@@ -45,8 +45,19 @@ Decision date: 2026-08-26
 - Profile is an account page backed by Supabase Auth and owner-scoped counts. It shows only email, account creation date, Guide count, Source count, and sign-out. No profile table, social fields, or invented plan state is added.
 - `/account` remains a compatibility redirect to `/profile`. My Guides, Library, Search, and Profile share a real responsive Workspace navigation.
 - Account deletion is intentionally not implemented. A complete design must stage owned aggregates, remove private Storage first, handle spans/Quick Checks/results and retention observably, then delete the Auth user, and later coordinate billing state. This lifecycle decision is required before Payment/Production completion.
-- `202608260003_product_3c_library_search_profile.sql` is the formal Product-3C migration. It and the earlier Product-3B migration remain unapplied in dev while this workspace lacks a linked Supabase CLI or database connection; migration-dependent E2E is not considered passed.
+- `202608260003_product_3c_library_search_profile.sql` is the formal Product-3C migration. It and the earlier Product-3B migration were applied to dev in order through the official Supabase CLI during the Product-3 Gate, followed by forward-only security and filename-search repairs `202608260004` and `202608260005`.
 - The detailed contract is in `docs/library-search-profile.md`.
+
+### Product-3 Phase 2 Gate decision
+
+Decision date: 2026-08-26
+
+- The official Supabase CLI migration channel is the only approved dev DDL path. Existing remote schema was verified before repairing historical records; local and remote migration history now match through `202608260005`.
+- Search remains PostgreSQL FTS, not semantic/AI search. The deployed RPC is `security invoker`, authenticated-only, owner/RLS scoped, excludes archived/deleted aggregates, and uses punctuation-normalized Source filename indexing.
+- The Product-3 deterministic two-account dev Gate passed My Guides, Library, Search, Profile, Guide lifecycle, Quick Check/Results regression, page/API/direct-client/RPC isolation, sign-out, relogin, desktop/390px, noindex, and console checks. Test data and Auth users were removed.
+- Sign out and Auth expiry revoke browser access but do not delete owned data. Guide delete is immediate access revocation plus 30-day purge eligibility; it is not a promise of automatic physical deletion because production scheduling/retry monitoring is not deployed.
+- No Delete Account UI or request endpoint may appear before a complete Storage-first deletion orchestrator exists. That future flow must stop writes, coordinate billing cancellation, remove Storage, cascade database children, handle retries/audit needs, and delete the Auth user last.
+- With these current boundaries documented truthfully, Product-3/Phase 2 passes. Full account deletion/recovery, deployed retention scheduling, Payment, production rollout, and real AI full-chain verification remain later gates.
 
 ### Product identity and category ownership
 

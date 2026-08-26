@@ -6,7 +6,7 @@ import { buttonClassName, cn } from "@/components/ui/styles";
 type WorkspaceRoute = "guides" | "library" | "search" | "profile";
 
 const navigation = [
-  { id: "guides", href: "/my-guides", label: "My Guides", icon: BookOpen },
+  { id: "guides", href: "/my-guides", label: "My Guides", mobileLabel: "Guides", icon: BookOpen },
   { id: "library", href: "/library", label: "Library", icon: FolderOpen },
   { id: "search", href: "/search", label: "Search", icon: Search },
   { id: "profile", href: "/profile", label: "Profile", icon: UserRound },
@@ -15,7 +15,7 @@ const navigation = [
 function WorkspaceNavigation({ active, mobile = false }: { active: WorkspaceRoute; mobile?: boolean }) {
   return (
     <nav
-      className={mobile ? "flex min-w-max gap-1 px-5 pb-3" : "space-y-1.5 px-3"}
+      className={mobile ? "grid w-full grid-cols-4 gap-1 px-3 pb-3" : "space-y-1.5 px-3"}
       aria-label="Workspace"
     >
       {navigation.map((item) => {
@@ -27,13 +27,14 @@ function WorkspaceNavigation({ active, mobile = false }: { active: WorkspaceRout
             aria-current={active === item.id ? "page" : undefined}
             className={cn(
               "flex h-11 items-center gap-3 rounded-lg px-3 text-[14px] font-medium transition-colors",
+              mobile && "justify-center gap-1.5 px-1.5 text-[13px]",
               active === item.id
                 ? "bg-[var(--primary-soft)] text-[var(--primary-hover)]"
                 : "text-[var(--muted)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]",
             )}
           >
             <Icon className="h-[17px] w-[17px] shrink-0" strokeWidth={1.8} />
-            {item.label}
+            {mobile && "mobileLabel" in item ? item.mobileLabel : item.label}
           </Link>
         );
       })}
@@ -65,7 +66,7 @@ export function WorkspaceShell({ active, children }: { active: WorkspaceRoute; c
               <Plus className="h-4 w-4" /> New Guide
             </Link>
           </div>
-          <div className="overflow-x-auto"><WorkspaceNavigation active={active} mobile /></div>
+          <WorkspaceNavigation active={active} mobile />
         </header>
         <main className="px-5 py-8 sm:px-8 sm:py-10 lg:px-12">{children}</main>
       </div>

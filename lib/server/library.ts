@@ -9,7 +9,10 @@ type GuideRow = Database["public"]["Tables"]["study_guides"]["Row"];
 
 export type LibraryQueryRow = Pick<SourceRow, "id" | "display_name" | "kind" | "status" | "unit_count" | "readable_unit_count" | "created_at"> & {
   preparation_sessions: Pick<SessionRow, "id" | "archived_at" | "deleted_at"> & {
-    study_guides: Array<Pick<GuideRow, "id" | "title" | "archived_at" | "deleted_at">>;
+    study_guides:
+      | Pick<GuideRow, "id" | "title" | "archived_at" | "deleted_at">
+      | Array<Pick<GuideRow, "id" | "title" | "archived_at" | "deleted_at">>
+      | null;
   };
 };
 
@@ -34,7 +37,9 @@ export type LibraryListResult = {
 };
 
 export function toLibraryItem(row: LibraryQueryRow): LibraryItem {
-  const guide = row.preparation_sessions.study_guides.find((candidate) => !candidate.deleted_at) ?? null;
+  const relationship = row.preparation_sessions.study_guides;
+  const guides = Array.isArray(relationship) ? relationship : relationship ? [relationship] : [];
+  const guide = guides.find((candidate) => !candidate.deleted_at) ?? null;
   return {
     id: row.id,
     filename: row.display_name,

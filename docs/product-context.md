@@ -42,24 +42,25 @@ The following exists in the current repository and passed build/typecheck/lint/t
 - Private PostgreSQL full-text knowledge Search across active Guide titles/topics/content and Source filenames/spans, with Guide/Topic/Source result types and bounded pagination from Product-3C.
 - A real Profile route with Supabase Auth email/creation date, owner-scoped Guide/Source totals, sign-out, and responsive Workspace navigation from Product-3C.
 - About, Privacy, Terms, canonical metadata, social images, JSON-LD, robots, sitemap, and explicit study-route noindex rules.
-- Synthetic demo Guide and Quick Check plus 66 automated tests across schema, parser, Quick Check, Auth/persistence, Guide management, Library/Search/Profile, SEO behavior, and UI foundation contracts.
+- Synthetic demo Guide and Quick Check plus 69 automated tests across schema, parser, Quick Check, Auth/persistence, Guide management, Library/Search/Profile, SEO behavior, and UI foundation contracts.
 
 Implemented UI milestones are UI-1 Study Guide Workspace, UI-2 Landing / Upload, and UI-4 Quick Check / Results. They are implementation baselines, not final visual sign-off.
 
 ## Actual limitations and missing launch capabilities
 
 - The Product-3A Auth/ownership migration is applied in the configured Supabase dev project and the scoped two-user Auth/claim/RLS/persistence flow is verified. Real AI Guide generation in that E2E remains unverified because the configured external model gateway returned retryable Cloudflare 502 responses.
-- Product-3B Guide management passed a separate real dev Supabase two-account fixture E2E for owner lists, recent order, pagination, reopen, rename, archive/restore, soft delete, Quick Check/Results continuity, cross-owner denial, sign-out, and relogin persistence; fixtures were cleaned. Its index-only migration is repository-complete but cannot be applied from the current unlinked, no-database-connection workspace.
-- Product-3C is repository-complete, but its Library/search indexes and authenticated FTS RPC migration are also unapplied for the same migration-channel reason. Product-3C real dev two-account and RLS E2E is therefore not marked passed.
+- Product-3B Guide management passed a real dev Supabase two-account fixture E2E for owner lists, recent order, pagination, reopen, rename, archive/restore, soft delete, Quick Check/Results continuity, cross-owner denial, sign-out, and relogin persistence. Its migration is formally applied in dev.
+- The official Supabase CLI channel is linked to the dev project. Local and remote history match through `202608260005`; Product-3B/Product-3C indexes, GIN search indexes, authenticated Search RPC, and claim-RPC execute grants were verified against the deployed schema.
+- Product-3C passed a real dev two-account/RLS/browser Gate covering Library, Search, Profile, workspace navigation, cross-owner page/API/direct-client denial, signed-out isolation, relogin persistence, query behavior, and regression paths. All temporary aggregates and Auth users were cleaned.
 - A single `sgm_session` cookie represents one anonymous session token; creating another session replaces browser access to the prior session.
-- Account deletion orchestration remains unresolved; deleting only `auth.users` would bypass required Storage-first cleanup and is not treated as a complete account lifecycle.
+- Account deletion is deliberately unavailable rather than partially implemented. The required Storage-first, child-record/Auth cleanup, retry, retention, request-channel, and future billing-cancellation orchestration is deferred as a mandatory Payment/Production prerequisite; deleting only `auth.users` is not accepted.
 - Payment, Pricing, SEO v2, production deployment, and public indexing remain unimplemented.
 - No Payment/Billing, pricing model, entitlement ledger, checkout, subscription status, billing portal, webhooks, or usage enforcement.
 - A protected Storage-first retention endpoint exists, but no deployment scheduler has been configured or verified yet.
 - No application rate limiting, abuse controls, analytics decision, real support/privacy-request channel, or production monitoring.
 - No pasted-text input, OCR, handwriting, image/chart/diagram interpretation, audio/video/URL ingestion, or open-web research.
 - No generation lease/checkpoint resume implementation despite those items appearing in the historical technical plan.
-- No full automated browser E2E suite, automated migration/RLS integration suite, webhook tests, billing tests, or production Core Web Vitals data. Product-3A has a completed manual dev Auth/RLS E2E; Product-3B adds focused management contracts and a scoped dev two-account verification.
+- No reusable automated browser suite, automated migration/RLS CI suite, webhook tests, billing tests, or production Core Web Vitals data. Product-3 now has a completed scoped dev two-account migration/RLS/browser Gate, backed by a deterministic fixture script; the external AI full chain remains outside that fixture.
 - `NEXT_PUBLIC_SITE_URL` is not currently configured in `.env.local`; local metadata falls back to `http://localhost:3000`.
 - Full SEO v2 intent/page-ownership and pre-launch indexing implementation remain pending, although the homepage title, visible capability label, and first-viewport positioning now use `Study Guide Maker` rather than `AI Study Guide Maker`.
 - Current robots/sitemap/public metadata do not implement a controlled pre-launch indexing mode.
@@ -91,7 +92,7 @@ Remaining UI limitations:
 - The transformation preview uses accurate synthetic demo content, not a captured real-user Guide or external illustration asset.
 - Process/relationship data remains a list of grounded claims. The UI does not invent nodes, edges, or ordered steps; Study Path visualizes only the real topic priority order.
 - Long Guide density still depends on generated topic count and claim length, and there is no automated browser visual-regression suite yet.
-- Product-3C Workspace navigation is implemented across My Guides, Library, Search, and Profile; full account deletion/recovery hardening and migration-backed browser E2E remain open.
+- Product-3C Workspace navigation is implemented across My Guides, Library, Search, and Profile and passed desktop/390px browser QA. Full account deletion/recovery orchestration remains a Payment/Production prerequisite.
 
 UI/UX Polish v2 must establish Folveta-owned tokens and reusable primitives before Product-3 pages multiply the current inconsistencies.
 

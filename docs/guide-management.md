@@ -29,7 +29,7 @@ The final ID tie-breaker makes ordering deterministic. Reopen updates `last_acce
 
 The list API defaults to 12 rows and caps client-selected limits at 24. It fetches one look-ahead row to expose `hasNextPage` without loading a user's full history. Recent Guides reuses the same active query with a limit of four. The PostgREST query starts from `study_guides`, inner-joins the owner session, filters both lifecycle records, and embeds `sources(count)` in the same database request; it does not issue one source query per Guide.
 
-Repository migration `202608260002_product_3b_guide_management.sql` adds partial owner/lifecycle/recent indexes, a source session index for counts, and the due-purge index. The list still filters owner ID explicitly even though authenticated RLS also protects direct reads. The configured environment exposes no database connection, Supabase CLI, or linked project configuration, so this index-only migration has not been applied or query-planned in dev yet; it must be applied through the normal migration channel before release.
+Repository migration `202608260002_product_3b_guide_management.sql` adds partial owner/lifecycle/recent indexes, a source session index for counts, and the due-purge index. The list still filters owner ID explicitly even though authenticated RLS also protects direct reads. On 2026-08-26 the migration was applied to the configured dev project through the official Supabase CLI after the pre-existing schema and migration history were reconciled; local and remote history now match.
 
 ## Rename
 
@@ -47,6 +47,8 @@ Delete is soft deletion, not immediate physical purge. It sets `deleted_at` on t
 
 The existing protected retention endpoint remains responsible for deleting private Storage objects first and then deleting the aggregate so database cascades remove children. Deployment scheduling for that endpoint remains unconfigured and is not claimed as production-ready.
 
+The 30-day timestamp means eligible for purge, not a guarantee that automatic physical deletion is currently running. A Storage failure stops before database deletion, leaving the aggregate due for retry. Production readiness still requires a scheduler, retry/alerting evidence, and verification that a Storage-success/database-failure retry completes safely.
+
 ## Privacy and SEO
 
 `/my-guides` exports `noindex,nofollow`, redirects anonymous users before querying, is absent from the sitemap, and emits no user title or source content in public metadata. Individual Study routes retain their existing `noindex,nofollow` layout. The homepage remains the public Study Guide Maker owner even though it conditionally renders a signed-in user's Recent Guides.
@@ -56,6 +58,8 @@ The existing protected retention endpoint remains responsible for deleting priva
 Automated Product-3B coverage includes owner query constraints, second-user ownership rejection, recent ordering, pagination/limits, source-count strategy, reopen, valid/invalid rename, archive/restore, default archive exclusion, soft delete, deleted access denial, mutation authorization, anonymous list denial, private-route SEO, and existing Study Guide/Quick Check regression coverage.
 
 Scoped real dev Supabase E2E passed with two temporary confirmed Auth users and five deterministic Guide/source fixtures. It verified Account A owner-only multi-Guide listing, recent order, pagination, reopen, rename, archive/restore, soft delete, deleted reopen denial, Quick Check and Results continuity, sign-out isolation, and persistence after a new login. Account B saw only its own Guide and received owner-safe denial for Account A read, rename, archive, and delete attempts. The fixtures were database/schema fixtures, not AI generation, and all five aggregates plus both Auth users were removed after the run.
+
+The Product-3C Gate repeated the relevant My Guides/Recent/reopen/rename/archive/delete and Quick Check/Results paths after all Product-3 migrations were deployed. It also verified that deleted aggregates disappear from Library/Search and that signed-out and cross-account access fail closed. Gate fixtures and users were cleaned.
 
 Browser QA passed at 1440px and 390px with no horizontal overflow or incoherent overlap, one semantic H1, visible real empty states, keyboard focus entry/wrapping/Escape/restore in management dialogs, explicit destructive confirmation, `noindex,nofollow`, and no browser console warnings or errors. QA screenshots were stored only as temporary local artifacts rather than committed product assets.
 

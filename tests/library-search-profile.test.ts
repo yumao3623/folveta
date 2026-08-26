@@ -12,6 +12,7 @@ const libraryDal = readFileSync("lib/server/library.ts", "utf8");
 const searchDal = readFileSync("lib/server/knowledge-search.ts", "utf8");
 const profileDal = readFileSync("lib/server/profile.ts", "utf8");
 const migration = readFileSync("supabase/migrations/202608260003_product_3c_library_search_profile.sql", "utf8");
+const filenameSearchMigration = readFileSync("supabase/migrations/202608260005_product_3c_source_filename_search.sql", "utf8");
 const libraryPage = readFileSync("app/library/page.tsx", "utf8");
 const searchPage = readFileSync("app/search/page.tsx", "utf8");
 const profilePage = readFileSync("app/profile/page.tsx", "utf8");
@@ -54,6 +55,18 @@ describe("Library", () => {
     }));
     expect(item).toEqual(expect.objectContaining({ filename: "Lecture 4.pdf", kind: "pdf", unitCount: 12, readableUnitCount: 11 }));
     expect(item.relatedGuide).toEqual({ id: "guide-a", title: "Cell Biology", archived: true });
+  });
+
+  it("accepts the single Guide relationship shape returned by remote PostgREST", () => {
+    const item = toLibraryItem(libraryRow({
+      preparation_sessions: {
+        id: "session-a",
+        archived_at: null,
+        deleted_at: null,
+        study_guides: { id: "guide-a", title: "Cell Biology", archived_at: null, deleted_at: null },
+      },
+    }));
+    expect(item.relatedGuide).toEqual({ id: "guide-a", title: "Cell Biology", archived: false });
   });
 
   it("does not expose a deleted related Guide", () => {
@@ -106,6 +119,14 @@ describe("private knowledge search", () => {
     expect(migration).toContain("limit least(greatest(result_limit, 1), 24)");
   });
 
+  it("normalizes filename punctuation consistently in the FTS index and RPC", () => {
+    expect(filenameSearchMigration).toContain("regexp_replace(display_name, '[^[:alnum:]]+', ' ', 'g')");
+    expect(filenameSearchMigration.match(/regexp_replace\(source\.display_name, '\[\^\[:alnum:\]\]\+', ' ', 'g'\)/g)).toHaveLength(3);
+    expect(filenameSearchMigration).toContain("using gin");
+    expect(filenameSearchMigration).toContain("security invoker");
+    expect(filenameSearchMigration).toContain("from anon");
+  });
+
   it("renders empty query, invalid query, no-results, and result states", () => {
     expect(searchPage).toContain("Search your workspace");
     expect(searchPage).toContain("validationMessage");
@@ -126,6 +147,8 @@ describe("Profile and workspace shell", () => {
 
   it("exposes only implemented workspace destinations", () => {
     for (const path of ["/my-guides", "/library", "/search", "/profile"]) expect(workspaceShell).toContain(`href: "${path}"`);
+    expect(workspaceShell).toContain("grid-cols-4");
+    expect(workspaceShell).toContain('mobileLabel: "Guides"');
     expect(workspaceShell).not.toContain("coming soon");
     expect(workspaceShell).not.toContain("disabled");
   });

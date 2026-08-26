@@ -114,7 +114,7 @@ All tables enable RLS. Authenticated select policies compare the aggregate owner
 
 The private Storage bucket allows PDF/PPTX-related MIME values, a 25 MB object limit, and signed upload. No current route issues a user-facing signed source download/view URL. Product-3B Guide lists use bounded page/limit input, deterministic last-access ordering, an embedded source count, and partial indexes for active/archive/recent and cleanup paths. Product-3C Library starts from `sources`, joins the owner aggregate and related Guide in one request, and uses look-ahead pagination without N+1 reads.
 
-Product-3C Search calls `search_owned_knowledge` through the authenticated Supabase server client. The `security invoker` function requires `auth.uid()`, relies on existing owner RLS, excludes archived/deleted aggregates, unions Guide title, structured Topic, Source filename, and Source span matches, and caps page size at 24. GIN FTS indexes support Guide JSON/title, Source filename, and span text. No search content is loaded wholesale into the browser.
+Product-3C Search calls `search_owned_knowledge` through the authenticated Supabase server client. The `security invoker` function requires `auth.uid()`, relies on existing owner RLS, excludes archived/deleted aggregates, unions Guide title, structured Topic, normalized Source filename, and Source span matches, and caps page size at 24. GIN FTS indexes support Guide JSON/title, punctuation-normalized Source filename, and span text. A dev query plan used the Source filename GIN index. No search content is loaded wholesale into the browser.
 
 ## 5. Identity and ownership reality
 
@@ -133,7 +133,7 @@ Product-3A adds the durable path:
 - Account-owned sessions have no anonymous expiry and can be reopened across browser sessions through owner authorization.
 - One unauthenticated browser cookie still represents only its current anonymous session. Product-3B provides durable multi-Guide listing only for authenticated owners.
 
-The schema and threat model are detailed in `docs/auth-and-persistence.md`. The migration is applied in the configured dev project, and the scoped two-user Auth/claim/RLS/persistence E2E passed on 2026-08-26. Real AI Guide generation in that run did not pass because the configured external model gateway returned retryable Cloudflare 502 responses.
+The schema and threat model are detailed in `docs/auth-and-persistence.md`. The official Supabase CLI channel is linked to dev and local/remote migration history matches through `202608260005`. Product-3B/Product-3C indexes, three GIN indexes, RPC security modes/grants, and RLS state were verified against the deployed schema. Scoped two-user Product-3 Auth/claim/management/Library/Search/Profile/RLS/browser E2E passed on 2026-08-26. Real AI Guide generation remains unverified because the configured external model gateway returned retryable Cloudflare 502 responses.
 
 ## 6. Generation and assessment contracts
 
@@ -172,7 +172,7 @@ Current gaps:
 - No pre-launch indexing flag.
 - Auth redirect uses `NEXT_PUBLIC_SITE_URL` with the existing localhost fallback; the Supabase project must allow the matching callback URL.
 - No payment provider/customer/webhook/price configuration.
-- No cleanup scheduler secret/endpoint or rate-limit configuration.
+- No deployed cleanup scheduler or verified production retention secret; no rate-limit configuration.
 - `.env.local` did not contain `NEXT_PUBLIC_SITE_URL` at audit time; no secret values were inspected or recorded.
 
 ## 8. Missing reliability, security, and privacy capabilities
@@ -181,10 +181,10 @@ Current gaps:
 - Application rate limits, abuse detection, and per-account/entitlement quotas.
 - Explicit origin/CSRF policy for future authenticated and billing mutations.
 - Durable generation concurrency lease/idempotency and resume strategy.
-- Password recovery, full account deletion orchestration, and production support/privacy request handling.
+- Password recovery, full Storage-first account deletion orchestration, and production support/privacy request handling. No Delete Account UI or request endpoint is exposed before that workflow exists.
 - Billing signature verification, event idempotency/reconciliation, and entitlement enforcement.
 - Production observability, structured redaction rules, alerting, support/privacy channel, and incident runbook.
-- Automated migration/RLS integration and full release browser E2E beyond the completed scoped Product-3A and Product-3B dev checks. Product-3C migration-backed E2E is pending because migrations `202608260002` and `202608260003` are not applied in dev.
+- Reusable automated migration/RLS CI and full release browser E2E beyond the completed scoped Product-3 dev Gate. The deterministic dev Gate is not a substitute for production-like scheduling, AI full-chain, billing, or cross-browser verification.
 - Separate production/preview service isolation proof.
 
 ## 9. Product-3 target architecture decisions
