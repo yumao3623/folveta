@@ -57,7 +57,7 @@ Decision date: 2026-08-26
 - The Product-3 deterministic two-account dev Gate passed My Guides, Library, Search, Profile, Guide lifecycle, Quick Check/Results regression, page/API/direct-client/RPC isolation, sign-out, relogin, desktop/390px, noindex, and console checks. Test data and Auth users were removed.
 - Sign out and Auth expiry revoke browser access but do not delete owned data. Guide delete is immediate access revocation plus 30-day purge eligibility; it is not a promise of automatic physical deletion because production scheduling/retry monitoring is not deployed.
 - No Delete Account UI or request endpoint may appear before a complete Storage-first deletion orchestrator exists. That future flow must stop writes, coordinate billing cancellation, remove Storage, cascade database children, handle retries/audit needs, and delete the Auth user last.
-- With these current boundaries documented truthfully, Product-3/Phase 2 passes. Full account deletion/recovery, deployed retention scheduling, Payment, production rollout, and real AI full-chain verification remain later gates.
+- With these current boundaries documented truthfully, Product-3/Phase 2 passes. The scoped Production pre-launch Gate also passed on `main@2dcc4d9`, including Auth/PKCE, anonymous claim, workspace regression, and real AI full-chain. Full account deletion/recovery, deployed retention scheduling and retry monitoring, rate limiting, production monitoring, support/privacy channel, Payment, SEO v2, and indexing cutover remain later gates.
 
 ### Product identity and category ownership
 

@@ -1,10 +1,14 @@
 # Folveta Production Pre-launch, Launch, and SEO Checklist
 
-Status: **Active operational checklist; not yet passed**  
+Status: **Active operational checklist; scoped Production pre-launch Gate passed; public launch gates remain open**
 Canonical target: `https://folveta.com`  
 Architecture: `docs/seo-architecture.md`
 
 Do not mark local assumptions as production verification. Protected deployment is allowed before this checklist is complete; public indexing is not.
+
+## Scoped Production pre-launch Gate (2026-08-27)
+
+The scoped pre-launch gate passed on GitHub `main@2dcc4d9`, deployed Ready in Vercel Production. Live evidence covers `folveta.com` domain/TLS/redirects, anonymous session persistence and cookie behavior, same-browser Auth email confirmation/PKCE (`/signup 200`, `/verify 303`, `/token 200`, `/user 200`), anonymous claim, sign-in/refresh/sign-out/relogin, My Guides, Recent Guides, Library, Search, Profile, Guide reopen, Quick Check, persisted Results, real AI Guide generation, and public/private noindex safety. The empty pre-launch sitemap and robots behavior remain intentional. This does not close the separate public launch, billing, deletion, retention, monitoring, rate-limit, support, SEO v2, or indexing cutover gates below.
 
 ## A. Before protected production testing
 

@@ -1,6 +1,6 @@
 # Folveta Production Deployment
 
-Status: **Production pre-launch infrastructure live; Auth callback gate remains open; not a public launch record**
+Status: **Production pre-launch infrastructure live; scoped Production Gate passed; not a public launch record**
 Last updated: 2026-08-27
 Canonical target: `https://folveta.com`
 
@@ -9,7 +9,7 @@ Canonical target: `https://folveta.com`
 | Item | Configuration | Current state |
 | --- | --- | --- |
 | GitHub repository | `https://github.com/yumao3623/folveta` | Vercel GitHub App access confirmed |
-| Production branch | `main` | GitHub-triggered Production deployment at `db758664c4cfda3c126a89bd9897dce634a8ddc4` |
+| Production branch | `main` | GitHub-triggered Production deployment at `2dcc4d969baa03d4ef6e1deefb9d417c74b1eb1d` (`Ready`) |
 | Vercel team/project | `creen ai` / `folveta` | Live and connected to `yumao3623/folveta` |
 | Framework | Next.js 16.3.2 App Router | Vercel native Next.js preset |
 | Root directory | `./` | Confirmed |
@@ -79,7 +79,7 @@ The current pre-launch reuses the existing Supabase project named `study-guide-m
 
 Email sign-up uses PKCE `emailRedirectTo` built from `NEXT_PUBLIC_SITE_URL`. Sign-in redirects only to validated same-origin paths. Sign-out clears the Supabase session and returns to `/`.
 
-Production sign-up sent a real confirmation email and the account became confirmed; password sign-in, refresh, sign-out, and sign-in again passed. The confirmation link was opened on another device and Folveta received no usable callback `code`, displaying an invalid/expired error before password sign-in succeeded. The observed result does not distinguish between a cross-device PKCE limitation and the one-time link being consumed before the visible click, for example by mail-link scanning. The default Supabase email template uses `{{ .ConfirmationURL }}` and cannot be changed on the current default-mail setup without Custom SMTP. A fresh same-browser PKCE callback remains unverified and blocks the Production Pre-launch Gate from PASS.
+Production sign-up sent a real confirmation email and the account became confirmed; password sign-in, refresh, sign-out, and sign-in again passed. A fresh same-browser PKCE run produced `/signup 200`, `/verify 303`, `/token 200`, `/user 200`, returned to `https://folveta.com/profile`, and preserved the anonymous aggregate through claim. A separate cross-device attempt reached Folveta without a usable callback `code` and is retained as historical evidence only. The default Supabase email template uses `{{ .ConfirmationURL }}` and cannot be changed on the current default-mail setup without Custom SMTP.
 
 ## Cookies and HTTPS
 
@@ -100,7 +100,7 @@ Verified locally and in Production:
 - Homepage emits `noindex,nofollow` in the default pre-launch state.
 - Automated index-mode tests cover fail-closed Production, Preview, robots, sitemap, and permanent private-route policy.
 - Supabase Auth Site URL and exact production/localhost callbacks were configured in the dashboard.
-- Vercel Production is Ready from GitHub `main` commit `db758664c4cfda3c126a89bd9897dce634a8ddc4`; an empty optional `RETENTION_JOB_SECRET` is normalized to absent without accepting a short non-empty secret.
+- Vercel Production is Ready from GitHub `main` commit `2dcc4d969baa03d4ef6e1deefb9d417c74b1eb1d`; an empty optional `RETENTION_JOB_SECRET` is normalized to absent without accepting a short non-empty secret. The latest Production deployment is `folveta-c3nxpgivn-creen-ai.vercel.app` (Vercel ID `JE5XqsKHvQi3ikqEigfwEeNtnmW6`).
 - `folveta.com` returns `200` over HTTPS; HTTP and `www` redirect `308` to the preferred HTTPS apex.
 - Public `/`, `/about`, `/privacy`, and `/terms` return `200`, self-canonicalize to the Production origin, and emit `noindex,nofollow` while `PRELAUNCH=true`.
 - `robots.txt` returns `200` without advertising a sitemap; `sitemap.xml` returns `200` with an empty URL set.
@@ -111,7 +111,6 @@ Verified locally and in Production:
 
 Open or not live-verified:
 
-- Same-browser email-confirmation PKCE callback; the cross-device attempt reached Folveta without a usable callback `code`, but the available evidence does not isolate cross-device state from prior one-time-link consumption.
 - Raw Supabase Auth `Set-Cookie` attribute inspection; functional refresh, sign-out, isolation, and relogin passed without recording token values.
 - A reusable automated browser suite, full cross-browser/accessibility/performance audit, and comprehensive runtime-log/observability review.
 - Deployment protection, retention scheduling, monitoring, production deletion, account deletion, rate limits, Payment, SEO v2, and indexing cutover.
