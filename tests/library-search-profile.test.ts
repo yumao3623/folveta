@@ -140,6 +140,8 @@ describe("Profile and workspace shell", () => {
     expect(profileDal).toContain("Promise.all");
     expect(profileDal.match(/\.eq\("preparation_sessions.owner_user_id", userId\)/g)?.length).toBe(2);
     expect(profileDal.match(/\.is\("preparation_sessions.deleted_at", null\)/g)?.length).toBe(2);
+    expect(profileDal.match(/\.limit\(0\)/g)?.length).toBe(2);
+    expect(profileDal).not.toContain("head: true");
     expect(profilePage).toContain("user.created_at");
     expect(profilePage).toContain("user.email");
     expect(profilePage).toContain("action={signOut}");
