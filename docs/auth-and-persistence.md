@@ -1,7 +1,7 @@
 # Folveta Auth and Persistence
 
 Status: **Current Product-3 identity, ownership, and lifecycle architecture**
-Last updated: 2026-08-26
+Last updated: 2026-08-27
 
 ## Decision
 
@@ -63,6 +63,12 @@ Real Guide generation was attempted twice but the configured external model gate
 Product-3B added a second scoped two-account dev run on 2026-08-26. Deterministic schema fixtures verified owner-only list/recent data, stable-ID reopen, rename, archive/restore, soft delete, deleted denial, Quick Check/Results continuity, sign-out isolation, relogin persistence, and Account B denial for Account A reads and mutations. Its index migration is now applied, and all fixture aggregates and Auth users were removed.
 
 Product-3C keeps ownership on `auth.users.id` and adds no profile table. Library/Profile server DALs repeat explicit owner filters while direct authenticated reads remain protected by existing RLS. Search runs through the authenticated client under RLS rather than the service role. The Product-3C index/RPC migration, claim-grant hardening migration, and filename-tokenization repair are applied in dev. The final two-account Gate passed owner isolation across pages, APIs, direct authenticated/anonymous Supabase reads, Search RPC, URL guessing, signed-out routes, and relogin persistence. All Gate fixtures and users were cleaned.
+
+## Production pre-launch verification
+
+On 2026-08-27, Production created and persisted an anonymous session with the expected `sgm_session` attributes (`HttpOnly`, `Secure`, `SameSite=Lax`, path `/`, host-only), uploaded and parsed a synthetic PDF fixture through private Storage, generated a real source-grounded Guide, and generated/scored a five-question Quick Check. Email confirmation activated a real test account; password sign-in then atomically claimed the anonymous aggregate. My Guides, Library, Search, Profile, stable-ID reopen, source continuity, persisted Results, refresh, sign-out isolation, and relogin passed. The claimed account retained exactly one Guide and one Source, providing replay/idempotency evidence for this flow.
+
+The confirmation link was opened on a different device from the browser that initiated the PKCE sign-up. The account became confirmed, but Folveta received no usable callback `code` and showed an invalid/expired error. This evidence does not distinguish a cross-device PKCE limitation from the one-time link being consumed before the visible click, for example by mail-link scanning. The current Supabase default confirmation template uses `{{ .ConfirmationURL }}` and is not editable without Custom SMTP; a fresh same-browser PKCE callback remains unverified. The Production pre-launch Auth gate must not be marked PASS until that path is successfully exercised.
 
 ## Privacy and SEO
 

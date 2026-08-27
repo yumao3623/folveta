@@ -1,7 +1,7 @@
 # Folveta Production Deployment
 
-Status: **Production pre-launch setup in progress; not a public launch record**  
-Last updated: 2026-08-26  
+Status: **Production pre-launch infrastructure live; Auth callback gate remains open; not a public launch record**
+Last updated: 2026-08-27
 Canonical target: `https://folveta.com`
 
 ## Deployment identity
@@ -9,22 +9,22 @@ Canonical target: `https://folveta.com`
 | Item | Configuration | Current state |
 | --- | --- | --- |
 | GitHub repository | `https://github.com/yumao3623/folveta` | Vercel GitHub App access confirmed |
-| Production branch | `main` | Import target; feature branch is not merged or pushed yet |
-| Vercel team/project | `creen ai` / `folveta` | Import configuration staged; project is created by the first Deploy |
+| Production branch | `main` | GitHub-triggered Production deployment at `db758664c4cfda3c126a89bd9897dce634a8ddc4` |
+| Vercel team/project | `creen ai` / `folveta` | Live and connected to `yumao3623/folveta` |
 | Framework | Next.js 16.3.2 App Router | Vercel native Next.js preset |
 | Root directory | `./` | Confirmed |
 | Build/output/install | `npm run build`; Next.js default output; `npm install` | Vercel defaults, no override |
-| Runtime compatibility | Next.js requires Node.js 20.9+; Vercel supported Node runtime | Live build still required |
-| Production origin | `https://folveta.com` | Environment value staged; DNS/TLS not verified |
-| Preferred hostname | `folveta.com` | `www.folveta.com` must redirect directly to apex |
+| Runtime compatibility | Next.js requires Node.js 20.9+; Vercel supported Node runtime | Production build verified |
+| Production origin | `https://folveta.com` | Live with valid HTTPS |
+| Preferred hostname | `folveta.com` | `www.folveta.com` redirects `308` to apex |
 
-Do not run the first Vercel Deploy from the old `main`. The pre-launch code must be reviewed, committed, and explicitly approved for merge/push first.
+The pre-launch infrastructure and environment hotfix are on `main`. Later closeout changes still require an independent reviewed commit; do not perform a public indexing cutover from this task.
 
 ## Domain and DNS strategy
 
-Add both `folveta.com` and `www.folveta.com` to the single Vercel project. Make the apex the production primary domain and configure `www` to redirect to it. Use only the DNS records Vercel reports for the actual domain after it is attached. Inspect existing registrar records before changing anything, and never delete an uncertain mail, verification, or service record. Vercel handles HTTP to HTTPS after DNS validation and certificate issuance.
+Both `folveta.com` and `www.folveta.com` are attached to the single Vercel project. The apex is the production primary domain; `www` redirects directly to it. The verified public DNS values are `A folveta.com -> 216.198.79.1` and `CNAME www.folveta.com -> 83541033d72053fa.vercel-dns-017.com`. No unrelated DNS record was removed.
 
-DNS, SSL, apex reachability, the `www` redirect, and redirect-chain status are not yet verified. Do not submit a sitemap or request indexing during pre-launch.
+DNS, certificate issuance, apex reachability, HTTP-to-HTTPS, and `www`-to-apex `308` behavior passed live verification on 2026-08-27. Do not submit a sitemap or request indexing during pre-launch.
 
 ## Environment contract
 
@@ -79,9 +79,11 @@ The current pre-launch reuses the existing Supabase project named `study-guide-m
 
 Email sign-up uses PKCE `emailRedirectTo` built from `NEXT_PUBLIC_SITE_URL`. Sign-in redirects only to validated same-origin paths. Sign-out clears the Supabase session and returns to `/`.
 
+Production sign-up sent a real confirmation email and the account became confirmed; password sign-in, refresh, sign-out, and sign-in again passed. The confirmation link was opened on another device and Folveta received no usable callback `code`, displaying an invalid/expired error before password sign-in succeeded. The observed result does not distinguish between a cross-device PKCE limitation and the one-time link being consumed before the visible click, for example by mail-link scanning. The default Supabase email template uses `{{ .ConfirmationURL }}` and cannot be changed on the current default-mail setup without Custom SMTP. A fresh same-browser PKCE callback remains unverified and blocks the Production Pre-launch Gate from PASS.
+
 ## Cookies and HTTPS
 
-The anonymous `sgm_session` cookie is HttpOnly, SameSite=Lax, path `/`, host-only, and Secure when `NODE_ENV=production`. The Supabase SSR client owns Auth cookie creation/refresh, while `proxy.ts` refreshes valid sessions and clears stale Auth cookies. Live HTTPS QA must inspect the actual Set-Cookie attributes, login/logout, email confirmation, and anonymous-to-account claim behavior.
+The anonymous `sgm_session` cookie was live-verified as HttpOnly, SameSite=Lax, path `/`, host-only, and Secure. Its create request returned `201`, repeated owned status requests returned `200`, and no related browser console error occurred. The Supabase SSR client owns Auth cookie creation/refresh, while `proxy.ts` refreshes valid sessions and clears stale Auth cookies. Auth refresh, sign-out isolation, and relogin passed; raw Auth cookie values were not inspected or recorded.
 
 ## Brand icon assets
 
@@ -91,22 +93,29 @@ Browser favicon verification must use the rendered icon links and direct icon re
 
 ## Verification ledger
 
-Verified locally:
+Verified locally and in Production:
 
 - Git branch was created from clean `main` at `28babfab2ed1cab72844e6c6675ab98800e86b24`.
 - Next.js emits the new favicon and app-icon links.
 - Homepage emits `noindex,nofollow` in the default pre-launch state.
 - Automated index-mode tests cover fail-closed Production, Preview, robots, sitemap, and permanent private-route policy.
 - Supabase Auth Site URL and exact production/localhost callbacks were configured in the dashboard.
+- Vercel Production is Ready from GitHub `main` commit `db758664c4cfda3c126a89bd9897dce634a8ddc4`; an empty optional `RETENTION_JOB_SECRET` is normalized to absent without accepting a short non-empty secret.
+- `folveta.com` returns `200` over HTTPS; HTTP and `www` redirect `308` to the preferred HTTPS apex.
+- Public `/`, `/about`, `/privacy`, and `/terms` return `200`, self-canonicalize to the Production origin, and emit `noindex,nofollow` while `PRELAUNCH=true`.
+- `robots.txt` returns `200` without advertising a sitemap; `sitemap.xml` returns `200` with an empty URL set.
+- Favicon/app icon, fonts, CSS, desktop/mobile rendering, and public-page console checks passed.
+- Anonymous session create/persist, signed Storage upload, PDF parse, AI Guide generation/grounding, anonymous-to-account claim, Guide reopen, My Guides, Library, Search, Profile, Quick Check, persisted Results, Auth refresh, sign-out isolation, and relogin passed against Production test data.
+- The generated Production QA aggregate retained exactly one Guide and one Source after claim/relogin; the Quick Check result persisted at `5/5`.
+- Vercel Runtime Logs showed the exercised Production Guide/workspace routes with expected `200` responses and the reopen route with its expected `307`; the inspected rows contained no runtime error message.
 
-Staged but not live-verified:
+Open or not live-verified:
 
-- Vercel project creation and GitHub production deployment.
-- Production environment persistence after project creation.
-- Domain attachment, registrar DNS, certificate issuance, HTTP to HTTPS, and `www` to apex redirect.
-- Production canonical, OG, JSON-LD, robots, sitemap, favicon, fonts, CSS, console, and network behavior.
-- Auth sign-up/sign-in/sign-out, PKCE callback, anonymous claim, My Guides, Library, Search, Profile, mobile behavior, and cookie attributes on HTTPS.
+- Same-browser email-confirmation PKCE callback; the cross-device attempt reached Folveta without a usable callback `code`, but the available evidence does not isolate cross-device state from prior one-time-link consumption.
+- Raw Supabase Auth `Set-Cookie` attribute inspection; functional refresh, sign-out, isolation, and relogin passed without recording token values.
+- A reusable automated browser suite, full cross-browser/accessibility/performance audit, and comprehensive runtime-log/observability review.
 - Deployment protection, retention scheduling, monitoring, production deletion, account deletion, rate limits, Payment, SEO v2, and indexing cutover.
+- Preview remains intentionally unable to build against Production-only Supabase credentials; no Production secret should be added to Preview to clear that expected isolation failure.
 
 ## Rollback
 

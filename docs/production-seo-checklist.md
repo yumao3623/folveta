@@ -9,14 +9,14 @@ Do not mark local assumptions as production verification. Protected deployment i
 ## A. Before protected production testing
 
 - [x] Confirm `https://folveta.com` is the selected non-`www` canonical origin and document the intended `www` -> apex redirect.
-- [x] Stage `NEXT_PUBLIC_SITE_URL=https://folveta.com` in the Vercel Production environment; live output remains unverified.
+- [x] Set `NEXT_PUBLIC_SITE_URL=https://folveta.com` in Vercel Production and verify the live canonical origin.
 - [ ] Isolate production Supabase, Storage, model, Auth, and billing sandbox/live environments from previews.
 - [ ] Enable deployment/access protection where feasible.
 - [x] Implement and automate-test a fail-safe `PRELAUNCH` index mode whose missing/invalid production value does not enable indexing.
-- [ ] In reachable pre-launch mode, verify public discovery pages emit `noindex` and the sitemap advertises no discovery URLs.
-- [ ] Keep private/account/search/billing routes access-controlled and `noindex` in every mode.
-- [ ] Verify no preview/localhost origin appears in production canonical, OG, JSON-LD, robots, or sitemap output.
-- [ ] Document rollback for protection/index-mode configuration.
+- [x] In reachable pre-launch mode, verify public discovery pages emit `noindex` and the sitemap advertises no discovery URLs.
+- [x] Keep private/account/search/billing routes access-controlled and `noindex` in every mode.
+- [x] Verify no preview/localhost origin appears in production canonical, OG, JSON-LD, robots, or sitemap output.
+- [x] Document rollback for protection/index-mode configuration.
 
 ## B. Product and commercial launch gates
 
@@ -41,11 +41,11 @@ Do not mark local assumptions as production verification. Protected deployment i
 
 ## D. Full release-candidate verification
 
-- [ ] `npm test` passes.
-- [ ] `npm run typecheck` passes.
-- [ ] `npm run lint` passes.
-- [ ] `npm run build` passes.
-- [ ] Full browser E2E passes for anonymous upload -> Guide -> Quick Check -> return.
+- [x] `npm test` passes.
+- [x] `npm run typecheck` passes.
+- [x] `npm run lint` passes.
+- [x] `npm run build` passes.
+- [x] Full browser E2E passes for anonymous upload -> Guide -> Quick Check -> return.
 - [ ] Auth/anonymous claim/multi-guide/reopen/rename/archive/delete/search/Profile E2E passes.
 - [ ] Free limit/upgrade/checkout/success/cancel/failure/billing-management/entitlement E2E passes.
 - [ ] Cleanup and deletion jobs are observed completing against safe production-like fixtures.
@@ -54,14 +54,14 @@ Do not mark local assumptions as production verification. Protected deployment i
 
 ## E. Domain and URL behavior
 
-- [ ] Production TLS certificate is valid.
-- [ ] HTTP permanently redirects to matching HTTPS.
-- [ ] `www` permanently redirects to non-`www` without a chain.
+- [x] Production TLS certificate is valid.
+- [x] HTTP permanently redirects to matching HTTPS.
+- [x] `www` permanently redirects to non-`www` without a chain.
 - [ ] Trailing-slash/case policy is consistent.
-- [ ] No canonical loops, cross-host canonicals, or preview/localhost canonicals.
-- [ ] `/`, `/about`, `/privacy`, `/terms`, and an approved `/pricing` return `200 text/html` as applicable.
+- [x] No canonical loops, cross-host canonicals, or preview/localhost canonicals.
+- [x] `/`, `/about`, `/privacy`, and `/terms` return `200 text/html`; no Pricing route is approved yet.
 - [ ] Unknown URLs return real 404 behavior.
-- [ ] Private missing/expired/unauthorized records fail closed and do not leak existence.
+- [x] Private missing/expired/unauthorized records fail closed and do not leak existence.
 
 ## F. On-page ownership and public trust
 
@@ -86,10 +86,10 @@ Do not mark local assumptions as production verification. Protected deployment i
 
 ### Protected/pre-launch mode
 
-- [ ] Access protection is active and/or reachable discovery pages emit `noindex`.
-- [ ] Reachable noindex pages are not blocked from receiving the directive solely by robots.
-- [ ] Sitemap contains no pages intended to remain pre-launch noindex.
-- [ ] `/api/` and private application spaces follow the approved crawl policy.
+- [x] Access protection is active and/or reachable discovery pages emit `noindex`.
+- [x] Reachable noindex pages are not blocked from receiving the directive solely by robots.
+- [x] Sitemap contains no pages intended to remain pre-launch noindex.
+- [x] `/api/` and private application spaces follow the approved crawl policy.
 
 ### Launch mode
 

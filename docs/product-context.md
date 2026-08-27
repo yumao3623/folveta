@@ -1,7 +1,7 @@
 # Folveta Current Product Context
 
 Status: **Current v5 context**  
-Last updated: 2026-08-26
+Last updated: 2026-08-27
 Decision authority: `docs/decisions.md`  
 Delivery roadmap: `docs/v5-master-roadmap.md`
 
@@ -27,7 +27,7 @@ The Guide is the primary artifact. Quick Check is optional and subordinate. Folv
 
 ## Actual implemented baseline
 
-The following exists in the current repository and passed build/typecheck/lint/tests on 2026-08-26:
+The following exists in the current repository and passed build/typecheck/lint/tests during the 2026-08-27 Production pre-launch closeout:
 
 - Next.js 16.3.2 App Router, React 19, TypeScript, Tailwind CSS 4.
 - Folveta landing/upload experience with real PDF/PPTX input.
@@ -43,7 +43,7 @@ The following exists in the current repository and passed build/typecheck/lint/t
 - A real Profile route with Supabase Auth email/creation date, owner-scoped Guide/Source totals, sign-out, and responsive Workspace navigation from Product-3C.
 - About, Privacy, Terms, canonical metadata, social images, JSON-LD, robots, sitemap, explicit study-route noindex rules, and fail-closed pre-launch indexing control.
 - Folveta favicon/app icon assets derived from the approved green Folveta wordmark without changing the in-page wordmark or Logo treatment.
-- Synthetic demo Guide and Quick Check plus 71 automated tests across schema, parser, Quick Check, Auth/persistence, Guide management, Library/Search/Profile, SEO behavior, and UI foundation contracts.
+- Synthetic demo Guide and Quick Check plus 74 automated tests across schema, parser, Quick Check, Auth/persistence, Guide management, Library/Search/Profile, SEO behavior, environment handling, and UI foundation contracts.
 
 Implemented UI milestones are UI-1 Study Guide Workspace, UI-2 Landing / Upload, and UI-4 Quick Check / Results. They are implementation baselines, not final visual sign-off.
 
@@ -55,16 +55,16 @@ Implemented UI milestones are UI-1 Study Guide Workspace, UI-2 Landing / Upload,
 - Product-3C passed a real dev two-account/RLS/browser Gate covering Library, Search, Profile, workspace navigation, cross-owner page/API/direct-client denial, signed-out isolation, relogin persistence, query behavior, and regression paths. All temporary aggregates and Auth users were cleaned.
 - A single `sgm_session` cookie represents one anonymous session token; creating another session replaces browser access to the prior session.
 - Account deletion is deliberately unavailable rather than partially implemented. The required Storage-first, child-record/Auth cleanup, retry, retention, request-channel, and future billing-cancellation orchestration is deferred as a mandatory Payment/Production prerequisite; deleting only `auth.users` is not accepted.
-- Payment, Pricing, final SEO v2, completed production deployment, and public indexing remain unimplemented.
+- Payment, Pricing, final SEO v2, and public indexing remain unimplemented. The Production pre-launch deployment is live but its same-browser email-confirmation PKCE callback Gate is not yet passed.
 - No Payment/Billing, pricing model, entitlement ledger, checkout, subscription status, billing portal, webhooks, or usage enforcement.
 - A protected Storage-first retention endpoint exists, but no deployment scheduler has been configured or verified yet.
 - No application rate limiting, abuse controls, analytics decision, real support/privacy-request channel, or production monitoring.
 - No pasted-text input, OCR, handwriting, image/chart/diagram interpretation, audio/video/URL ingestion, or open-web research.
 - No generation lease/checkpoint resume implementation despite those items appearing in the historical technical plan.
-- No reusable automated browser suite, automated migration/RLS CI suite, webhook tests, billing tests, or production Core Web Vitals data. Product-3 now has a completed scoped dev two-account migration/RLS/browser Gate, backed by a deterministic fixture script; the external AI full chain remains outside that fixture.
+- No reusable automated browser suite, automated migration/RLS CI suite, webhook tests, billing tests, or production Core Web Vitals data. Product-3 has a completed scoped dev two-account migration/RLS/browser Gate backed by a deterministic fixture script. On 2026-08-27, a separate Production run completed real PDF upload, parse, AI Guide generation, grounding, Quick Check generation, scoring, and persisted Results.
 - `PRELAUNCH` now fails closed: a missing value, `PRELAUNCH=true`, or any Vercel non-production environment makes discovery pages `noindex,nofollow`; the sitemap is empty and robots does not advertise it. Only an explicit production `PRELAUNCH=false` restores the approved public index mode.
 - Full SEO v2 intent/page-ownership implementation remains pending, although the homepage title, visible capability label, and first-viewport positioning now use `Study Guide Maker` rather than `AI Study Guide Maker`.
-- Vercel/GitHub import, production environment variables, Supabase Auth URLs, domain, TLS, redirects, and live browser behavior remain staged or unverified until the feature branch is approved for `main` and deployed.
+- Vercel/GitHub integration, Production environment variables, Supabase Auth URLs, DNS, TLS, redirects, PRELAUNCH metadata, and the core live browser workflow are deployed and verified. The email was confirmed and password Auth passed, but a confirmation link opened on another device reached Folveta without a usable callback `code`; the evidence does not distinguish cross-device PKCE state from prior one-time-link consumption. Same-browser callback proof remains open.
 
 ## Current UI context
 

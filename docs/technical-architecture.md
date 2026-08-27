@@ -1,7 +1,7 @@
 # Folveta Technical Architecture
 
 Status: **Current v5 architecture baseline and target boundaries**  
-Last verified: 2026-08-26
+Last verified: 2026-08-27
 Decision authority: `docs/decisions.md`
 
 ## 1. Architecture principle
@@ -133,7 +133,7 @@ Product-3A adds the durable path:
 - Account-owned sessions have no anonymous expiry and can be reopened across browser sessions through owner authorization.
 - One unauthenticated browser cookie still represents only its current anonymous session. Product-3B provides durable multi-Guide listing only for authenticated owners.
 
-The schema and threat model are detailed in `docs/auth-and-persistence.md`. The official Supabase CLI channel is linked to dev and local/remote migration history matches through `202608260005`. Product-3B/Product-3C indexes, three GIN indexes, RPC security modes/grants, and RLS state were verified against the deployed schema. Scoped two-user Product-3 Auth/claim/management/Library/Search/Profile/RLS/browser E2E passed on 2026-08-26. Real AI Guide generation remains unverified because the configured external model gateway returned retryable Cloudflare 502 responses.
+The schema and threat model are detailed in `docs/auth-and-persistence.md`. The official Supabase CLI channel is linked to dev and local/remote migration history matches through `202608260005`. Product-3B/Product-3C indexes, three GIN indexes, RPC security modes/grants, and RLS state were verified against the deployed schema. Scoped two-user Product-3 Auth/claim/management/Library/Search/Profile/RLS/browser E2E passed on 2026-08-26. That historical dev AI attempt remained blocked by external 502 responses; a separate 2026-08-27 Production run completed the real AI Guide and Quick Check full chain.
 
 ## 6. Generation and assessment contracts
 
@@ -173,9 +173,10 @@ Current behavior and gaps:
 - `PRELAUNCH` is server-only and fail-closed. Only exact `false` in Vercel Production enables discovery-page indexing; Vercel Preview remains pre-launch regardless of the variable.
 - Pre-launch discovery pages emit `noindex,nofollow`, sitemap returns no URLs, and robots omits the sitemap declaration while keeping discovery pages crawlable enough to observe their page directive.
 - Auth redirect uses `NEXT_PUBLIC_SITE_URL` with the localhost fallback. The current Supabase project allows exact callbacks for `https://folveta.com/auth/callback` and `http://localhost:3000/auth/callback`.
+- `@supabase/ssr` uses PKCE. Production email confirmation activated the account and password Auth passed, but a confirmation link opened on another device reached Folveta without a usable callback `code`. That observation does not isolate cross-device PKCE state from prior one-time-link consumption such as mail-link scanning. Same-browser PKCE callback proof remains an open Production Gate; the current default Supabase email template cannot be converted to a `token_hash`/`verifyOtp` pattern without Custom SMTP/template editing.
 - No payment provider/customer/webhook/price configuration.
 - No deployed cleanup scheduler or verified production retention secret; no rate-limit configuration.
-- Production environment values are staged in Vercel import configuration; no secret values are recorded in the repository.
+- Production environment values are live in Vercel Production; no secret values are recorded in the repository. Production Supabase/OpenAI credentials remain withheld from Preview.
 
 ## 8. Missing reliability, security, and privacy capabilities
 

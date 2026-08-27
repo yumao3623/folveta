@@ -1,7 +1,7 @@
 # Folveta SEO v2 Architecture
 
 Status: **Current project-specific SEO architecture**  
-Last updated: 2026-08-25  
+Last updated: 2026-08-27
 Reusable standard: `docs/SEO_GUIDE.md`  
 Canonical production origin: `https://folveta.com`
 
@@ -66,12 +66,12 @@ Implemented:
 
 Open/corrective:
 
-- Production origin and `PRELAUNCH=true` are staged in the Vercel import configuration but are not live-verified yet.
+- Production origin and `PRELAUNCH=true` are live-verified on `https://folveta.com`: discovery pages emit `noindex,nofollow`, robots does not advertise a sitemap, and the sitemap contains no URLs.
 - No public Pricing route or billing facts; do not invent them.
 - No real support/privacy request channel.
 - Privacy states that automatic deletion is missing; cleanup must be implemented.
 - No real product screenshots/image SEO beyond generated social images and code-drawn UI.
-- No Search Console, analytics decision, field CWV, crawler log monitoring, or production-domain verification.
+- No Search Console, analytics decision, field CWV, or crawler log monitoring. Production DNS, TLS, redirects, canonical origin, and pre-launch index behavior are verified; no sitemap was submitted and no indexing was requested.
 
 ## 5. On-page v2 requirements
 
