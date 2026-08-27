@@ -4,6 +4,7 @@ import { isInvalidAuthSessionError } from "@/lib/auth-errors";
 import { safeNextPath } from "@/lib/auth-redirect";
 import { sessionAccessMode } from "@/lib/server/auth";
 import { retentionRequestAuthorized } from "@/lib/server/retention";
+import { isSupabaseAuthSessionCookie } from "@/lib/supabase-cookies";
 
 const activeAnonymous = {
   owner_user_id: null,
@@ -111,6 +112,14 @@ describe("auth and persistence contracts", () => {
     expect(isInvalidAuthSessionError({ code: "refresh_token_not_found" })).toBe(true);
     expect(isInvalidAuthSessionError({ code: "user_not_found" })).toBe(true);
     expect(isInvalidAuthSessionError({ code: "unexpected_failure" })).toBe(false);
+  });
+
+  it("keeps PKCE verifier cookies separate from authenticated session cookies", () => {
+    expect(isSupabaseAuthSessionCookie("sb-hzajflqtwuxwwzprggwi-auth-token")).toBe(true);
+    expect(isSupabaseAuthSessionCookie("sb-hzajflqtwuxwwzprggwi-auth-token.0")).toBe(true);
+    expect(isSupabaseAuthSessionCookie("sb-hzajflqtwuxwwzprggwi-auth-token-code-verifier")).toBe(false);
+    expect(isSupabaseAuthSessionCookie("sb-hzajflqtwuxwwzprggwi-auth-token-flow-abcdef12-code-verifier")).toBe(false);
+    expect(isSupabaseAuthSessionCookie("sb-hzajflqtwuxwwzprggwi-auth-token-flows-code-verifier")).toBe(false);
   });
 
   it("requires an exact retention job bearer secret", () => {
