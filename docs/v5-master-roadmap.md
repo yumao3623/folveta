@@ -1,7 +1,7 @@
 # Folveta v5 Master Roadmap
 
 Status: **Current roadmap**  
-Last updated: 2026-08-26
+Last updated: 2026-08-28
 Decision authority: `docs/decisions.md`  
 Baseline audit: `docs/current-state-audit.md`
 
@@ -431,7 +431,7 @@ Make `https://folveta.com` the canonical, technically sound owner of the `Study 
 
 ## Phase 5 — Production Pre-launch Deployment, Full E2E, and Performance QA
 
-Infrastructure setup record (updated 2026-08-27): `yumao3623/folveta` is connected to the live Vercel project `creen ai / folveta`, and GitHub `main` commit `2dcc4d969baa03d4ef6e1deefb9d417c74b1eb1d` deployed Ready. `https://folveta.com` is the HTTPS Production apex, public DNS and certificate are valid, HTTP and `www` redirect `308` to the preferred host, and the favicon/app icon and desktop/mobile baseline passed. `PRELAUNCH=true` is live: public discovery pages emit `noindex,nofollow`, private routes remain noindex, robots does not advertise a sitemap, and the sitemap is empty. Production anonymous session/cookie persistence, signed upload/parse, real AI Guide/Quick Check generation, Auth signup/email confirmation/PKCE/password lifecycle, anonymous claim, Guide reopen, My Guides, Library, Search, Profile, Results persistence, mobile layout, sign-out isolation, and relogin passed. The same-browser PKCE evidence was `/signup 200`, `/verify 303`, `/token 200`, `/user 200`, returning to `/profile`; the separate cross-device confirmation result remains historical evidence only. Deployment protection, retention scheduling, monitoring, account deletion, rate limits, Payment, indexing cutover, Search Console, and final SEO v2 remain open or out of scope.
+Infrastructure setup record (updated 2026-08-28): `yumao3623/folveta` is connected to the live Vercel project `creen ai / folveta`, and GitHub `main` commit `2dcc4d969baa03d4ef6e1deefb9d417c74b1eb1d` deployed Ready. `https://folveta.com` is the HTTPS Production apex, public DNS and certificate are valid, HTTP and `www` redirect `308` to the preferred host, and the favicon/app icon and desktop/mobile baseline passed. `PRELAUNCH=true` is live: public discovery pages emit `noindex,nofollow`, private routes remain noindex, robots does not advertise a sitemap, and the sitemap is empty. Auth, upload/parse, Guide reopen, My Guides, Library, Search, Profile, Results persistence, mobile layout, sign-out isolation, and relogin have scoped evidence. Production AI pipeline functional but reliability hardening in progress: a controlled run succeeded, while real-user material later failed with `MODEL_EMPTY_OUTPUT`; repeated real-material E2E is a blocker before Payment. The same-browser PKCE evidence was `/signup 200`, `/verify 303`, `/token 200`, `/user 200`, returning to `/profile`; the separate cross-device confirmation result remains historical evidence only. Deployment protection, the AI reliability migration and production validation, retention scheduling, monitoring, account deletion, rate limits, Payment, indexing cutover, Search Console, and final SEO v2 remain open or out of scope.
 
 **Goal**
 

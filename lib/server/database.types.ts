@@ -3,6 +3,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 type SessionRow = {
   id: string; access_token_hash: string | null; owner_user_id: string | null; title: string; state: string; current_stage: string | null;
   failed_stage: string | null; error_code: string | null; error_message: string | null;
+  generation_checkpoint: Json | null;
   expires_at: string | null; claimed_at: string | null; last_accessed_at: string; archived_at: string | null;
   deleted_at: string | null; purge_after: string | null; created_at: string; updated_at: string;
 };
@@ -55,6 +56,7 @@ export type Database = {
       preparation_sessions: Table<SessionRow, {
         id?: string; access_token_hash?: string | null; owner_user_id?: string | null; title?: string; state?: string; current_stage?: string | null;
         failed_stage?: string | null; error_code?: string | null; error_message?: string | null;
+        generation_checkpoint?: Json | null;
         expires_at?: string | null; claimed_at?: string | null; last_accessed_at?: string; archived_at?: string | null;
         deleted_at?: string | null; purge_after?: string | null; created_at?: string; updated_at?: string;
       }>;

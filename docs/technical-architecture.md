@@ -133,7 +133,7 @@ Product-3A adds the durable path:
 - Account-owned sessions have no anonymous expiry and can be reopened across browser sessions through owner authorization.
 - One unauthenticated browser cookie still represents only its current anonymous session. Product-3B provides durable multi-Guide listing only for authenticated owners.
 
-The schema and threat model are detailed in `docs/auth-and-persistence.md`. The official Supabase CLI channel is linked to dev and local/remote migration history matches through `202608260005`. Product-3B/Product-3C indexes, three GIN indexes, RPC security modes/grants, and RLS state were verified against the deployed schema. Scoped two-user Product-3 Auth/claim/management/Library/Search/Profile/RLS/browser E2E passed on 2026-08-26. That historical dev AI attempt remained blocked by external 502 responses; a separate 2026-08-27 Production run completed the real AI Guide and Quick Check full chain.
+The schema and threat model are detailed in `docs/auth-and-persistence.md`. The official Supabase CLI channel is linked to dev and local/remote migration history matches through `202608260005`. Product-3B/Product-3C indexes, three GIN indexes, RPC security modes/grants, and RLS state were verified against the deployed schema. Scoped two-user Product-3 Auth/claim/management/Library/Search/Profile/RLS/browser E2E passed on 2026-08-26. A controlled Production AI run succeeded on 2026-08-27, but subsequent real-user material failures returned `MODEL_EMPTY_OUTPUT`; therefore Production AI pipeline functional but reliability hardening in progress. The production Gateway reliability migration and repeated real-material E2E remain open.
 
 ## 6. Generation and assessment contracts
 
@@ -187,7 +187,7 @@ Current behavior and gaps:
 - Password recovery, full Storage-first account deletion orchestration, and production support/privacy request handling. No Delete Account UI or request endpoint is exposed before that workflow exists.
 - Billing signature verification, event idempotency/reconciliation, and entitlement enforcement.
 - Production observability, structured redaction rules, alerting, support/privacy channel, and incident runbook.
-- Reusable automated migration/RLS CI and full release browser E2E beyond the completed scoped Product-3 dev Gate. The deterministic dev Gate is not a substitute for production-like scheduling, AI full-chain, billing, or cross-browser verification.
+- Reusable automated migration/RLS CI and full release browser E2E beyond the completed scoped Product-3 dev Gate. The deterministic dev Gate and one controlled AI success are not substitutes for repeated production real-material generation, billing, or cross-browser verification.
 - Separate production/preview service isolation proof.
 
 ## 9. Product-3 target architecture decisions

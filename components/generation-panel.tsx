@@ -12,6 +12,10 @@ const stageLabels: Record<string, string> = {
   merging_topics: "Merging overlapping topics",
   generating_guide: "Writing structured Study Guide topics",
   verifying_guide: "Checking claims and source references",
+  retrying_extracting_topics: "Retrying generation...",
+  retrying_merging_topics: "Retrying generation...",
+  retrying_generating_guide: "Retrying generation...",
+  retrying_verifying_guide: "Retrying generation...",
   guide_ready: "Study Guide ready",
 };
 
@@ -83,7 +87,7 @@ export function GenerationPanel({
       <p className="mt-1 text-sm">This page checks progress automatically. Successful parsing is preserved if generation needs a retry.</p>
       <div className="mt-3"><Progress label="Study Guide generation in progress" /></div>
     </Alert>}
-    {error && <Alert tone="destructive" className="mt-5"><strong>Generation failed:</strong> {error}</Alert>}
+    {error && <Alert tone="destructive" className="mt-5"><strong>Generation failed:</strong> {state === "failed_terminal" ? "Generation could not be completed with these materials." : "Your materials and completed work are saved. Please retry generation."}</Alert>}
     <Button onClick={generate} disabled={!canGenerate || generating} loading={generating} loadingLabel="Generating Study Guide..." size="lg" className="mt-5">
       <Sparkles aria-hidden="true" className="h-[18px] w-[18px]" strokeWidth={1.8} />
       {state === "failed_retryable" ? "Retry Study Guide generation" : "Generate Study Guide"}

@@ -1,7 +1,7 @@
 # Folveta Current Product Context
 
 Status: **Current v5 context**  
-Last updated: 2026-08-27
+Last updated: 2026-08-28
 Decision authority: `docs/decisions.md`  
 Delivery roadmap: `docs/v5-master-roadmap.md`
 
@@ -55,13 +55,13 @@ Implemented UI milestones are UI-1 Study Guide Workspace, UI-2 Landing / Upload,
 - Product-3C passed a real dev two-account/RLS/browser Gate covering Library, Search, Profile, workspace navigation, cross-owner page/API/direct-client denial, signed-out isolation, relogin persistence, query behavior, and regression paths. All temporary aggregates and Auth users were cleaned.
 - A single `sgm_session` cookie represents one anonymous session token; creating another session replaces browser access to the prior session.
 - Account deletion is deliberately unavailable rather than partially implemented. The required Storage-first, child-record/Auth cleanup, retry, retention, request-channel, and future billing-cancellation orchestration is deferred as a mandatory Payment/Production prerequisite; deleting only `auth.users` is not accepted.
-- Payment, Pricing, final SEO v2, and public indexing remain unimplemented. The Production pre-launch deployment is live on `main@2dcc4d9`; same-browser email-confirmation PKCE and the scoped Production Gate are passed, while the remaining Production Readiness capabilities below stay open.
+- Payment, Pricing, final SEO v2, and public indexing remain unimplemented. The Production pre-launch deployment is live on `main@2dcc4d9`; same-browser email-confirmation PKCE is passed, while AI-generation reliability and the remaining Production Readiness capabilities stay open.
 - No Payment/Billing, pricing model, entitlement ledger, checkout, subscription status, billing portal, webhooks, or usage enforcement.
 - A protected Storage-first retention endpoint exists, but no deployment scheduler has been configured or verified yet.
 - No application rate limiting, abuse controls, analytics decision, real support/privacy-request channel, or production monitoring.
 - No pasted-text input, OCR, handwriting, image/chart/diagram interpretation, audio/video/URL ingestion, or open-web research.
-- No generation lease/checkpoint resume implementation despite those items appearing in the historical technical plan.
-- No reusable automated browser suite, automated migration/RLS CI suite, webhook tests, billing tests, or production Core Web Vitals data. Product-3 has a completed scoped dev two-account migration/RLS/browser Gate backed by a deterministic fixture script. On 2026-08-27, a separate Production run completed real PDF upload, parse, AI Guide generation, grounding, Quick Check generation, scoring, and persisted Results.
+- Guide generation now has a source- and contract-bound checkpoint plus a conditional execution claim, so a retry can resume completed extraction/merge/topic work and concurrent retries do not start duplicate runs. The corresponding production migration and repeated live validation remain required before this is treated as stable.
+- Production AI pipeline functional but reliability hardening in progress. A controlled Production run succeeded on 2026-08-27, but a real-user nine-page PDF subsequently failed with `MODEL_EMPTY_OUTPUT` during both topic extraction and Guide generation. Local parsing of that private regression material remains healthy; its content is never logged or committed. Payment remains blocked pending migration deployment and repeated real-material production evidence.
 - `PRELAUNCH` now fails closed: a missing value, `PRELAUNCH=true`, or any Vercel non-production environment makes discovery pages `noindex,nofollow`; the sitemap is empty and robots does not advertise it. Only an explicit production `PRELAUNCH=false` restores the approved public index mode.
 - Full SEO v2 intent/page-ownership implementation remains pending, although the homepage title, visible capability label, and first-viewport positioning now use `Study Guide Maker` rather than `AI Study Guide Maker`.
 - Vercel/GitHub integration, Production environment variables, Supabase Auth URLs, DNS, TLS, redirects, PRELAUNCH metadata, and the core live browser workflow are deployed and verified. A fresh same-browser sign-up produced `/signup 200`, `/verify 303`, `/token 200`, `/user 200`, returned to `https://folveta.com/profile`, and passed Auth/session/claim validation. The cross-device confirmation attempt remains historical evidence only and is not used as the passing path.

@@ -61,7 +61,7 @@ async function trackedQuickCheckCall<T>(
   sessionId: string,
   stage: "generating_quick_check" | "verifying_questions",
   task: "quick_check" | "question_verify",
-  call: () => Promise<StructuredResult<T>>,
+  call: (onRetry: (attempt: number) => Promise<void>) => Promise<StructuredResult<T>>,
 ) {
   const env = getServerEnv();
   const admin = getSupabaseAdmin();
@@ -79,11 +79,14 @@ async function trackedQuickCheckCall<T>(
   if (insertError) throw insertError;
 
   try {
-    const result = await call();
+    const result = await call(async (attempt) => {
+      console.info("[generation-retry]", JSON.stringify({ sessionId, stage, task, attempt }));
+    });
     await admin.from("generation_runs").update({
       status: "succeeded",
       model: result.actualModel,
       usage: result.usage as Json,
+      attempt: result.retryCount + 1,
       completed_at: new Date().toISOString(),
     }).eq("id", runId);
     return result.data;
@@ -340,12 +343,13 @@ export async function generateQuickCheck(
     .join("\n\n");
 
   const gateway = new ModelGateway();
-  const raw = await trackedQuickCheckCall(sessionId, "generating_quick_check", "quick_check", () => gateway.generateStructured({
+  const raw = await trackedQuickCheckCall(sessionId, "generating_quick_check", "quick_check", (onRetry) => gateway.generateStructured({
     task: "quick_check",
     schema: rawQuickCheckCandidatesSchema,
     schemaName: "quick_check_candidates",
     instructions: PROMPTS.quickCheck,
     evidence: `Requested final questions: ${requested}\nGenerate ${candidateCount} candidates so weak items can be discarded.\n\nGuide targets:\n${JSON.stringify(targetPayload)}\n\nUploaded-course evidence:\n${evidence}`,
+    onRetry,
   }));
 
   const targetMap = new Map(reliableTargets.map((target) => [target.id, target]));
@@ -363,12 +367,13 @@ export async function generateQuickCheck(
     return `Candidate:\n${JSON.stringify(candidate)}\nEvidence:\n${candidateEvidence}\nGuide target:\n${target.guide_text}`;
   }).join("\n\n---\n\n");
 
-  const verified = await trackedQuickCheckCall(sessionId, "verifying_questions", "question_verify", () => gateway.generateStructured({
+  const verified = await trackedQuickCheckCall(sessionId, "verifying_questions", "question_verify", (onRetry) => gateway.generateStructured({
     task: "question_verify",
     schema: questionVerdictsSchema,
     schemaName: "question_verdicts",
     instructions: PROMPTS.questionVerify,
     evidence: verificationEvidence,
+    onRetry,
   }));
 
   const { selected, rejections } = validateQuickCheckCandidates({

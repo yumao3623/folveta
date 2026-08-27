@@ -1,7 +1,7 @@
 # Folveta Production Deployment
 
-Status: **Production pre-launch infrastructure live; scoped Production Gate passed; not a public launch record**
-Last updated: 2026-08-27
+Status: **Production pre-launch infrastructure live; AI reliability hardening in progress; not a public launch record**
+Last updated: 2026-08-28
 Canonical target: `https://folveta.com`
 
 ## Deployment identity
@@ -66,6 +66,10 @@ Preview is always `noindex,nofollow` through `VERCEL_ENV`, regardless of `PRELAU
 - Private, account, search, study, result, and future billing routes remain `noindex,nofollow` in every mode.
 
 Changing `PRELAUNCH` to `false` is a public-launch action. It requires Payment, SEO v2, Production Readiness, live QA, and explicit launch-owner approval. It is not part of this task.
+
+## AI reliability status
+
+Production AI pipeline functional but reliability hardening in progress. A controlled run has completed, but real-user material has also produced `MODEL_EMPTY_OUTPUT` through the configured `portdan.com` OpenAI-compatible gateway. The deployed status must not be described as stable until the checkpoint migration and reliability code are deployed and repeated real-material generations complete with recorded, privacy-safe diagnostics.
 
 ## Supabase Auth and environment boundary
 

@@ -39,6 +39,28 @@ type SpanRow = {
   content_hash: string;
 };
 
+export type GenerationCheckpoint = {
+  source_checksum: string;
+  prompt_version: string;
+  schema_version: string;
+  extracted_batch_keys: string[];
+  candidate_groups: TopicCandidates["candidates"];
+  merged_topics: MergedTopic[];
+  raw_topics: Array<{ merged: MergedTopic; raw: RawGuideTopic }>;
+  verdicts: Record<string, GroundingVerdicts>;
+};
+
+export function checkpointMatches(
+  checkpoint: GenerationCheckpoint | null,
+  sourceChecksum: string,
+  promptVersion: string,
+  schemaVersion: string,
+) {
+  return checkpoint?.source_checksum === sourceChecksum
+    && checkpoint.prompt_version === promptVersion
+    && checkpoint.schema_version === schemaVersion;
+}
+
 const stageStates = {
   extracting_topics: "extracting_topics",
   merging_topics: "merging_topics",
@@ -74,7 +96,7 @@ async function trackedCall<T>(
   sessionId: string,
   stage: keyof typeof stageStates,
   task: ModelTask,
-  call: () => Promise<StructuredResult<T>>,
+  call: (onRetry: (attempt: number) => Promise<void>) => Promise<StructuredResult<T>>,
 ) {
   const env = getServerEnv();
   const admin = getSupabaseAdmin();
@@ -90,11 +112,19 @@ async function trackedCall<T>(
     model: modelForTask(task),
   });
   try {
-    const result = await call();
+    const result = await call(async (attempt) => {
+      const { error } = await admin.from("preparation_sessions").update({
+        current_stage: `retrying_${stage}`,
+        updated_at: new Date().toISOString(),
+      }).eq("id", sessionId);
+      if (error) throw error;
+      console.info("[generation-retry]", JSON.stringify({ sessionId, stage, task, attempt }));
+    });
     await admin.from("generation_runs").update({
       status: "succeeded",
       model: result.actualModel,
       usage: result.usage as Json,
+      attempt: result.retryCount + 1,
       completed_at: new Date().toISOString(),
     }).eq("id", runId);
     return result.data;
@@ -107,6 +137,14 @@ async function trackedCall<T>(
     }).eq("id", runId);
     throw error;
   }
+}
+
+async function persistCheckpoint(sessionId: string, checkpoint: GenerationCheckpoint) {
+  const { error } = await getSupabaseAdmin().from("preparation_sessions").update({
+    generation_checkpoint: checkpoint as unknown as Json,
+    updated_at: new Date().toISOString(),
+  }).eq("id", sessionId);
+  if (error) throw error;
 }
 
 function evidenceLine(span: SpanRow, source: SourceRow) {
@@ -255,52 +293,93 @@ export async function generateGuide(sessionId: string, title: string): Promise<G
   }
   const sourcesById = new Map(sources.map((source) => [source.id, source]));
   const spansById = new Map(spans.map((span) => [span.id, span]));
+  const sourceChecksum = createHash("sha256").update(spans.map((span) => span.content_hash).sort().join(":"), "utf8").digest("hex");
+  const { data: sessionData, error: checkpointSessionError } = await admin.from("preparation_sessions").select("generation_checkpoint").eq("id", sessionId).maybeSingle();
+  if (checkpointSessionError) throw checkpointSessionError;
+  const storedCheckpoint = sessionData?.generation_checkpoint;
+  const checkpoint = storedCheckpoint && typeof storedCheckpoint === "object" && !Array.isArray(storedCheckpoint)
+    ? storedCheckpoint as unknown as GenerationCheckpoint
+    : null;
+  const reusable = checkpointMatches(checkpoint, sourceChecksum, env.PROMPT_VERSION, env.GUIDE_SCHEMA_VERSION);
+  const working: GenerationCheckpoint = reusable && checkpoint ? {
+    ...checkpoint,
+    extracted_batch_keys: checkpoint.extracted_batch_keys ?? [],
+    candidate_groups: checkpoint.candidate_groups ?? [],
+    merged_topics: checkpoint.merged_topics ?? [],
+    raw_topics: checkpoint.raw_topics ?? [],
+    verdicts: checkpoint.verdicts ?? {},
+  } : {
+    source_checksum: sourceChecksum,
+    prompt_version: env.PROMPT_VERSION,
+    schema_version: env.GUIDE_SCHEMA_VERSION,
+    extracted_batch_keys: [],
+    candidate_groups: [],
+    merged_topics: [],
+    raw_topics: [],
+    verdicts: {},
+  };
 
   await setStage(sessionId, "extracting_topics");
-  const candidateGroups: TopicCandidates["candidates"] = [];
+  const candidateGroups: TopicCandidates["candidates"] = working.candidate_groups;
   for (const source of usableSources) {
     const sourceSpans = spans.filter((span) => span.source_id === source.id);
     for (const batch of batchSpans(sourceSpans)) {
-      const candidates = await trackedCall(sessionId, "extracting_topics", "topic_extract", () => gateway.generateStructured({
+      const batchKey = createHash("sha256").update(`${source.id}:${batch.map((span) => span.id).join(",")}`, "utf8").digest("hex");
+      if (working.extracted_batch_keys.includes(batchKey)) continue;
+      const candidates = await trackedCall(sessionId, "extracting_topics", "topic_extract", (onRetry) => gateway.generateStructured({
         task: "topic_extract",
         schema: topicCandidatesSchema,
         schemaName: "topic_candidates",
         instructions: PROMPTS.topicExtract,
         evidence: `Source: ${source.display_name}\n\n${batch.map((span) => evidenceLine(span, source)).join("\n\n")}`,
+        onRetry,
       }));
       candidateGroups.push(...candidates.candidates);
+      working.extracted_batch_keys.push(batchKey);
+      working.candidate_groups = candidateGroups;
+      await persistCheckpoint(sessionId, working);
     }
   }
   if (!candidateGroups.length) throw new AppError("TOPIC_EXTRACTION_EMPTY", "No supported study topics could be extracted.", 422);
 
   await setStage(sessionId, "merging_topics");
-  const mergedResult = await trackedCall(sessionId, "merging_topics", "topic_merge", () => gateway.generateStructured({
-    task: "topic_merge",
-    schema: mergedTopicsSchema,
-    schemaName: "merged_topics",
-    instructions: PROMPTS.topicMerge,
-    evidence: `Maximum topics: ${MVP_LIMITS.maxTopics}\nValid span IDs: ${spans.map((span) => span.id).join(", ")}\n\nCandidates:\n${JSON.stringify(candidateGroups)}`,
-  }));
-  const mergedTopics = mergedResult.topics.slice(0, MVP_LIMITS.maxTopics).map((topic) => ({
-    ...topic,
-    evidence_span_ids: [...new Set(topic.evidence_span_ids)].filter((id) => spansById.has(id)),
-  })).filter((topic) => topic.evidence_span_ids.length > 0);
+  let mergedTopics = working.merged_topics;
+  if (!mergedTopics.length) {
+    const mergedResult = await trackedCall(sessionId, "merging_topics", "topic_merge", (onRetry) => gateway.generateStructured({
+      task: "topic_merge",
+      schema: mergedTopicsSchema,
+      schemaName: "merged_topics",
+      instructions: PROMPTS.topicMerge,
+      evidence: `Maximum topics: ${MVP_LIMITS.maxTopics}\nValid span IDs: ${spans.map((span) => span.id).join(", ")}\n\nCandidates:\n${JSON.stringify(candidateGroups)}`,
+      onRetry,
+    }));
+    mergedTopics = mergedResult.topics.slice(0, MVP_LIMITS.maxTopics).map((topic) => ({
+      ...topic,
+      evidence_span_ids: [...new Set(topic.evidence_span_ids)].filter((id) => spansById.has(id)),
+    })).filter((topic) => topic.evidence_span_ids.length > 0);
+    working.merged_topics = mergedTopics;
+    await persistCheckpoint(sessionId, working);
+  }
   if (!mergedTopics.length) throw new AppError("TOPIC_REFERENCE_VALIDATION_FAILED", "Topic extraction returned no valid source references.", 422);
 
   await setStage(sessionId, "generating_guide");
-  const rawTopics: Array<{ merged: MergedTopic; raw: RawGuideTopic }> = [];
+  const rawTopics: Array<{ merged: MergedTopic; raw: RawGuideTopic }> = working.raw_topics;
   for (const merged of mergedTopics) {
+    if (rawTopics.some((item) => item.merged.id === merged.id)) continue;
     const evidenceSpans = merged.evidence_span_ids.map((id) => spansById.get(id)).filter((span): span is SpanRow => Boolean(span));
-    const raw = await trackedCall(sessionId, "generating_guide", "guide", () => gateway.generateStructured({
+    const raw = await trackedCall(sessionId, "generating_guide", "guide", (onRetry) => gateway.generateStructured({
       task: "guide",
       schema: rawGuideTopicSchema,
       schemaName: "study_guide_topic",
       instructions: PROMPTS.guideTopic,
       evidence: `Topic contract: ${JSON.stringify(merged)}\n\nEvidence:\n${evidenceSpans.map((span) => evidenceLine(span, sourcesById.get(span.source_id)!)).join("\n\n")}`,
+      onRetry,
     }));
     const invalidReference = allRawClaims(raw).some((claim) => claim.span_ids.some((id) => !merged.evidence_span_ids.includes(id)));
     if (invalidReference) throw new AppError("GUIDE_REFERENCE_VALIDATION_FAILED", `Generated topic “${merged.title}” cited an evidence span outside its supplied bundle.`, 422);
     rawTopics.push({ merged, raw: { ...raw, id: merged.id, title: merged.title, priority: merged.priority, focus_reason: merged.focus_reason } });
+    working.raw_topics = rawTopics;
+    await persistCheckpoint(sessionId, working);
   }
 
   await setStage(sessionId, "verifying_guide");
@@ -308,7 +387,7 @@ export async function generateGuide(sessionId: string, title: string): Promise<G
   for (const { merged, raw } of rawTopics) {
     const claims = allRawClaims(raw);
     const citedIds = [...new Set(claims.flatMap((claim) => claim.span_ids))];
-    const verdicts = claims.length ? await trackedCall(sessionId, "verifying_guide", "grounding_verify", () => gateway.generateStructured({
+    const verdicts = working.verdicts[merged.id] ?? (claims.length ? await trackedCall(sessionId, "verifying_guide", "grounding_verify", (onRetry) => gateway.generateStructured({
       task: "grounding_verify",
       schema: groundingVerdictsSchema,
       schemaName: "grounding_verdicts",
@@ -317,7 +396,12 @@ export async function generateGuide(sessionId: string, title: string): Promise<G
         const span = spansById.get(id)!;
         return evidenceLine(span, sourcesById.get(span.source_id)!);
       }).join("\n\n")}`,
-    })) : { verdicts: [] };
+      onRetry,
+    })) : { verdicts: [] });
+    if (!working.verdicts[merged.id]) {
+      working.verdicts[merged.id] = verdicts;
+      await persistCheckpoint(sessionId, working);
+    }
     topics.push(buildTopic(raw, merged, verdicts, spansById, sourcesById));
   }
 
@@ -359,7 +443,6 @@ export async function generateGuide(sessionId: string, title: string): Promise<G
     throw new AppError("FORBIDDEN_LANGUAGE", "The generated guide used prediction, mastery, or guaranteed-coverage language and was rejected.", 422);
   }
 
-  const sourceChecksum = createHash("sha256").update(spans.map((span) => span.content_hash).sort().join(":"), "utf8").digest("hex");
   const { error: guideError } = await admin.from("study_guides").upsert({
     id: guideId,
     session_id: sessionId,
