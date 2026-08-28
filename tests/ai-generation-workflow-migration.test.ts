@@ -6,6 +6,10 @@ const migration = readFileSync(join(
   process.cwd(),
   "supabase/migrations/202608280004_ai_generation_workflow.sql",
 ), "utf8");
+const remoteValidationMigration = readFileSync(join(
+  process.cwd(),
+  "supabase/migrations/20260828171952_fix_ai_generation_workflow_remote_validation.sql",
+), "utf8");
 
 function functionBody(name: string) {
   const start = migration.indexOf(`function public.${name}`);
@@ -26,7 +30,7 @@ describe("durable generation expand migration", () => {
     expect(migration).toContain("create table public.generation_operations");
     expect(migration).toContain("create table public.generation_workflow_instances");
     expect(migration).toContain("input_json jsonb not null");
-    expect(migration).toContain("operation_input_hash = encode(public.digest(input_json::text, 'sha256'), 'hex')");
+    expect(migration).toContain("operation_input_hash = encode(extensions.digest(input_json::text, 'sha256'), 'hex')");
     expect(migration).toContain("enable row level security");
     expect(migration).toMatch(/revoke all on table public\.generation_executions from public, anon, authenticated/i);
     expect(migration).toContain("function public.get_generation_operation_context");
@@ -108,7 +112,14 @@ describe("durable generation expand migration", () => {
     expect(migration).toContain("slot_wait_duration_ms");
     expect(migration).toContain("provider_duration_ms");
     expect(migration).toContain("database_commit_duration_ms");
-    expect(migration).toContain("v_result_hash := encode(public.digest(p_result_json::text, 'sha256'), 'hex')");
+    expect(migration).toContain("v_result_hash := encode(extensions.digest(p_result_json::text, 'sha256'), 'hex')");
     expect(migration).not.toMatch(/prompt_json|request_body|response_body|source_material/i);
+  });
+
+  it("keeps deployed RPCs valid against Supabase extension schemas", () => {
+    expect(remoteValidationMigration).toContain("select extensions.gen_random_uuid()");
+    expect(remoteValidationMigration).toContain("revoke all on function public.gen_random_uuid()");
+    expect(remoteValidationMigration).toContain("update public.generation_workflow_instances as instance");
+    expect(remoteValidationMigration).toContain("where instance.generation_run_id = v_run.id");
   });
 });

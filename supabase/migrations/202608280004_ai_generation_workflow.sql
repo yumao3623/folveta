@@ -134,7 +134,7 @@ create table public.generation_operations (
   check (cardinality(dependency_operation_ids) = cardinality(dependency_result_hashes)),
   check (array_position(dependency_operation_ids, null) is null),
   check (array_position(dependency_result_hashes, null) is null),
-  check (operation_input_hash = encode(public.digest(input_json::text, 'sha256'), 'hex')),
+  check (operation_input_hash = encode(extensions.digest(input_json::text, 'sha256'), 'hex')),
   check ((status = 'succeeded') = (result_hash is not null) or status <> 'succeeded'),
   check ((status = 'running') = (owner_token is not null and lease_expires_at is not null) or status <> 'running')
 );
@@ -512,7 +512,7 @@ begin
     raise exception 'generation_session_not_ready' using errcode = '55000';
   end if;
 
-  select count(*), encode(public.digest(string_agg(span.content_hash, ':' order by span.content_hash), 'sha256'), 'hex')
+  select count(*), encode(extensions.digest(string_agg(span.content_hash, ':' order by span.content_hash), 'sha256'), 'hex')
   into v_span_count, v_database_snapshot_hash
   from public.source_spans as span
   join public.sources as source
@@ -570,7 +570,7 @@ begin
   ) values (
     v_plan_operation_id, v_generation_run_id, 'plan:root', p_plan_operation_kind,
     p_plan_operation_version, 'ready', p_plan_input_json,
-    encode(public.digest(p_plan_input_json::text, 'sha256'), 'hex'), now()
+    encode(extensions.digest(p_plan_input_json::text, 'sha256'), 'hex'), now()
   );
 
   update public.preparation_sessions
@@ -678,7 +678,7 @@ begin
     if (p_operation_id is null or v_existing.id = p_operation_id)
        and v_existing.operation_kind = p_operation_kind
        and v_existing.operation_version = p_operation_version
-       and v_existing.operation_input_hash = encode(public.digest(p_input_json::text, 'sha256'), 'hex')
+       and v_existing.operation_input_hash = encode(extensions.digest(p_input_json::text, 'sha256'), 'hex')
        and v_existing.input_json = p_input_json
        and v_existing.dependency_operation_ids = coalesce(p_dependency_operation_ids, '{}')
        and v_existing.dependency_result_hashes = coalesce(p_dependency_result_hashes, '{}') then
@@ -726,7 +726,7 @@ begin
     v_operation_id, p_generation_run_id, p_operation_key, p_operation_kind,
     p_operation_version, 'ready', coalesce(p_dependency_operation_ids, '{}'),
     coalesce(p_dependency_result_hashes, '{}'), p_input_json,
-    encode(public.digest(p_input_json::text, 'sha256'), 'hex'), now()
+    encode(extensions.digest(p_input_json::text, 'sha256'), 'hex'), now()
   );
 
   return v_operation_id;
@@ -895,7 +895,7 @@ begin
     return jsonb_build_object('status', 'contract_mismatch');
   end if;
 
-  select count(*), encode(public.digest(string_agg(span.content_hash, ':' order by span.content_hash), 'sha256'), 'hex')
+  select count(*), encode(extensions.digest(string_agg(span.content_hash, ':' order by span.content_hash), 'sha256'), 'hex')
   into v_span_count, v_database_snapshot_hash
   from public.source_spans as span
   join public.sources as source
@@ -1290,7 +1290,7 @@ begin
     return jsonb_build_object('status', 'stale');
   end if;
 
-  select count(*), encode(public.digest(string_agg(span.content_hash, ':' order by span.content_hash), 'sha256'), 'hex')
+  select count(*), encode(extensions.digest(string_agg(span.content_hash, ':' order by span.content_hash), 'sha256'), 'hex')
   into v_span_count, v_database_snapshot_hash
   from public.source_spans as span
   join public.sources as source
@@ -1345,7 +1345,7 @@ begin
     return jsonb_build_object('status', 'stale');
   end if;
 
-  v_result_hash := encode(public.digest(p_result_json::text, 'sha256'), 'hex');
+  v_result_hash := encode(extensions.digest(p_result_json::text, 'sha256'), 'hex');
 
   update public.generation_operations
   set status = 'succeeded',
@@ -1647,7 +1647,7 @@ begin
     return jsonb_build_object('status', 'stale');
   end if;
 
-  select count(*), encode(public.digest(string_agg(span.content_hash, ':' order by span.content_hash), 'sha256'), 'hex')
+  select count(*), encode(extensions.digest(string_agg(span.content_hash, ':' order by span.content_hash), 'sha256'), 'hex')
   into v_span_count, v_database_snapshot_hash
   from public.source_spans as span
   join public.sources as source
@@ -1694,7 +1694,7 @@ begin
     return jsonb_build_object('status', 'dependencies_pending');
   end if;
 
-  v_guide_result_hash := encode(public.digest(p_guide_json::text, 'sha256'), 'hex');
+  v_guide_result_hash := encode(extensions.digest(p_guide_json::text, 'sha256'), 'hex');
 
   insert into public.study_guides as guide (
     id, session_id, schema_version, prompt_version, source_checksum,
