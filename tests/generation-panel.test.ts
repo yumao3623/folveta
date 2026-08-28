@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isGenerationActive, isPersistedGenerationInProgress } from "@/components/generation-panel";
+import { isGenerationActive, isGenerationContinuationReady, isPersistedGenerationInProgress } from "@/components/generation-panel";
 
 describe("GenerationPanel failure recovery", () => {
   it("does not keep the generate control busy after a persisted retryable failure", () => {
@@ -17,5 +17,11 @@ describe("GenerationPanel failure recovery", () => {
   it("restarts status polling only for a persisted active stage after refresh", () => {
     expect(isPersistedGenerationInProgress("merging_topics")).toBe(true);
     expect(isPersistedGenerationInProgress("failed_retryable")).toBe(false);
+  });
+
+  it("only resumes a persisted continuation after its database lease is free", () => {
+    expect(isGenerationContinuationReady("generating_guide", false)).toBe(true);
+    expect(isGenerationContinuationReady("generating_guide", true)).toBe(false);
+    expect(isGenerationContinuationReady("failed_retryable", false)).toBe(false);
   });
 });

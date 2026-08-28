@@ -1,5 +1,6 @@
 import { guideSchema } from "@/lib/schemas";
 import { isStaleGeneration } from "@/lib/ai/generation-recovery";
+import { isGenerationLeaseActive } from "@/lib/ai/generation-lease";
 import { requireOwnedSession } from "@/lib/server/auth";
 import { AppError, errorResponse } from "@/lib/server/http";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
@@ -10,7 +11,9 @@ export async function GET(_request: Request, context: RouteContext<"/api/session
     let session = await requireOwnedSession(sessionId);
     if (!session) throw new AppError("SESSION_NOT_FOUND", "This study session is missing or expired.", 404);
     const admin = getSupabaseAdmin();
-    if (isStaleGeneration(session.state, session.updated_at)) {
+    const nowMs = Date.now();
+    const leaseActive = isGenerationLeaseActive(session.generation_lease_expires_at, nowMs);
+    if (isStaleGeneration(session.state, session.updated_at, nowMs, leaseActive)) {
       const now = new Date().toISOString();
       const { data: recovered, error: recoveryError } = await admin
         .from("preparation_sessions")
@@ -19,11 +22,14 @@ export async function GET(_request: Request, context: RouteContext<"/api/session
           failed_stage: session.current_stage?.replace(/^retrying_/, "") ?? "generation",
           error_code: "GENERATION_STALLED",
           error_message: "Generation paused before it could finish. Your materials and completed work are saved. Please retry.",
+          generation_lease_id: null,
+          generation_lease_expires_at: null,
           updated_at: now,
         })
         .eq("id", session.id)
         .eq("state", session.state)
         .eq("updated_at", session.updated_at)
+        .or(`generation_lease_expires_at.is.null,generation_lease_expires_at.lt.${now}`)
         .select("*")
         .maybeSingle();
       if (recoveryError) throw recoveryError;
@@ -36,7 +42,16 @@ export async function GET(_request: Request, context: RouteContext<"/api/session
     if (sourceError) throw sourceError;
     if (guideError) throw guideError;
     const guide = guideRow ? guideSchema.parse(guideRow.guide_json) : null;
-    return Response.json({ session, sources: sources ?? [], guide });
+    const safeSession = {
+      id: session.id,
+      state: session.state,
+      current_stage: session.current_stage,
+      failed_stage: session.failed_stage,
+      error_message: session.error_message,
+      updated_at: session.updated_at,
+      generation_lease_active: isGenerationLeaseActive(session.generation_lease_expires_at),
+    };
+    return Response.json({ session: safeSession, sources: sources ?? [], guide });
   } catch (error) {
     return errorResponse(error);
   }

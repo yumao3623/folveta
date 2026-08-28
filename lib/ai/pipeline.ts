@@ -68,6 +68,10 @@ const stageStates = {
   verifying_guide: "verifying_guide",
 } as const;
 
+// Two bounded 120-second provider attempts plus jitter fit within the 300s
+// Route Handler limit while preserving the existing one-retry policy.
+export const GENERATION_STEP_REQUEST_TIMEOUT_MS = 120_000;
+
 function modelForTask(task: ModelTask) {
   const env = getServerEnv();
   return {
@@ -277,7 +281,16 @@ function forbiddenLanguage(guide: Guide) {
   return /exam probability|likely to (?:appear|be on)|predict(?:s|ed|ion)? (?:the |your )?exam|mastered|safe to skip|guaranteed (?:coverage|readiness)|complete course coverage/i.test(JSON.stringify(guide));
 }
 
-export async function generateGuide(sessionId: string, title: string): Promise<Guide> {
+export type GenerationStep =
+  | { complete: false; stage: keyof typeof stageStates }
+  | { complete: true; stage: "guide_ready"; guide: Guide };
+
+/**
+ * Performs one durable generation unit. Every model call is followed by a
+ * checkpoint write before this function returns, so a continuation request
+ * never needs to repeat completed model work.
+ */
+export async function generateGuideStep(sessionId: string, title: string): Promise<GenerationStep> {
   const admin = getSupabaseAdmin();
   const env = getServerEnv();
   const gateway = new ModelGateway();
@@ -321,13 +334,13 @@ export async function generateGuide(sessionId: string, title: string): Promise<G
     verdicts: {},
   };
 
-  await setStage(sessionId, "extracting_topics");
   const candidateGroups: TopicCandidates["candidates"] = working.candidate_groups;
   for (const source of usableSources) {
     const sourceSpans = spans.filter((span) => span.source_id === source.id);
     for (const batch of batchSpans(sourceSpans)) {
       const batchKey = createHash("sha256").update(`${source.id}:${batch.map((span) => span.id).join(",")}`, "utf8").digest("hex");
       if (working.extracted_batch_keys.includes(batchKey)) continue;
+      await setStage(sessionId, "extracting_topics");
       const candidates = await trackedCall(sessionId, "extracting_topics", "topic_extract", (onRetry) => gateway.generateStructured({
         task: "topic_extract",
         schema: topicCandidatesSchema,
@@ -335,18 +348,20 @@ export async function generateGuide(sessionId: string, title: string): Promise<G
         instructions: PROMPTS.topicExtract,
         evidence: `Source: ${source.display_name}\n\n${batch.map((span) => evidenceLine(span, source)).join("\n\n")}`,
         onRetry,
+        requestTimeoutMs: GENERATION_STEP_REQUEST_TIMEOUT_MS,
       }));
       candidateGroups.push(...candidates.candidates);
       working.extracted_batch_keys.push(batchKey);
       working.candidate_groups = candidateGroups;
       await persistCheckpoint(sessionId, working);
+      return { complete: false, stage: "extracting_topics" };
     }
   }
   if (!candidateGroups.length) throw new AppError("TOPIC_EXTRACTION_EMPTY", "No supported study topics could be extracted.", 422);
 
-  await setStage(sessionId, "merging_topics");
   let mergedTopics = working.merged_topics;
   if (!mergedTopics.length) {
+    await setStage(sessionId, "merging_topics");
     const mergedResult = await trackedCall(sessionId, "merging_topics", "topic_merge", (onRetry) => gateway.generateStructured({
       task: "topic_merge",
       schema: mergedTopicsSchema,
@@ -354,6 +369,7 @@ export async function generateGuide(sessionId: string, title: string): Promise<G
       instructions: PROMPTS.topicMerge,
       evidence: `Maximum topics: ${MVP_LIMITS.maxTopics}\nValid span IDs: ${spans.map((span) => span.id).join(", ")}\n\nCandidates:\n${JSON.stringify(candidateGroups)}`,
       onRetry,
+      requestTimeoutMs: GENERATION_STEP_REQUEST_TIMEOUT_MS,
     }));
     mergedTopics = mergedResult.topics.slice(0, MVP_LIMITS.maxTopics).map((topic) => ({
       ...topic,
@@ -361,13 +377,14 @@ export async function generateGuide(sessionId: string, title: string): Promise<G
     })).filter((topic) => topic.evidence_span_ids.length > 0);
     working.merged_topics = mergedTopics;
     await persistCheckpoint(sessionId, working);
+    return { complete: false, stage: "merging_topics" };
   }
   if (!mergedTopics.length) throw new AppError("TOPIC_REFERENCE_VALIDATION_FAILED", "Topic extraction returned no valid source references.", 422);
 
-  await setStage(sessionId, "generating_guide");
   const rawTopics: Array<{ merged: MergedTopic; raw: RawGuideTopic }> = working.raw_topics;
   for (const merged of mergedTopics) {
     if (rawTopics.some((item) => item.merged.id === merged.id)) continue;
+    await setStage(sessionId, "generating_guide");
     const evidenceSpans = merged.evidence_span_ids.map((id) => spansById.get(id)).filter((span): span is SpanRow => Boolean(span));
     const raw = await trackedCall(sessionId, "generating_guide", "guide", (onRetry) => gateway.generateStructured({
       task: "guide",
@@ -376,20 +393,23 @@ export async function generateGuide(sessionId: string, title: string): Promise<G
       instructions: PROMPTS.guideTopic,
       evidence: `Topic contract: ${JSON.stringify(merged)}\n\nEvidence:\n${evidenceSpans.map((span) => evidenceLine(span, sourcesById.get(span.source_id)!)).join("\n\n")}`,
       onRetry,
+      requestTimeoutMs: GENERATION_STEP_REQUEST_TIMEOUT_MS,
     }));
     const invalidReference = allRawClaims(raw).some((claim) => claim.span_ids.some((id) => !merged.evidence_span_ids.includes(id)));
     if (invalidReference) throw new AppError("GUIDE_REFERENCE_VALIDATION_FAILED", `Generated topic “${merged.title}” cited an evidence span outside its supplied bundle.`, 422);
     rawTopics.push({ merged, raw: { ...raw, id: merged.id, title: merged.title, priority: merged.priority, focus_reason: merged.focus_reason } });
     working.raw_topics = rawTopics;
     await persistCheckpoint(sessionId, working);
+    return { complete: false, stage: "generating_guide" };
   }
 
-  await setStage(sessionId, "verifying_guide");
   const topics: GuideTopic[] = [];
   for (const { merged, raw } of rawTopics) {
     const claims = allRawClaims(raw);
     const citedIds = [...new Set(claims.flatMap((claim) => claim.span_ids))];
-    const verdicts = working.verdicts[merged.id] ?? (claims.length ? await trackedCall(sessionId, "verifying_guide", "grounding_verify", (onRetry) => gateway.generateStructured({
+    if (!working.verdicts[merged.id] && claims.length) {
+      await setStage(sessionId, "verifying_guide");
+      const verdicts = await trackedCall(sessionId, "verifying_guide", "grounding_verify", (onRetry) => gateway.generateStructured({
       task: "grounding_verify",
       schema: groundingVerdictsSchema,
       schemaName: "grounding_verdicts",
@@ -399,12 +419,13 @@ export async function generateGuide(sessionId: string, title: string): Promise<G
         return evidenceLine(span, sourcesById.get(span.source_id)!);
       }).join("\n\n")}`,
       onRetry,
-    })) : { verdicts: [] });
-    if (!working.verdicts[merged.id]) {
+      requestTimeoutMs: GENERATION_STEP_REQUEST_TIMEOUT_MS,
+      }));
       working.verdicts[merged.id] = verdicts;
       await persistCheckpoint(sessionId, working);
+      return { complete: false, stage: "verifying_guide" };
     }
-    topics.push(buildTopic(raw, merged, verdicts, spansById, sourcesById));
+    topics.push(buildTopic(raw, merged, working.verdicts[merged.id] ?? { verdicts: [] }, spansById, sourcesById));
   }
 
   const sourceIssues = sources.flatMap((source) => {
@@ -466,5 +487,5 @@ export async function generateGuide(sessionId: string, title: string): Promise<G
     updated_at: new Date().toISOString(),
   }).eq("id", sessionId);
   if (sessionError) throw sessionError;
-  return guide;
+  return { complete: true, stage: "guide_ready", guide };
 }

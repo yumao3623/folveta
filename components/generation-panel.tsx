@@ -27,6 +27,10 @@ export function isPersistedGenerationInProgress(state: string) {
   return ["extracting_topics", "merging_topics", "generating_guide", "verifying_guide"].includes(state);
 }
 
+export function isGenerationContinuationReady(state: string, leaseActive: boolean) {
+  return isPersistedGenerationInProgress(state) && !leaseActive;
+}
+
 export function GenerationPanel({
   sessionId,
   canGenerate,
@@ -43,7 +47,9 @@ export function GenerationPanel({
   const [stage, setStage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(initialError);
   const [busy, setBusy] = useState(false);
+  const [leaseActive, setLeaseActive] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const requestInFlight = useRef(false);
 
   useEffect(() => () => {
     if (timer.current) clearInterval(timer.current);
@@ -56,6 +62,7 @@ export function GenerationPanel({
       setState(payload.session.state);
       setStage(payload.session.current_stage);
       setError(payload.session.error_message ?? null);
+      setLeaseActive(payload.session.generation_lease_active === true);
       if (payload.session.state === "guide_ready") {
         if (timer.current) clearInterval(timer.current);
         router.refresh();
@@ -74,28 +81,39 @@ export function GenerationPanel({
     timer.current = setInterval(() => void poll(), 2000);
   }, [poll, state]);
 
-  async function generate() {
+  const generate = useCallback(async () => {
+    if (requestInFlight.current) return;
+    requestInFlight.current = true;
     setBusy(true);
     setError(null);
-    setState("extracting_topics");
-    setStage("extracting_topics");
-    timer.current = setInterval(() => void poll(), 2000);
     try {
       const response = await fetch(`/api/sessions/${sessionId}/generate`, { method: "POST" });
       const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload?.error?.message ?? "Study Guide generation failed.");
-      setState("guide_ready");
-      setStage("guide_ready");
-      router.refresh();
+      if (!response.ok) {
+        if (payload?.error?.code === "GENERATION_IN_PROGRESS") {
+          setLeaseActive(true);
+          return;
+        }
+        throw new Error(payload?.error?.message ?? "Study Guide generation failed.");
+      }
+      setState(payload?.complete ? "guide_ready" : payload?.currentStage ?? "extracting_topics");
+      setStage(payload?.currentStage ?? null);
+      setLeaseActive(false);
+      if (payload?.complete) router.refresh();
     } catch (reason) {
       setState("failed_retryable");
       setError(reason instanceof Error ? reason.message : "Study Guide generation failed.");
     } finally {
-      if (timer.current) clearInterval(timer.current);
-      timer.current = null;
+      requestInFlight.current = false;
       setBusy(false);
     }
-  }
+  }, [router, sessionId]);
+
+  useEffect(() => {
+    if (!isGenerationContinuationReady(state, leaseActive) || busy) return;
+    const continuation = setTimeout(() => void generate(), 0);
+    return () => clearTimeout(continuation);
+  }, [busy, generate, leaseActive, state]);
 
   const generating = isGenerationActive(state, busy);
   return <section className="ui-surface ui-surface--elevated p-6 sm:p-8">

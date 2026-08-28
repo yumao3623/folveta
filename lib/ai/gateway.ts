@@ -61,8 +61,8 @@ export type ModelResponseDiagnostics = {
   durationMs: number;
 };
 
-const MODEL_TIMEOUT_MS = 180_000;
-const MAX_ATTEMPTS = 2;
+export const MODEL_TIMEOUT_MS = 180_000;
+export const MAX_ATTEMPTS = 2;
 
 function numericUsage(usage: unknown) {
   if (!usage || typeof usage !== "object") return null;
@@ -178,6 +178,7 @@ export class ModelGateway {
     evidence,
     transport = "structured",
     onRetry,
+    requestTimeoutMs = MODEL_TIMEOUT_MS,
   }: {
     task: ModelTask;
     schema: ZodType<T>;
@@ -186,6 +187,7 @@ export class ModelGateway {
     evidence: string | ResponseInput;
     transport?: "structured" | "json_text";
     onRetry?: (attempt: number) => Promise<void> | void;
+    requestTimeoutMs?: number;
   }): Promise<StructuredResult<T>> {
     const configuredModel = this.env[modelKeys[task]];
     return withBoundedModelRetry(async (attempt) => {
@@ -196,13 +198,13 @@ export class ModelGateway {
             model: configuredModel,
             instructions: `${instructions}\nReturn exactly one valid JSON object matching the requested schema. Do not include markdown or commentary.`,
             input: evidence,
-          })
+          }, { timeout: requestTimeoutMs })
           : await this.client.responses.parse({
             model: configuredModel,
             instructions,
             input: evidence,
             text: { format: zodTextFormat(schema, schemaName) },
-          });
+          }, { timeout: requestTimeoutMs });
         const responseValue = response as unknown as Record<string, unknown>;
         const hasRefusalItem = response.output?.some((item) => {
           const candidate = item as unknown as { type?: string; content?: unknown };

@@ -7,9 +7,10 @@ const activeGenerationStates = new Set([
 
 export const GENERATION_STALE_AFTER_MS = 6 * 60_000;
 
-export function isStaleGeneration(state: string, updatedAt: string, now = Date.now()) {
+export function isStaleGeneration(state: string, updatedAt: string, now = Date.now(), leaseActive = false) {
   const lastProgressAt = new Date(updatedAt).getTime();
-  return activeGenerationStates.has(state)
+  return !leaseActive
+    && activeGenerationStates.has(state)
     && Number.isFinite(lastProgressAt)
     && now - lastProgressAt > GENERATION_STALE_AFTER_MS;
 }

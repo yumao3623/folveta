@@ -330,8 +330,8 @@ async function parseLegacyPpt(buffer: Buffer): Promise<ParsedMaterial> {
   try {
     // This parser is local and keeps legacy PowerPoint availability independent
     // of an OpenAI-compatible gateway's incomplete Files API support.
-    const module = await import("ppt-to-text");
-    const parser = module.default as LegacyPptParser;
+    const pptTextModule = await import("ppt-to-text");
+    const parser = pptTextModule.default as LegacyPptParser;
     const slides = parser.utils.to_text(parser.readBuffer(buffer));
     if (slides.length === 0) throw new AppError("PPT_NO_SLIDES", "The PPT did not contain readable slide records.", 422);
     if (slides.length > MVP_LIMITS.maxTotalUnits) throw new AppError("UNIT_LIMIT_EXCEEDED", `This PPT has ${slides.length} slides; the limit is ${MVP_LIMITS.maxTotalUnits}.`, 413);

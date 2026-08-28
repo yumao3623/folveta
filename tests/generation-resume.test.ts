@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { checkpointMatches, type GenerationCheckpoint } from "@/lib/ai/pipeline";
+import { GENERATION_STEP_REQUEST_TIMEOUT_MS, checkpointMatches, type GenerationCheckpoint } from "@/lib/ai/pipeline";
+import { MAX_ATTEMPTS } from "@/lib/ai/gateway";
 import { isGenerationClaimable } from "@/app/api/sessions/[sessionId]/generate/route";
 
 const checkpoint: GenerationCheckpoint = {
@@ -21,11 +22,16 @@ describe("Guide generation resume and duplicate protection", () => {
     expect(checkpointMatches(checkpoint, "source-a", "prompt-a", "2.0")).toBe(false);
   });
 
-  it("claims only idle or retryable sessions", () => {
+  it("allows a saved active stage to continue while keeping terminal sessions unavailable", () => {
     expect(isGenerationClaimable("ready")).toBe(true);
     expect(isGenerationClaimable("failed_retryable")).toBe(true);
-    expect(isGenerationClaimable("generating_guide")).toBe(false);
+    expect(isGenerationClaimable("generating_guide")).toBe(true);
     expect(isGenerationClaimable("guide_ready")).toBe(false);
     expect(isGenerationClaimable("failed_terminal")).toBe(false);
+  });
+
+  it("keeps one continuation request inside the Route Handler time budget", () => {
+    const maximumRetryDelayMs = 2_150;
+    expect(GENERATION_STEP_REQUEST_TIMEOUT_MS * MAX_ATTEMPTS + maximumRetryDelayMs).toBeLessThan(300_000);
   });
 });
