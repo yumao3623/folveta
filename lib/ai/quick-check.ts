@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
-import { ModelGateway, type ModelTask, type StructuredResult } from "@/lib/ai/gateway";
+import { ModelGateway, SafeProviderError, type ModelTask, type StructuredResult } from "@/lib/ai/gateway";
 import { PROMPTS } from "@/lib/ai/prompts";
 import {
   questionVerdictsSchema,
@@ -61,7 +61,7 @@ async function trackedQuickCheckCall<T>(
   sessionId: string,
   stage: "generating_quick_check" | "verifying_questions",
   task: "quick_check" | "question_verify",
-  call: (onRetry: (attempt: number) => Promise<void>) => Promise<StructuredResult<T>>,
+  call: () => Promise<StructuredResult<T>>,
 ) {
   const env = getServerEnv();
   const admin = getSupabaseAdmin();
@@ -79,9 +79,7 @@ async function trackedQuickCheckCall<T>(
   if (insertError) throw insertError;
 
   try {
-    const result = await call(async (attempt) => {
-      console.info("[generation-retry]", JSON.stringify({ sessionId, stage, task, attempt }));
-    });
+    const result = await call();
     await admin.from("generation_runs").update({
       status: "succeeded",
       model: result.actualModel,
@@ -91,12 +89,16 @@ async function trackedQuickCheckCall<T>(
     }).eq("id", runId);
     return result.data;
   } catch (error) {
+    const providerError = error instanceof SafeProviderError ? error : null;
     await admin.from("generation_runs").update({
       status: "failed",
-      error_code: error instanceof AppError ? error.code : "QUICK_CHECK_MODEL_FAILED",
-      error_message: error instanceof Error ? error.message : "Unknown Quick Check generation error",
+      error_code: providerError?.code ?? (error instanceof AppError ? error.code : "QUICK_CHECK_MODEL_FAILED"),
+      error_message: error instanceof AppError ? error.message : "The model provider request failed.",
       completed_at: new Date().toISOString(),
     }).eq("id", runId);
+    if (providerError) {
+      throw new AppError(providerError.code, "The model provider request failed.", providerError.retryable ? 503 : 422);
+    }
     throw error;
   }
 }
@@ -343,13 +345,12 @@ export async function generateQuickCheck(
     .join("\n\n");
 
   const gateway = new ModelGateway();
-  const raw = await trackedQuickCheckCall(sessionId, "generating_quick_check", "quick_check", (onRetry) => gateway.generateStructured({
+  const raw = await trackedQuickCheckCall(sessionId, "generating_quick_check", "quick_check", () => gateway.generateStructured({
     task: "quick_check",
     schema: rawQuickCheckCandidatesSchema,
     schemaName: "quick_check_candidates",
     instructions: PROMPTS.quickCheck,
     evidence: `Requested final questions: ${requested}\nGenerate ${candidateCount} candidates so weak items can be discarded.\n\nGuide targets:\n${JSON.stringify(targetPayload)}\n\nUploaded-course evidence:\n${evidence}`,
-    onRetry,
   }));
 
   const targetMap = new Map(reliableTargets.map((target) => [target.id, target]));
@@ -367,13 +368,12 @@ export async function generateQuickCheck(
     return `Candidate:\n${JSON.stringify(candidate)}\nEvidence:\n${candidateEvidence}\nGuide target:\n${target.guide_text}`;
   }).join("\n\n---\n\n");
 
-  const verified = await trackedQuickCheckCall(sessionId, "verifying_questions", "question_verify", (onRetry) => gateway.generateStructured({
+  const verified = await trackedQuickCheckCall(sessionId, "verifying_questions", "question_verify", () => gateway.generateStructured({
     task: "question_verify",
     schema: questionVerdictsSchema,
     schemaName: "question_verdicts",
     instructions: PROMPTS.questionVerify,
     evidence: verificationEvidence,
-    onRetry,
   }));
 
   const { selected, rejections } = validateQuickCheckCandidates({

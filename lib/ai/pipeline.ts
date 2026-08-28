@@ -5,7 +5,7 @@ import { MVP_LIMITS } from "@/lib/config";
 import { AppError } from "@/lib/server/http";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 import type { Json } from "@/lib/server/database.types";
-import { ModelGateway, type ModelTask, type StructuredResult } from "@/lib/ai/gateway";
+import { ModelGateway, SafeProviderError, type ModelTask, type StructuredResult } from "@/lib/ai/gateway";
 import { PROMPTS } from "@/lib/ai/prompts";
 import {
   groundingVerdictsSchema,
@@ -19,7 +19,7 @@ import {
   type RawGuideTopic,
 } from "@/lib/ai/schemas";
 
-type SourceRow = {
+export type GenerationSourceRow = {
   id: string;
   display_name: string;
   kind: "pdf" | "ppt" | "pptx" | "doc" | "docx" | "xls" | "xlsx" | "image";
@@ -29,7 +29,7 @@ type SourceRow = {
   error_message: string | null;
 };
 
-type SpanRow = {
+export type GenerationSpanRow = {
   id: string;
   source_id: string;
   locator_kind: "page" | "slide" | "paragraph" | "sheet" | "image" | "file";
@@ -68,8 +68,8 @@ const stageStates = {
   verifying_guide: "verifying_guide",
 } as const;
 
-// Two bounded 120-second provider attempts plus jitter fit within the 300s
-// Route Handler limit while preserving the existing one-retry policy.
+// The feature-flag-off legacy path performs one bounded provider call per
+// browser continuation; provider retries remain disabled in ModelGateway.
 export const GENERATION_STEP_REQUEST_TIMEOUT_MS = 120_000;
 
 function modelForTask(task: ModelTask) {
@@ -102,7 +102,7 @@ async function trackedCall<T>(
   sessionId: string,
   stage: keyof typeof stageStates,
   task: ModelTask,
-  call: (onRetry: (attempt: number) => Promise<void>) => Promise<StructuredResult<T>>,
+  call: () => Promise<StructuredResult<T>>,
 ) {
   const env = getServerEnv();
   const admin = getSupabaseAdmin();
@@ -118,14 +118,7 @@ async function trackedCall<T>(
     model: modelForTask(task) ?? env.MODEL_TOPIC_EXTRACT,
   });
   try {
-    const result = await call(async (attempt) => {
-      const { error } = await admin.from("preparation_sessions").update({
-        current_stage: `retrying_${stage}`,
-        updated_at: new Date().toISOString(),
-      }).eq("id", sessionId);
-      if (error) throw error;
-      console.info("[generation-retry]", JSON.stringify({ sessionId, stage, task, attempt }));
-    });
+    const result = await call();
     await admin.from("generation_runs").update({
       status: "succeeded",
       model: result.actualModel,
@@ -135,12 +128,16 @@ async function trackedCall<T>(
     }).eq("id", runId);
     return result.data;
   } catch (error) {
+    const providerError = error instanceof SafeProviderError ? error : null;
     await admin.from("generation_runs").update({
       status: "failed",
-      error_code: error instanceof AppError ? error.code : "MODEL_GENERATION_FAILED",
-      error_message: error instanceof Error ? error.message : "Unknown generation error",
+      error_code: providerError?.code ?? (error instanceof AppError ? error.code : "MODEL_GENERATION_FAILED"),
+      error_message: error instanceof AppError ? error.message : "The model provider request failed.",
       completed_at: new Date().toISOString(),
     }).eq("id", runId);
+    if (providerError) {
+      throw new AppError(providerError.code, "The model provider request failed.", providerError.retryable ? 503 : 422);
+    }
     throw error;
   }
 }
@@ -153,14 +150,14 @@ async function persistCheckpoint(sessionId: string, checkpoint: GenerationCheckp
   if (error) throw error;
 }
 
-function evidenceLine(span: SpanRow, source: SourceRow) {
+export function evidenceLine(span: GenerationSpanRow, source: GenerationSourceRow) {
   const locator = span.locator_kind === "page" ? "Page" : span.locator_kind === "slide" ? "Slide" : span.locator_kind === "sheet" ? "Sheet" : span.locator_kind === "paragraph" ? "Paragraph" : span.locator_kind === "image" ? "Image" : "File";
   return `[${span.id}] ${source.display_name} · ${locator} ${span.locator_number}\n${span.text}`;
 }
 
-function batchSpans(spans: SpanRow[], maximumCharacters = 45_000) {
-  const batches: SpanRow[][] = [];
-  let batch: SpanRow[] = [];
+export function batchSpans(spans: GenerationSpanRow[], maximumCharacters = 45_000) {
+  const batches: GenerationSpanRow[][] = [];
+  let batch: GenerationSpanRow[] = [];
   let size = 0;
   for (const span of spans) {
     if (batch.length && size + span.text.length > maximumCharacters) {
@@ -175,7 +172,7 @@ function batchSpans(spans: SpanRow[], maximumCharacters = 45_000) {
   return batches;
 }
 
-function allRawClaims(topic: RawGuideTopic) {
+export function allRawClaims(topic: RawGuideTopic) {
   return [
     ...topic.explanation,
     ...topic.key_concepts.flatMap((item) => item.explanation),
@@ -185,7 +182,7 @@ function allRawClaims(topic: RawGuideTopic) {
   ];
 }
 
-function referenceFor(span: SpanRow, source: SourceRow): SourceReference {
+function referenceFor(span: GenerationSpanRow, source: GenerationSourceRow): SourceReference {
   return {
     span_id: span.id,
     source_id: span.source_id,
@@ -199,12 +196,12 @@ function uniqueReferences(references: SourceReference[]) {
   return [...new Map(references.map((reference) => [reference.span_id, reference])).values()];
 }
 
-function buildTopic(
+export function buildTopic(
   raw: RawGuideTopic,
   merged: MergedTopic,
   verdicts: GroundingVerdicts,
-  spansById: Map<string, SpanRow>,
-  sourcesById: Map<string, SourceRow>,
+  spansById: Map<string, GenerationSpanRow>,
+  sourcesById: Map<string, GenerationSourceRow>,
 ): GuideTopic {
   const verdictMap = new Map(verdicts.verdicts.map((item) => [item.claim_id, item.verdict]));
   const resolveClaim = (claim: RawClaim): GroundedClaim => {
@@ -277,7 +274,7 @@ function buildTopic(
   };
 }
 
-function forbiddenLanguage(guide: Guide) {
+export function forbiddenLanguage(guide: Guide) {
   return /exam probability|likely to (?:appear|be on)|predict(?:s|ed|ion)? (?:the |your )?exam|mastered|safe to skip|guaranteed (?:coverage|readiness)|complete course coverage/i.test(JSON.stringify(guide));
 }
 
@@ -300,9 +297,9 @@ export async function generateGuideStep(sessionId: string, title: string): Promi
   ]);
   if (sourceError) throw sourceError;
   if (spanError) throw spanError;
-  const sources = (sourceData ?? []) as SourceRow[];
+  const sources = (sourceData ?? []) as GenerationSourceRow[];
   const usableSources = sources.filter((source) => source.status === "ready" || source.status === "ready_with_gaps");
-  const spans = (spanData ?? []) as SpanRow[];
+  const spans = (spanData ?? []) as GenerationSpanRow[];
   if (!usableSources.length || !spans.length) {
     throw new AppError("NO_USABLE_SOURCES", "At least one source with readable course text is required before generation.", 422);
   }
@@ -341,13 +338,12 @@ export async function generateGuideStep(sessionId: string, title: string): Promi
       const batchKey = createHash("sha256").update(`${source.id}:${batch.map((span) => span.id).join(",")}`, "utf8").digest("hex");
       if (working.extracted_batch_keys.includes(batchKey)) continue;
       await setStage(sessionId, "extracting_topics");
-      const candidates = await trackedCall(sessionId, "extracting_topics", "topic_extract", (onRetry) => gateway.generateStructured({
+      const candidates = await trackedCall(sessionId, "extracting_topics", "topic_extract", () => gateway.generateStructured({
         task: "topic_extract",
         schema: topicCandidatesSchema,
         schemaName: "topic_candidates",
         instructions: PROMPTS.topicExtract,
         evidence: `Source: ${source.display_name}\n\n${batch.map((span) => evidenceLine(span, source)).join("\n\n")}`,
-        onRetry,
         requestTimeoutMs: GENERATION_STEP_REQUEST_TIMEOUT_MS,
       }));
       candidateGroups.push(...candidates.candidates);
@@ -362,13 +358,12 @@ export async function generateGuideStep(sessionId: string, title: string): Promi
   let mergedTopics = working.merged_topics;
   if (!mergedTopics.length) {
     await setStage(sessionId, "merging_topics");
-    const mergedResult = await trackedCall(sessionId, "merging_topics", "topic_merge", (onRetry) => gateway.generateStructured({
+    const mergedResult = await trackedCall(sessionId, "merging_topics", "topic_merge", () => gateway.generateStructured({
       task: "topic_merge",
       schema: mergedTopicsSchema,
       schemaName: "merged_topics",
       instructions: PROMPTS.topicMerge,
       evidence: `Maximum topics: ${MVP_LIMITS.maxTopics}\nValid span IDs: ${spans.map((span) => span.id).join(", ")}\n\nCandidates:\n${JSON.stringify(candidateGroups)}`,
-      onRetry,
       requestTimeoutMs: GENERATION_STEP_REQUEST_TIMEOUT_MS,
     }));
     mergedTopics = mergedResult.topics.slice(0, MVP_LIMITS.maxTopics).map((topic) => ({
@@ -385,14 +380,13 @@ export async function generateGuideStep(sessionId: string, title: string): Promi
   for (const merged of mergedTopics) {
     if (rawTopics.some((item) => item.merged.id === merged.id)) continue;
     await setStage(sessionId, "generating_guide");
-    const evidenceSpans = merged.evidence_span_ids.map((id) => spansById.get(id)).filter((span): span is SpanRow => Boolean(span));
-    const raw = await trackedCall(sessionId, "generating_guide", "guide", (onRetry) => gateway.generateStructured({
+    const evidenceSpans = merged.evidence_span_ids.map((id) => spansById.get(id)).filter((span): span is GenerationSpanRow => Boolean(span));
+    const raw = await trackedCall(sessionId, "generating_guide", "guide", () => gateway.generateStructured({
       task: "guide",
       schema: rawGuideTopicSchema,
       schemaName: "study_guide_topic",
       instructions: PROMPTS.guideTopic,
       evidence: `Topic contract: ${JSON.stringify(merged)}\n\nEvidence:\n${evidenceSpans.map((span) => evidenceLine(span, sourcesById.get(span.source_id)!)).join("\n\n")}`,
-      onRetry,
       requestTimeoutMs: GENERATION_STEP_REQUEST_TIMEOUT_MS,
     }));
     const invalidReference = allRawClaims(raw).some((claim) => claim.span_ids.some((id) => !merged.evidence_span_ids.includes(id)));
@@ -409,7 +403,7 @@ export async function generateGuideStep(sessionId: string, title: string): Promi
     const citedIds = [...new Set(claims.flatMap((claim) => claim.span_ids))];
     if (!working.verdicts[merged.id] && claims.length) {
       await setStage(sessionId, "verifying_guide");
-      const verdicts = await trackedCall(sessionId, "verifying_guide", "grounding_verify", (onRetry) => gateway.generateStructured({
+      const verdicts = await trackedCall(sessionId, "verifying_guide", "grounding_verify", () => gateway.generateStructured({
       task: "grounding_verify",
       schema: groundingVerdictsSchema,
       schemaName: "grounding_verdicts",
@@ -418,7 +412,6 @@ export async function generateGuideStep(sessionId: string, title: string): Promi
         const span = spansById.get(id)!;
         return evidenceLine(span, sourcesById.get(span.source_id)!);
       }).join("\n\n")}`,
-      onRetry,
       requestTimeoutMs: GENERATION_STEP_REQUEST_TIMEOUT_MS,
       }));
       working.verdicts[merged.id] = verdicts;

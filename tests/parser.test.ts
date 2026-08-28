@@ -83,6 +83,9 @@ describe("material parsing", () => {
       configuredModel: "test-model",
       actualModel: "test-model",
       usage: null,
+      providerRequestId: null,
+      providerStatus: 200,
+      durationMs: 1,
       retryCount: 0,
       parseMode: "parsed",
     });

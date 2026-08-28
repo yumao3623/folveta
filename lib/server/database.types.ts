@@ -5,6 +5,7 @@ type SessionRow = {
   failed_stage: string | null; error_code: string | null; error_message: string | null;
   generation_checkpoint: Json | null;
   generation_lease_id: string | null; generation_lease_expires_at: string | null;
+  current_generation_run_id: string | null;
   expires_at: string | null; claimed_at: string | null; last_accessed_at: string; archived_at: string | null;
   deleted_at: string | null; purge_after: string | null; created_at: string; updated_at: string;
 };
@@ -27,6 +28,10 @@ type RunRow = {
   id: string; session_id: string; stage: string; status: string; attempt: number; prompt_version: string;
   schema_version: string; provider: string; model: string; usage: Json | null; error_code: string | null;
   error_message: string | null; started_at: string; completed_at: string | null;
+  generation_execution_id: string | null; operation_id: string | null;
+  queue_duration_ms: number | null; slot_wait_duration_ms: number | null; provider_duration_ms: number | null;
+  database_commit_duration_ms: number | null; total_duration_ms: number | null; retry_reason: string | null;
+  provider_status: number | null; provider_request_id: string | null; deadline_exceeded: boolean;
 };
 type GuideRow = {
   id: string; session_id: string; schema_version: string; prompt_version: string; source_checksum: string;
@@ -59,6 +64,7 @@ export type Database = {
         failed_stage?: string | null; error_code?: string | null; error_message?: string | null;
         generation_checkpoint?: Json | null;
         generation_lease_id?: string | null; generation_lease_expires_at?: string | null;
+        current_generation_run_id?: string | null;
         expires_at?: string | null; claimed_at?: string | null; last_accessed_at?: string; archived_at?: string | null;
         deleted_at?: string | null; purge_after?: string | null; created_at?: string; updated_at?: string;
       }>;
@@ -80,6 +86,29 @@ export type Database = {
         id?: string; session_id: string; stage: string; status: string; attempt?: number; prompt_version: string;
         schema_version: string; provider: string; model: string; usage?: Json | null; error_code?: string | null;
         error_message?: string | null; started_at?: string; completed_at?: string | null;
+        generation_execution_id?: string | null; operation_id?: string | null;
+        queue_duration_ms?: number | null; slot_wait_duration_ms?: number | null; provider_duration_ms?: number | null;
+        database_commit_duration_ms?: number | null; total_duration_ms?: number | null; retry_reason?: string | null;
+        provider_status?: number | null; provider_request_id?: string | null; deadline_exceeded?: boolean;
+      }>;
+      generation_executions: Table<{
+        id: string; session_id: string; status: string; public_stage: string; source_snapshot_hash: string;
+        execution_contract_hash: string; dispatch_state: string; dispatch_token: string | null; support_id: string;
+      }, {
+        id?: string; session_id: string; status?: string; public_stage?: string; source_snapshot_hash: string;
+        execution_contract_hash: string; dispatch_state?: string; dispatch_token?: string | null; support_id?: string;
+      }>;
+      generation_operations: Table<{
+        id: string; generation_run_id: string; operation_key: string; operation_kind: string;
+        status: string; operation_input_hash: string; input_json: Json; result_json: Json | null; result_hash: string | null;
+      }, {
+        id?: string; generation_run_id: string; operation_key: string; operation_kind: string; operation_version: string;
+        status?: string; operation_input_hash: string; input_json: Json; dependency_operation_ids?: string[]; dependency_result_hashes?: string[];
+      }>;
+      generation_workflow_instances: Table<{
+        id: string; generation_run_id: string; workflow_run_id: string; status: string; support_id: string;
+      }, {
+        id?: string; generation_run_id: string; workflow_run_id: string; workflow_contract_version: string; status: string;
       }>;
       study_guides: Table<GuideRow, {
         id: string; session_id: string; schema_version: string; prompt_version: string; source_checksum: string;
@@ -103,6 +132,24 @@ export type Database = {
         Args: { token_hash: string };
         Returns: string | null;
       };
+      acknowledge_generation_workflow: {
+        Args: {
+          p_generation_run_id: string;
+          p_dispatch_token: string;
+          p_workflow_run_id: string;
+          p_workflow_contract_version: string;
+        };
+        Returns: Json;
+      };
+      claim_generation_execution: { Args: Record<string, unknown>; Returns: Json };
+      claim_generation_dispatch: { Args: Record<string, unknown>; Returns: Json };
+      create_generation_operation: { Args: Record<string, unknown>; Returns: string };
+      claim_generation_operation: { Args: Record<string, unknown>; Returns: Json };
+      settle_generation_operation_success: { Args: Record<string, unknown>; Returns: Json };
+      settle_generation_operation_retry_or_fail: { Args: Record<string, unknown>; Returns: Json };
+      finalize_generation_execution: { Args: Record<string, unknown>; Returns: Json };
+      get_generation_execution_status: { Args: { p_generation_run_id: string }; Returns: Json };
+      get_generation_operation_context: { Args: { p_generation_run_id: string; p_operation_key: string }; Returns: Json };
       search_owned_knowledge: {
         Args: { search_query: string; result_limit?: number; result_offset?: number };
         Returns: Array<{

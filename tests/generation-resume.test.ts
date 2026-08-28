@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { GENERATION_STEP_REQUEST_TIMEOUT_MS, checkpointMatches, type GenerationCheckpoint } from "@/lib/ai/pipeline";
-import { MAX_ATTEMPTS } from "@/lib/ai/gateway";
 import { isGenerationClaimable } from "@/app/api/sessions/[sessionId]/generate/route";
 
 const checkpoint: GenerationCheckpoint = {
@@ -30,8 +29,7 @@ describe("Guide generation resume and duplicate protection", () => {
     expect(isGenerationClaimable("failed_terminal")).toBe(false);
   });
 
-  it("keeps one continuation request inside the Route Handler time budget", () => {
-    const maximumRetryDelayMs = 2_150;
-    expect(GENERATION_STEP_REQUEST_TIMEOUT_MS * MAX_ATTEMPTS + maximumRetryDelayMs).toBeLessThan(300_000);
+  it("keeps a legacy single-attempt continuation inside the Route Handler time budget", () => {
+    expect(GENERATION_STEP_REQUEST_TIMEOUT_MS).toBeLessThan(300_000);
   });
 });

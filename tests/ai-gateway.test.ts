@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AppError } from "@/lib/server/http";
-import { isRetryableModelError, parseStructuredText, responseDiagnostics, withBoundedModelRetry } from "@/lib/ai/gateway";
+import { isRetryableModelError, parseStructuredText, privacySafeDiagnostics, responseDiagnostics, SafeProviderError, validateProviderEnvelope } from "@/lib/ai/gateway";
 import { z } from "zod";
 
 const schema = z.object({ value: z.string().min(1) }).strict();
@@ -17,42 +17,28 @@ describe("AI gateway reliability contracts", () => {
   });
 
   it("only marks bounded transient failures retryable", () => {
-    expect(isRetryableModelError(new AppError("MODEL_EMPTY_OUTPUT", "empty"))).toBe(true);
-    expect(isRetryableModelError(new AppError("MODEL_INCOMPLETE_RESPONSE", "incomplete"))).toBe(true);
-    expect(isRetryableModelError(Object.assign(new Error("bad gateway"), { status: 502 }))).toBe(true);
+    expect(isRetryableModelError(new SafeProviderError("MODEL_EMPTY_OUTPUT", "provider_transient", true))).toBe(true);
+    expect(isRetryableModelError(new SafeProviderError("MODEL_INCOMPLETE_RESPONSE", "provider_transient", true))).toBe(true);
+    expect(isRetryableModelError(Object.assign(new Error("bad gateway"), { status: 502 }))).toBe(false);
     expect(isRetryableModelError(new AppError("MODEL_SCHEMA_VALIDATION_FAILED", "invalid"))).toBe(false);
     expect(isRetryableModelError(Object.assign(new Error("bad request"), { status: 400 }))).toBe(false);
   });
 
-  it("retries an empty model response once, then succeeds", async () => {
-    let calls = 0;
-    const retries: number[] = [];
-    const result = await withBoundedModelRetry(async () => {
-      calls += 1;
-      if (calls === 1) throw new AppError("MODEL_EMPTY_OUTPUT", "empty");
-      return "ok";
-    }, (attempt) => {
-      retries.push(attempt);
-    });
-    expect(result).toBe("ok");
-    expect(calls).toBe(2);
-    expect(retries).toEqual([2]);
+  it("exposes only sanitized provider error fields", () => {
+    const error = new SafeProviderError("MODEL_PROVIDER_TRANSIENT", "provider_transient", true, 503, "req_123", "provider_unavailable");
+    expect(error.message).toBe("MODEL_PROVIDER_TRANSIENT");
+    expect(error).not.toHaveProperty("cause");
+    expect(JSON.stringify(error)).not.toContain("private");
   });
 
-  it("retries a 502 only once and preserves terminal errors", async () => {
-    let transientCalls = 0;
-    await expect(withBoundedModelRetry(async () => {
-      transientCalls += 1;
-      throw Object.assign(new Error("bad gateway"), { status: 502 });
-    })).rejects.toMatchObject({ status: 502 });
-    expect(transientCalls).toBe(2);
-
-    let terminalCalls = 0;
-    await expect(withBoundedModelRetry(async () => {
-      terminalCalls += 1;
-      throw new AppError("MODEL_SCHEMA_VALIDATION_FAILED", "invalid");
-    })).rejects.toMatchObject({ code: "MODEL_SCHEMA_VALIDATION_FAILED" });
-    expect(terminalCalls).toBe(1);
+  it("rejects invalid content types, response shapes, and model identities without retrying", () => {
+    const valid = { model: "configured-model", output: [], output_text: "{}" };
+    expect(() => validateProviderEnvelope({ contentType: "text/event-stream", response: valid, configuredModel: "configured-model", providerStatus: 200, requestId: "req_1" }))
+      .toThrowError(expect.objectContaining({ code: "MODEL_INVALID_CONTENT_TYPE", retryable: false }));
+    expect(() => validateProviderEnvelope({ contentType: "application/json", response: "not-an-object", configuredModel: "configured-model", providerStatus: 200, requestId: "req_2" }))
+      .toThrowError(expect.objectContaining({ code: "MODEL_INVALID_RESPONSE_OBJECT", retryable: false }));
+    expect(() => validateProviderEnvelope({ contentType: "application/json", response: { ...valid, model: "unexpected-model" }, configuredModel: "configured-model", providerStatus: 200, requestId: "req_3" }))
+      .toThrowError(expect.objectContaining({ code: "MODEL_IDENTITY_MISMATCH", retryable: false }));
   });
 
   it("diagnostics contain metadata only and never response text", () => {
@@ -79,5 +65,10 @@ describe("AI gateway reliability contracts", () => {
     expect(diagnostics.requestId).toBe("gateway-request-id");
     expect(diagnostics.httpStatus).toBe(503);
     expect(JSON.stringify(diagnostics)).not.toContain("private provider detail");
+    expect(privacySafeDiagnostics(diagnostics)).toEqual({
+      providerStatus: 503,
+      requestId: "gateway-request-id",
+      duration: 850,
+    });
   });
 });

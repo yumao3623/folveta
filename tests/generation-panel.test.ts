@@ -1,27 +1,47 @@
 import { describe, expect, it } from "vitest";
-import { isGenerationActive, isGenerationContinuationReady, isPersistedGenerationInProgress } from "@/components/generation-panel";
+import {
+  commitGenerationSnapshot,
+  generationFailureMessage,
+  generationStatusLabel,
+  isGenerationActive,
+  type GenerationSnapshot,
+} from "@/components/generation-panel";
 
-describe("GenerationPanel failure recovery", () => {
-  it("does not keep the generate control busy after a persisted retryable failure", () => {
-    expect(isGenerationActive("failed_retryable", false)).toBe(false);
+const generation = (overrides: Partial<GenerationSnapshot> = {}): GenerationSnapshot => ({
+  run_id: "run-1",
+  status: "running",
+  stage: "generating_guide",
+  progress_percent: 60,
+  failure_category: null,
+  retry_allowed: false,
+  support_id: null,
+  ...overrides,
+});
+
+describe("GenerationPanel server-owned progress", () => {
+  it("treats queued, running, and retrying logical runs as active", () => {
+    expect(isGenerationActive("queued", false)).toBe(true);
+    expect(isGenerationActive("running", false)).toBe(true);
+    expect(isGenerationActive("retrying", false)).toBe(true);
+    expect(isGenerationActive("failed", false)).toBe(false);
   });
 
-  it("does not keep the generate control busy after a persisted terminal failure", () => {
-    expect(isGenerationActive("failed_terminal", false)).toBe(false);
+  it("does not regress committed progress for the same logical run", () => {
+    expect(commitGenerationSnapshot(generation(), generation({ progress_percent: 35 }))?.progress_percent).toBe(60);
   });
 
-  it("keeps the control busy while an active generation stage is persisted", () => {
-    expect(isGenerationActive("generating_guide", false)).toBe(true);
+  it("resets progress when observing a different logical run", () => {
+    expect(commitGenerationSnapshot(generation(), generation({ run_id: "run-2", progress_percent: 5 }))?.progress_percent).toBe(5);
   });
 
-  it("restarts status polling only for a persisted active stage after refresh", () => {
-    expect(isPersistedGenerationInProgress("merging_topics")).toBe(true);
-    expect(isPersistedGenerationInProgress("failed_retryable")).toBe(false);
+  it("uses fixed labels instead of provider or API text", () => {
+    expect(generationStatusLabel(generation(), "ready")).toBe("Writing your Study Guide");
+    expect(generationStatusLabel(generation({ status: "retrying", stage: "provider secret" }), "ready")).toBe("Restoring generation progress");
+    expect(generationStatusLabel(generation({ stage: "provider secret" }), "ready")).toBe("Building your Study Guide");
   });
 
-  it("only resumes a persisted continuation after its database lease is free", () => {
-    expect(isGenerationContinuationReady("generating_guide", false)).toBe(true);
-    expect(isGenerationContinuationReady("generating_guide", true)).toBe(false);
-    expect(isGenerationContinuationReady("failed_retryable", false)).toBe(false);
+  it("uses fixed privacy-safe failure messages", () => {
+    expect(generationFailureMessage("raw provider payload", true)).toBe("Generation could not finish this time. Your materials and completed work are saved.");
+    expect(generationFailureMessage("raw provider payload", false)).toBe("Generation could not be completed with these materials.");
   });
 });

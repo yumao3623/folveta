@@ -3,7 +3,6 @@ import type { ResponseInput } from "openai/resources/responses/responses";
 import { zodTextFormat } from "openai/helpers/zod";
 import type { ZodType } from "zod";
 import { getServerEnv } from "@/lib/env";
-import { AppError } from "@/lib/server/http";
 
 export type ModelTask =
   | "image_extract"
@@ -39,7 +38,10 @@ export type StructuredResult<T> = {
   configuredModel: string;
   actualModel: string;
   usage: unknown;
-  retryCount: number;
+  providerRequestId: string | null;
+  providerStatus: number;
+  durationMs: number;
+  retryCount: 0;
   parseMode: "parsed" | "text_fallback";
 };
 
@@ -62,7 +64,44 @@ export type ModelResponseDiagnostics = {
 };
 
 export const MODEL_TIMEOUT_MS = 180_000;
-export const MAX_ATTEMPTS = 2;
+
+export type ProviderFailureCategory =
+  | "provider_transient"
+  | "provider_unavailable"
+  | "provider_refusal"
+  | "provider_protocol"
+  | "invalid_output"
+  | "execution_contract";
+
+export type ProviderRetryReason =
+  | "timeout"
+  | "rate_limited"
+  | "provider_unavailable"
+  | "connection"
+  | "transport_interruption"
+  | "empty_output"
+  | "protocol_error"
+  | "model_mismatch"
+  | "refusal"
+  | "schema_invalid"
+  | "invalid_source_reference"
+  | "configuration_limit"
+  | "non_retryable";
+
+export class SafeProviderError extends Error {
+  constructor(
+    public readonly code: string,
+    public readonly category: ProviderFailureCategory,
+    public readonly retryable: boolean,
+    public readonly providerStatus: number | null = null,
+    public readonly providerRequestId: string | null = null,
+    public readonly retryReason: ProviderRetryReason | null = null,
+    public readonly deadlineExceeded = false,
+  ) {
+    super(code);
+    this.name = "SafeProviderError";
+  }
+}
 
 function numericUsage(usage: unknown) {
   if (!usage || typeof usage !== "object") return null;
@@ -105,7 +144,15 @@ export function responseDiagnostics(
 }
 
 function logDiagnostics(diagnostics: ModelResponseDiagnostics) {
-  console.info("[model-diagnostic]", JSON.stringify(diagnostics));
+  console.info("[model-diagnostic]", JSON.stringify(privacySafeDiagnostics(diagnostics)));
+}
+
+export function privacySafeDiagnostics(diagnostics: ModelResponseDiagnostics) {
+  return {
+    providerStatus: diagnostics.httpStatus,
+    requestId: diagnostics.requestId,
+    duration: diagnostics.durationMs,
+  };
 }
 
 export function parseStructuredText<T>(text: unknown, schema: ZodType<T>) {
@@ -123,39 +170,71 @@ export function parseStructuredText<T>(text: unknown, schema: ZodType<T>) {
 }
 
 export function isRetryableModelError(error: unknown) {
-  if (error instanceof AppError) return ["MODEL_EMPTY_OUTPUT", "MODEL_INCOMPLETE_RESPONSE", "MODEL_PROVIDER_TRANSIENT", "MODEL_PROVIDER_TIMEOUT"].includes(error.code);
-  const status = error && typeof error === "object" && typeof (error as { status?: unknown }).status === "number" ? (error as { status: number }).status : null;
-  if (status !== null && [408, 409, 429, 502, 503, 504].includes(status)) return true;
-  const name = error && typeof error === "object" && typeof (error as { name?: unknown }).name === "string" ? (error as { name: string }).name : "";
-  return /timeout|connection/i.test(name);
+  return error instanceof SafeProviderError && error.retryable;
 }
 
-export async function withBoundedModelRetry<T>(
-  call: (attempt: number) => Promise<T>,
-  onRetry?: (attempt: number) => Promise<void> | void,
-) {
-  let lastError: unknown;
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
-    try {
-      return await call(attempt);
-    } catch (error) {
-      lastError = error;
-      if (attempt >= MAX_ATTEMPTS || !isRetryableModelError(error)) throw error;
-      await onRetry?.(attempt + 1);
-      const delay = Math.min(2_000, 250 * (2 ** (attempt - 1))) + Math.floor(Math.random() * 150);
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
+function boundedRequestId(value: unknown) {
+  return typeof value === "string" && /^[A-Za-z0-9._:-]{1,128}$/.test(value) ? value : null;
+}
+
+export function validateProviderEnvelope(input: {
+  contentType: string | null;
+  response: unknown;
+  configuredModel: string;
+  providerStatus: number;
+  requestId: string | null;
+}) {
+  const mediaType = input.contentType?.split(";", 1)[0]?.trim().toLowerCase() ?? "";
+  if (!(mediaType === "application/json" || mediaType.endsWith("+json"))) {
+    throw new SafeProviderError("MODEL_INVALID_CONTENT_TYPE", "provider_protocol", false, input.providerStatus, input.requestId, "protocol_error");
   }
-  throw lastError instanceof Error ? lastError : new AppError("MODEL_GENERATION_FAILED", "The model provider request failed.", 502);
+  if (!input.response || typeof input.response !== "object" || Array.isArray(input.response)) {
+    throw new SafeProviderError("MODEL_INVALID_RESPONSE_OBJECT", "provider_protocol", false, input.providerStatus, input.requestId, "protocol_error");
+  }
+  const response = input.response as Record<string, unknown>;
+  if (typeof response.model !== "string" || !response.model) {
+    throw new SafeProviderError("MODEL_IDENTITY_MISSING", "provider_protocol", false, input.providerStatus, input.requestId, "protocol_error");
+  }
+  if (response.model !== input.configuredModel) {
+    throw new SafeProviderError("MODEL_IDENTITY_MISMATCH", "provider_protocol", false, input.providerStatus, input.requestId, "model_mismatch");
+  }
+  if (!Array.isArray(response.output) || typeof response.output_text !== "string") {
+    throw new SafeProviderError("MODEL_INVALID_RESPONSE_OBJECT", "provider_protocol", false, input.providerStatus, input.requestId, "protocol_error");
+  }
+  return response;
 }
 
-function safeProviderError(error: unknown) {
+function safeProviderError(error: unknown): SafeProviderError {
   const status = error && typeof error === "object" && typeof (error as { status?: unknown }).status === "number" ? (error as { status: number }).status : null;
-  if (status === 408 || (status !== null && [502, 503, 504].includes(status))) return new AppError("MODEL_PROVIDER_TRANSIENT", "The model provider is temporarily unavailable.", 502, { httpStatus: status });
-  if (status === 429) return new AppError("MODEL_PROVIDER_TRANSIENT", "The model provider is rate limited.", 429, { httpStatus: status });
+  const requestId = error && typeof error === "object"
+    ? boundedRequestId((error as { request_id?: unknown; requestID?: unknown }).request_id ?? (error as { requestID?: unknown }).requestID)
+    : null;
+  if (status === 408) {
+    return new SafeProviderError("MODEL_PROVIDER_TIMEOUT", "provider_transient", true, status, requestId, "timeout", true);
+  }
+  if (status === 429) {
+    return new SafeProviderError("MODEL_PROVIDER_RATE_LIMITED", "provider_transient", true, status, requestId, "rate_limited");
+  }
+  if (status !== null && [500, 502, 503, 504].includes(status)) {
+    return new SafeProviderError("MODEL_PROVIDER_TRANSIENT", "provider_transient", true, status, requestId, "provider_unavailable");
+  }
   const name = error && typeof error === "object" && typeof (error as { name?: unknown }).name === "string" ? (error as { name: string }).name : "";
-  if (/timeout|connection/i.test(name)) return new AppError("MODEL_PROVIDER_TIMEOUT", "The model provider request timed out.", 504);
-  return new AppError("MODEL_GENERATION_FAILED", "The model provider request failed.", 502, { httpStatus: status });
+  if (/timeout/i.test(name)) return new SafeProviderError("MODEL_PROVIDER_TIMEOUT", "provider_transient", true, status, requestId, "timeout", true);
+  if (/connection|network|fetch/i.test(name)) return new SafeProviderError("MODEL_PROVIDER_CONNECTION", "provider_transient", true, status, requestId, "connection");
+  return new SafeProviderError("MODEL_PROVIDER_FAILURE", "provider_unavailable", false, status, requestId, "non_retryable");
+}
+
+function incompleteProviderError(reason: string | null, status: number | null, requestId: string | null) {
+  if (reason === "max_output_tokens") {
+    return new SafeProviderError("MODEL_OUTPUT_TOKEN_LIMIT", "execution_contract", false, status, requestId, "configuration_limit");
+  }
+  if (reason === "content_filter" || reason === "refusal") {
+    return new SafeProviderError("MODEL_REFUSAL", "provider_refusal", false, status, requestId, "refusal");
+  }
+  if (reason === "model_mismatch" || reason === "protocol_error") {
+    return new SafeProviderError("MODEL_PROTOCOL_MISMATCH", "provider_protocol", false, status, requestId, "protocol_error");
+  }
+  return new SafeProviderError("MODEL_INCOMPLETE_RESPONSE", "provider_transient", true, status, requestId, "transport_interruption");
 }
 
 export class ModelGateway {
@@ -167,6 +246,8 @@ export class ModelGateway {
       apiKey: this.env.OPENAI_API_KEY,
       baseURL: this.env.OPENAI_BASE_URL,
       timeout: MODEL_TIMEOUT_MS,
+      maxRetries: 0,
+      logLevel: "off",
     });
   }
 
@@ -177,7 +258,6 @@ export class ModelGateway {
     instructions,
     evidence,
     transport = "structured",
-    onRetry,
     requestTimeoutMs = MODEL_TIMEOUT_MS,
   }: {
     task: ModelTask;
@@ -186,81 +266,79 @@ export class ModelGateway {
     instructions: string;
     evidence: string | ResponseInput;
     transport?: "structured" | "json_text";
-    onRetry?: (attempt: number) => Promise<void> | void;
     requestTimeoutMs?: number;
   }): Promise<StructuredResult<T>> {
     const configuredModel = this.env[modelKeys[task]];
-    return withBoundedModelRetry(async (attempt) => {
-      const startedAt = Date.now();
-      try {
-        const response = transport === "json_text"
-          ? await this.client.responses.create({
-            model: configuredModel,
-            instructions: `${instructions}\nReturn exactly one valid JSON object matching the requested schema. Do not include markdown or commentary.`,
-            input: evidence,
-          }, { timeout: requestTimeoutMs })
-          : await this.client.responses.parse({
-            model: configuredModel,
-            instructions,
-            input: evidence,
-            text: { format: zodTextFormat(schema, schemaName) },
-          }, { timeout: requestTimeoutMs });
-        const responseValue = response as unknown as Record<string, unknown>;
-        const hasRefusalItem = response.output?.some((item) => {
-          const candidate = item as unknown as { type?: string; content?: unknown };
-          return candidate.type === "message" && Array.isArray(candidate.content)
-            && candidate.content.some((part: unknown) => part && typeof part === "object" && (part as { type?: unknown }).type === "refusal");
-        }) ?? false;
-        if (responseValue.refusal || hasRefusalItem) {
-          const error = new AppError("MODEL_REFUSAL", "The model declined to generate this result.", 422);
-          logDiagnostics(responseDiagnostics(response, { provider: "openai", model: configuredModel, durationMs: Date.now() - startedAt, parseResult: "refusal" }));
-          throw error;
-        }
-        if (response.status === "incomplete" || response.incomplete_details) {
-          const error = new AppError("MODEL_INCOMPLETE_RESPONSE", "The model response was incomplete.", 502, { reason: response.incomplete_details?.reason ?? null });
-          logDiagnostics(responseDiagnostics(response, { provider: "openai", model: configuredModel, durationMs: Date.now() - startedAt, parseResult: "incomplete" }));
-          throw error;
-        }
-        if (transport !== "json_text" && responseValue.output_parsed !== null && responseValue.output_parsed !== undefined) {
-          const validation = schema.safeParse(responseValue.output_parsed);
-          if (!validation.success) {
-            logDiagnostics(responseDiagnostics(response, { provider: "openai", model: configuredModel, durationMs: Date.now() - startedAt, parseResult: "schema_invalid" }));
-            throw new AppError("MODEL_SCHEMA_VALIDATION_FAILED", "The model returned a result that did not match the required schema.", 502);
-          }
-          logDiagnostics(responseDiagnostics(response, { provider: "openai", model: configuredModel, durationMs: Date.now() - startedAt, parseResult: "parsed" }));
-          return {
-            data: validation.data,
-            provider: "openai",
-            configuredModel,
-            actualModel: response.model,
-            usage: response.usage,
-            retryCount: attempt - 1,
-            parseMode: "parsed",
-          };
-        }
-        const fallback = parseStructuredText(response.output_text, schema);
-        if (fallback.kind === "valid") {
-          logDiagnostics(responseDiagnostics(response, { provider: "openai", model: configuredModel, durationMs: Date.now() - startedAt, parseResult: "text_fallback" }));
-          return {
-            data: fallback.data,
-            provider: "openai",
-            configuredModel,
-            actualModel: response.model,
-            usage: response.usage,
-            retryCount: attempt - 1,
-            parseMode: "text_fallback",
-          };
-        }
-        const code = fallback.kind === "empty" ? "MODEL_EMPTY_OUTPUT" : fallback.kind === "invalid_json" ? "MODEL_INVALID_JSON" : "MODEL_SCHEMA_VALIDATION_FAILED";
-        const error = new AppError(code, fallback.kind === "empty" ? "The model did not return a result." : "The model returned a result that did not match the required schema.", 502);
-        logDiagnostics(responseDiagnostics(response, { provider: "openai", model: configuredModel, durationMs: Date.now() - startedAt, parseResult: fallback.kind }));
-        throw error;
-      } catch (error) {
-        if (!(error instanceof AppError)) {
-          logDiagnostics(responseDiagnostics(error, { provider: "openai", model: configuredModel, durationMs: Date.now() - startedAt, parseResult: "empty" }));
-        }
-        throw error instanceof AppError ? error : safeProviderError(error);
+    const startedAt = Date.now();
+    try {
+      const request = this.client.responses.create({
+        model: configuredModel,
+        instructions: transport === "json_text"
+          ? `${instructions}\nReturn exactly one valid JSON object matching the requested schema. Do not include markdown or commentary.`
+          : instructions,
+        input: evidence,
+        ...(transport === "structured" ? { text: { format: zodTextFormat(schema, schemaName) } } : {}),
+      }, { timeout: requestTimeoutMs });
+      const envelope = await request.withResponse();
+      const requestId = boundedRequestId(envelope.request_id);
+      const providerStatus = envelope.response.status;
+      validateProviderEnvelope({
+        contentType: envelope.response.headers.get("content-type"),
+        response: envelope.data,
+        configuredModel,
+        providerStatus,
+        requestId,
+      });
+      const response = envelope.data;
+      const responseValue = response as unknown as Record<string, unknown>;
+      const hasRefusalItem = response.output.some((item) => {
+        const candidate = item as unknown as { type?: string; content?: unknown };
+        return candidate.type === "message" && Array.isArray(candidate.content)
+          && candidate.content.some((part: unknown) => part && typeof part === "object" && (part as { type?: unknown }).type === "refusal");
+      });
+      if (responseValue.refusal || hasRefusalItem) {
+        logDiagnostics(responseDiagnostics(response, { provider: "openai", model: configuredModel, durationMs: Date.now() - startedAt, parseResult: "refusal" }));
+        throw new SafeProviderError("MODEL_REFUSAL", "provider_refusal", false, providerStatus, requestId, "refusal");
       }
-    }, onRetry);
+      if (response.status === "incomplete" || response.incomplete_details) {
+        logDiagnostics(responseDiagnostics(response, { provider: "openai", model: configuredModel, durationMs: Date.now() - startedAt, parseResult: "incomplete" }));
+        throw incompleteProviderError(response.incomplete_details?.reason ?? null, providerStatus, requestId);
+      }
+      const parsed = parseStructuredText(response.output_text, schema);
+      if (parsed.kind === "valid") {
+        const durationMs = Date.now() - startedAt;
+        const parseMode = transport === "structured" ? "parsed" as const : "text_fallback" as const;
+        logDiagnostics(responseDiagnostics(response, { provider: "openai", model: configuredModel, durationMs, parseResult: parseMode }));
+        return {
+          data: parsed.data,
+          provider: "openai",
+          configuredModel,
+          actualModel: response.model,
+          usage: response.usage,
+          providerRequestId: requestId,
+          providerStatus,
+          durationMs,
+          retryCount: 0,
+          parseMode,
+        };
+      }
+      logDiagnostics(responseDiagnostics(response, { provider: "openai", model: configuredModel, durationMs: Date.now() - startedAt, parseResult: parsed.kind }));
+      if (parsed.kind === "empty") {
+        throw new SafeProviderError("MODEL_EMPTY_OUTPUT", "provider_transient", true, providerStatus, requestId, "empty_output");
+      }
+      throw new SafeProviderError(
+        parsed.kind === "invalid_json" ? "MODEL_INVALID_JSON" : "MODEL_SCHEMA_VALIDATION_FAILED",
+        "provider_protocol",
+        false,
+        providerStatus,
+        requestId,
+        parsed.kind === "invalid_json" ? "protocol_error" : "schema_invalid",
+      );
+    } catch (error) {
+      if (!(error instanceof SafeProviderError)) {
+        logDiagnostics(responseDiagnostics(error, { provider: "openai", model: configuredModel, durationMs: Date.now() - startedAt, parseResult: "empty" }));
+      }
+      throw error instanceof SafeProviderError ? error : safeProviderError(error);
+    }
   }
 }

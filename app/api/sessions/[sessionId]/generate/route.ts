@@ -3,6 +3,8 @@ import { generateGuideStep } from "@/lib/ai/pipeline";
 import { claimGenerationLease, releaseGenerationLease } from "@/lib/ai/generation-lease";
 import { AppError, errorResponse } from "@/lib/server/http";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
+import { getServerEnv } from "@/lib/env";
+import { claimLogicalGeneration, dispatchGeneration, generationSnapshot } from "@/lib/ai/generation-dispatch";
 
 export const maxDuration = 300;
 
@@ -31,6 +33,17 @@ export async function POST(_request: Request, context: RouteContext<"/api/sessio
     authorized = true;
     if (!isGenerationClaimable(session.state)) throw new AppError("GENERATION_NOT_AVAILABLE", "Guide generation is not available for this session.", 409);
 
+    if (getServerEnv().AI_GENERATION_WORKFLOW_ENABLED) {
+      const claimed = await claimLogicalGeneration(sessionId);
+      const generationRunId = String(claimed.generationRunId);
+      await dispatchGeneration(generationRunId);
+      const { data, error } = await (getSupabaseAdmin() as unknown as {
+        rpc: (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }>;
+      }).rpc("get_generation_execution_status", { p_generation_run_id: generationRunId });
+      if (error) throw new AppError("GENERATION_STATUS_UNAVAILABLE", "Generation was accepted but its status is unavailable.", 503);
+      return Response.json({ generation: generationSnapshot(data as Record<string, unknown>), accepted: true }, { status: 202 });
+    }
+
     leaseId = await claimGenerationLease(sessionId);
     if (!leaseId) throw new AppError("GENERATION_IN_PROGRESS", "Guide generation is already in progress.", 409);
     claimed = true;
@@ -42,7 +55,14 @@ export async function POST(_request: Request, context: RouteContext<"/api/sessio
         const admin = getSupabaseAdmin();
         const { data: liveSession } = await admin.from("preparation_sessions").select("current_stage").eq("id", sessionId).eq("generation_lease_id", leaseId).maybeSingle();
         const failedStage = liveSession?.current_stage?.replace(/^retrying_/, "") ?? "generation";
-        const retryable = error instanceof AppError && ["MODEL_EMPTY_OUTPUT", "MODEL_INCOMPLETE_RESPONSE", "MODEL_PROVIDER_TRANSIENT", "MODEL_PROVIDER_TIMEOUT"].includes(error.code);
+        const retryable = error instanceof AppError && [
+          "MODEL_EMPTY_OUTPUT",
+          "MODEL_INCOMPLETE_RESPONSE",
+          "MODEL_PROVIDER_CONNECTION",
+          "MODEL_PROVIDER_RATE_LIMITED",
+          "MODEL_PROVIDER_TRANSIENT",
+          "MODEL_PROVIDER_TIMEOUT",
+        ].includes(error.code);
         await admin.from("preparation_sessions").update({
           state: retryable ? "failed_retryable" : "failed_terminal",
           failed_stage: failedStage,

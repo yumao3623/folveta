@@ -5,6 +5,9 @@ import type { Database } from "@/lib/server/database.types";
 import { isSupabaseAuthSessionCookie } from "@/lib/supabase-cookies";
 
 export async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/.well-known/workflow/")) {
+    return NextResponse.next({ request });
+  }
   const authCookies = request.cookies.getAll().filter(({ name }) => isSupabaseAuthSessionCookie(name));
   if (authCookies.length === 0) return NextResponse.next({ request });
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -32,5 +35,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|\\.well-known/workflow|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };

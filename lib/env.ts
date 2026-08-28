@@ -14,6 +14,13 @@ const serverEnvSchema = z.object({
   MODEL_GROUNDING_VERIFY: z.string().min(1),
   MODEL_QUICK_CHECK: z.string().min(1),
   MODEL_QUESTION_VERIFY: z.string().min(1),
+  MODEL_CONTEXT_WINDOW_TOKENS: z.coerce.number().int().positive().default(128_000),
+  GATEWAY_MAX_INPUT_TOKENS: z.coerce.number().int().positive().default(80_000),
+  AI_GENERATION_WORKFLOW_ENABLED: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
+  CRON_SECRET: z.preprocess(
+    (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
+    z.string().min(32).optional(),
+  ),
   PROMPT_VERSION: z.string().min(1).default("phase1-v1"),
   GUIDE_SCHEMA_VERSION: z.literal("1.0").default("1.0"),
   QUICK_CHECK_SCHEMA_VERSION: z.literal("1.0").default("1.0"),
