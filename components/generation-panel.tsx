@@ -55,7 +55,7 @@ export function GenerationPanel({
     if (response.ok && payload?.session) {
       setState(payload.session.state);
       setStage(payload.session.current_stage);
-      if (payload.session.error_message) setError(payload.session.error_message);
+      setError(payload.session.error_message ?? null);
       if (payload.session.state === "guide_ready") {
         if (timer.current) clearInterval(timer.current);
         router.refresh();
