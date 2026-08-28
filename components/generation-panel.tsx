@@ -19,6 +19,10 @@ const stageLabels: Record<string, string> = {
   guide_ready: "Study Guide ready",
 };
 
+export function isGenerationActive(state: string, busy: boolean) {
+  return busy || ["extracting_topics", "merging_topics", "generating_guide", "verifying_guide"].includes(state);
+}
+
 export function GenerationPanel({
   sessionId,
   canGenerate,
@@ -52,6 +56,11 @@ export function GenerationPanel({
         if (timer.current) clearInterval(timer.current);
         router.refresh();
       }
+      if (["failed_retryable", "failed_terminal"].includes(payload.session.state)) {
+        if (timer.current) clearInterval(timer.current);
+        timer.current = null;
+        setBusy(false);
+      }
     }
   }
 
@@ -78,7 +87,7 @@ export function GenerationPanel({
     }
   }
 
-  const generating = busy || ["extracting_topics", "merging_topics", "generating_guide", "verifying_guide"].includes(state);
+  const generating = isGenerationActive(state, busy);
   return <section className="ui-surface ui-surface--elevated p-6 sm:p-8">
     <div className="flex items-center gap-3"><IconFrame tone="primary" size="lg"><Sparkles className="h-6 w-6" strokeWidth={1.8} /></IconFrame><div><p className="text-label-sm text-[var(--primary)]">Generation</p><h2 className="font-headline-md text-2xl font-semibold text-[var(--foreground)]">Build your Study Guide</h2></div></div>
     <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">The pipeline extracts topics source by source, merges them, writes structured sections, then validates grounding and references.</p>
