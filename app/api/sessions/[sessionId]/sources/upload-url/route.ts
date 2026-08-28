@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { MVP_LIMITS, STORAGE_BUCKET } from "@/lib/config";
+import { isSupportedSourceMimeType, MVP_LIMITS, sourceKindFromFilename, STORAGE_BUCKET } from "@/lib/config";
 import { requireOwnedSession } from "@/lib/server/auth";
 import { AppError, errorResponse } from "@/lib/server/http";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
@@ -12,9 +12,9 @@ const inputSchema = z.object({
 }).strict();
 
 function fileKind(filename: string) {
-  const extension = filename.split(".").pop()?.toLowerCase();
-  if (extension === "pdf" || extension === "pptx") return extension;
-  throw new AppError("UNSUPPORTED_FILE", "Only text-based PDF and PPTX files are supported in this MVP.", 415);
+  const kind = sourceKindFromFilename(filename);
+  if (kind) return kind;
+  throw new AppError("UNSUPPORTED_FILE", "This file type is not supported. Upload PDF, Word, Excel, PowerPoint, or an image.", 415);
 }
 
 function safeFilename(filename: string) {
@@ -28,6 +28,9 @@ export async function POST(request: Request, context: RouteContext<"/api/session
     if (!session) throw new AppError("SESSION_NOT_FOUND", "This study session is missing or expired.", 404);
     const input = inputSchema.parse(await request.json());
     const kind = fileKind(input.filename);
+    if (!isSupportedSourceMimeType(kind, input.mimeType)) {
+      throw new AppError("UNSUPPORTED_FILE", "The file type does not match its supported format.", 415);
+    }
     const admin = getSupabaseAdmin();
 
     const { count, error: countError } = await admin

@@ -24,7 +24,7 @@ Browser
   v
 Next.js 16 App Router / Node Route Handlers
   |-- Supabase Auth owner checks plus anonymous session-token compatibility
-  |-- PDF/PPTX validation and parsing
+  |-- PDF/Office/image validation and parsing
   |-- stable source unit/span creation
   |-- model gateway and structured generation
   |-- deterministic reference resolution and MCQ scoring
@@ -47,8 +47,8 @@ Configured OpenAI-compatible Responses API
 | Identity/database/storage | Supabase Auth, Supabase Postgres, private Storage, `@supabase/ssr` |
 | Validation | Zod 4 strict schemas |
 | Model API | OpenAI SDK Responses structured parsing behind `ModelGateway` |
-| Parsing | `unpdf`, `officeparser`, `file-type` |
-| Tests | Vitest; synthetic PDF/PPTX fixtures use `pdf-lib` and `jszip` |
+| Parsing | `unpdf`, `officeparser`, `ppt-to-text`, `file-type`; PDF/DOCX/XLSX/PPTX are parsed into anchored units, legacy `.ppt` is parsed locally into slide anchors, images use constrained visual-text extraction, and legacy `.doc/.xls` use controlled Responses file-input extraction with explicit file anchors |
+| Tests | Vitest; synthetic PDF/PPTX fixtures use `pdf-lib` and `jszip`, plus real PDF and legacy Office material parser regressions |
 
 There is no ORM, job queue, worker, vector database, component framework, analytics SDK, Auth provider integration, or billing SDK in the current application.
 
@@ -67,7 +67,7 @@ There is no ORM, job queue, worker, vector database, component framework, analyt
 | `/auth` | Email/password sign-in and sign-up | `noindex, nofollow` |
 | `/account` | Compatibility redirect to `/profile` | `noindex, nofollow` |
 | `/my-guides` | Account-owned active/archived Guide list and management UI | `noindex, nofollow` |
-| `/library` | Account-owned uploaded PDF/PPTX Source inventory | `noindex, nofollow` |
+| `/library` | Account-owned uploaded multi-format Source inventory | `noindex, nofollow` |
 | `/search` | Account-owned Guide/Topic/Source full-text search | `noindex, nofollow` |
 | `/profile` | Auth account facts, owner-scoped workspace counts, and sign-out | `noindex, nofollow` |
 | `/study/[sessionId]` | Anonymous-token or account-owned materials/generation/Guide | `noindex, nofollow` |
@@ -103,8 +103,8 @@ There is no ORM, job queue, worker, vector database, component framework, analyt
 | --- | --- |
 | `preparation_sessions` | Anonymous token or Auth owner, title/state/failure, claim/access/archive/delete/purge lifecycle |
 | `sources` | Session-owned file metadata, private object path, hash, parse state/counts/warnings |
-| `source_units` | Page/slide raw and normalized text plus readability/warnings |
-| `source_spans` | Stable evidence blocks selected by model output |
+| `source_units` | Page/slide/paragraph/sheet/image raw and normalized text plus readability/warnings |
+| `source_spans` | Stable evidence blocks selected by model output, with the same locator kinds |
 | `generation_runs` | Model stage/status/version/provider/model/usage/error metadata |
 | `study_guides` | Stable-ID versioned Guide JSON plus normalized title/access/archive/delete metadata |
 | `quick_checks` | Versioned Quick Check JSON keyed to Guide checksum/requested count |
@@ -112,7 +112,7 @@ There is no ORM, job queue, worker, vector database, component framework, analyt
 
 All tables enable RLS. Authenticated select policies compare the aggregate owner to `auth.uid()`; child ownership is derived through the non-deleted parent session. Direct writes to generated artifacts and all anonymous direct table access remain closed. Server routes use the service role only after the shared DAL validates either the Supabase user owner or the high-entropy anonymous cookie hash and expiry.
 
-The private Storage bucket allows PDF/PPTX-related MIME values, a 25 MB object limit, and signed upload. No current route issues a user-facing signed source download/view URL. Product-3B Guide lists use bounded page/limit input, deterministic last-access ordering, an embedded source count, and partial indexes for active/archive/recent and cleanup paths. Product-3C Library starts from `sources`, joins the owner aggregate and related Guide in one request, and uses look-ahead pagination without N+1 reads.
+The private Storage bucket allows PDF, Office OOXML, legacy Office, and common image MIME values, a 25 MB object limit, and signed upload. No current route issues a user-facing signed source download/view URL. Product-3B Guide lists use bounded page/limit input, deterministic last-access ordering, an embedded source count, and partial indexes for active/archive/recent and cleanup paths. Product-3C Library starts from `sources`, joins the owner aggregate and related Guide in one request, and uses look-ahead pagination without N+1 reads.
 
 Product-3C Search calls `search_owned_knowledge` through the authenticated Supabase server client. The `security invoker` function requires `auth.uid()`, relies on existing owner RLS, excludes archived/deleted aggregates, unions Guide title, structured Topic, normalized Source filename, and Source span matches, and caps page size at 24. GIN FTS indexes support Guide JSON/title, punctuation-normalized Source filename, and span text. A dev query plan used the Source filename GIN index. No search content is loaded wholesale into the browser.
 

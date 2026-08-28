@@ -19,7 +19,7 @@ export default function AboutPage() {
           <h1 className="mt-3 text-4xl font-semibold text-stone-950 sm:text-5xl">One clear Study Guide from the course files you already have</h1>
           <div className="mt-8 space-y-7 text-lg leading-8 text-stone-700">
             <p>Study Guide Maker is built for college students who have too much course material and too little time to reorganize it before an exam.</p>
-            <p>The current product accepts text-based PDF and PowerPoint files and turns them into a structured, priority-aware Study Guide. It can show key concepts, definitions, relationships, common confusions, source references, and visible material gaps.</p>
+            <p>The current product accepts PDF, Word, Excel, PowerPoint, and common image files and turns them into a structured, priority-aware Study Guide. It can show key concepts, definitions, relationships, common confusions, source references, and visible material gaps.</p>
             <p>After reviewing the guide, a student can optionally take a short Quick Check. Its purpose is narrow: identify a sampled mistake and return the student to the relevant guide section. It is not a mock exam, mastery system, exam predictor, AI tutor, or flashcard platform.</p>
           </div>
           <section className="mt-12 border-t border-[var(--line)] pt-8">
@@ -28,7 +28,7 @@ export default function AboutPage() {
               <li>Guide content is based on uploaded materials rather than open-web supplementation.</li>
               <li>Priority bands are study suggestions, not probabilities of appearing on an exam.</li>
               <li>Source references support spot-checking but do not prove complete course coverage.</li>
-              <li>Scanned documents, handwriting, and visual-only content are outside the current MVP.</li>
+              <li>Common image files are accepted. Scanned pages, handwriting, charts, and diagrams may remain visible gaps when reliable text cannot be extracted.</li>
             </ul>
           </section>
           <div className="mt-10 flex flex-wrap gap-4">

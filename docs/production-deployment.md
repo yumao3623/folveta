@@ -73,7 +73,7 @@ Production AI pipeline functional but reliability hardening in progress. A contr
 
 ## Supabase Auth and environment boundary
 
-The current pre-launch reuses the existing Supabase project named `study-guide-maker`, which already contains migrations through `202608260005`, the private Storage bucket, and the verified Product-3 schema. This is a pragmatic pre-launch choice, not a claim of full environment isolation:
+The current pre-launch reuses the existing Supabase project named `study-guide-maker`, which contains migrations through `202608260005`, the private Storage bucket, and the verified Product-3 schema. The source-format expansion migration `202608280002_source_format_expansion.sql` is present locally and must be applied and verified before its expanded schema/storage contract is treated as deployed. This is a pragmatic pre-launch choice, not a claim of full environment isolation:
 
 - Supabase Site URL: `https://folveta.com`.
 - Exact redirect URLs: `https://folveta.com/auth/callback` and `http://localhost:3000/auth/callback`.

@@ -29,7 +29,7 @@ import { getSupabaseAdmin } from "@/lib/server/supabase";
 type SpanRow = {
   id: string;
   source_id: string;
-  locator_kind: "page" | "slide";
+  locator_kind: "page" | "slide" | "paragraph" | "sheet" | "image" | "file";
   locator_number: number;
   text: string;
 };
@@ -128,7 +128,7 @@ function roundRobinTargets(targets: QuestionTarget[], limit: number) {
 }
 
 function evidenceLine(span: SpanRow, source: SourceRow) {
-  const locator = span.locator_kind === "page" ? "Page" : "Slide";
+  const locator = span.locator_kind === "page" ? "Page" : span.locator_kind === "slide" ? "Slide" : span.locator_kind === "sheet" ? "Sheet" : span.locator_kind === "paragraph" ? "Paragraph" : span.locator_kind === "image" ? "Image" : "File";
   return `[${span.id}] ${source.display_name} · ${locator} ${span.locator_number}\n${span.text}`;
 }
 

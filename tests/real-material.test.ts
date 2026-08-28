@@ -18,8 +18,17 @@ describe.skipIf(!regressionPdf)("real material regression", () => {
 });
 
 describe.skipIf(!regressionLegacyPpt)("real legacy presentation regression", () => {
-  it("rejects binary .ppt safely because the MVP accepts OOXML .pptx only", async () => {
-    await expect(validateFileSignature(await readFile(regressionLegacyPpt!), "pptx"))
-      .rejects.toMatchObject({ code: "INVALID_FILE_SIGNATURE" });
+  it("identifies legacy .ppt for the file-input extraction path", async () => {
+    await expect(validateFileSignature(await readFile(regressionLegacyPpt!), "ppt"))
+      .resolves.toBeUndefined();
   });
+
+  it("extracts reliable slide text from the supplied legacy .ppt without a model file request", async () => {
+    const parsed = await parseMaterial(await readFile(regressionLegacyPpt!), "ppt");
+    const readable = parsed.units.filter((unit) => unit.readable);
+    expect(parsed.units.length).toBeGreaterThan(1);
+    expect(readable.length).toBeGreaterThan(1);
+    expect(readable.reduce((total, unit) => total + unit.normalizedText.length, 0)).toBeGreaterThan(2_000);
+    expect(readable[0].locatorKind).toBe("slide");
+  }, 240_000);
 });

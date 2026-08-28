@@ -36,7 +36,7 @@ export const demoGuide: Guide = guideSchema.parse({
     source_id: "55555555-5555-4555-8555-555555555555",
     source_name: "Lecture 5 — Metabolism.pptx",
     code: "UNREADABLE_UNIT",
-    message: "Slide 24 contained no reliable text. Its diagram was not interpreted because OCR and image understanding are outside this MVP.",
+        message: "Slide 24 contained no reliable text. Its visual-only diagram was not interpreted because the extracted evidence was insufficient for grounded generation.",
   }],
   topics: [
     {

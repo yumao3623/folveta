@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-export const sourceKindSchema = z.enum(["pdf", "pptx"]);
-export const locatorKindSchema = z.enum(["page", "slide"]);
+export const sourceKindSchema = z.enum(["pdf", "ppt", "pptx", "doc", "docx", "xls", "xlsx", "image"]);
+export const locatorKindSchema = z.enum(["page", "slide", "paragraph", "sheet", "image", "file"]);
 export const sourceStatusSchema = z.enum([
   "uploading",
   "uploaded",
@@ -55,5 +55,7 @@ export const sourceSpanSchema = z
   .strict();
 
 export type Source = z.infer<typeof sourceSchema>;
+export type SourceKind = z.infer<typeof sourceKindSchema>;
+export type LocatorKind = z.infer<typeof locatorKindSchema>;
 export type SourceSpan = z.infer<typeof sourceSpanSchema>;
 export type SourceWarning = z.infer<typeof sourceWarningSchema>;

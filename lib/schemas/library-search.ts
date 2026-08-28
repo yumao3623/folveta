@@ -12,7 +12,7 @@ const boundedLibraryLimitSchema = z.coerce.number().int().min(1).max(LIBRARY_MAX
 const boundedSearchLimitSchema = z.coerce.number().int().min(1).max(SEARCH_MAX_LIMIT).default(SEARCH_DEFAULT_LIMIT);
 
 export const libraryListOptionsSchema = z.object({
-  type: z.enum(["all", "pdf", "pptx"]).default("all"),
+  type: z.enum(["all", "pdf", "ppt", "pptx", "doc", "docx", "xls", "xlsx", "image"]).default("all"),
   sort: z.enum(["newest", "oldest", "name"]).default("newest"),
   page: pageSchema,
   limit: boundedLibraryLimitSchema,

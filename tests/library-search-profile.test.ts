@@ -40,7 +40,7 @@ function libraryRow(overrides: Partial<LibraryQueryRow> = {}): LibraryQueryRow {
 describe("Library", () => {
   it("validates real file types, sorting, and bounded pagination", () => {
     expect(libraryListOptionsSchema.parse({ type: "pdf", sort: "name", page: "2", limit: "24" })).toEqual({ type: "pdf", sort: "name", page: 2, limit: 24 });
-    expect(libraryListOptionsSchema.safeParse({ type: "docx", sort: "newest", page: 1, limit: 12 }).success).toBe(false);
+    expect(libraryListOptionsSchema.safeParse({ type: "docx", sort: "newest", page: 1, limit: 12 }).success).toBe(true);
     expect(libraryListOptionsSchema.safeParse({ type: "all", sort: "newest", page: 1, limit: 25 }).success).toBe(false);
   });
 

@@ -1,10 +1,24 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import JSZip from "jszip";
-import { beforeAll, describe, expect, it } from "vitest";
-import { createSpanRows, normalizeText, parseMaterial } from "@/lib/server/parser";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import { createSpanRows, normalizeText, parseMaterial, validateFileSignature } from "@/lib/server/parser";
+import { isSupportedSourceMimeType, sourceKindFromFilename, SUPPORTED_FILE_ACCEPT } from "@/lib/config";
+import { ModelGateway } from "@/lib/ai/gateway";
 
 describe("material parsing", () => {
+  it("uses one filename contract for modern, legacy, and image inputs", () => {
+    expect(sourceKindFromFilename("notes.PDF")).toBe("pdf");
+    expect(sourceKindFromFilename("slides.ppt")).toBe("ppt");
+    expect(sourceKindFromFilename("workbook.xls")).toBe("xls");
+    expect(sourceKindFromFilename("photo.TIFF")).toBe("image");
+    expect(sourceKindFromFilename("archive.zip")).toBeNull();
+    expect(SUPPORTED_FILE_ACCEPT).toContain(".ppt");
+    expect(SUPPORTED_FILE_ACCEPT).toContain(".xls");
+    expect(isSupportedSourceMimeType("ppt", "application/vnd.ms-powerpoint")).toBe(true);
+    expect(isSupportedSourceMimeType("ppt", "application/pdf")).toBe(false);
+  });
+
   beforeAll(async () => {
     const pdf = resolve("tests/fixtures/sample-course.pdf");
     const pptx = resolve("tests/fixtures/sample-course.pptx");
@@ -58,5 +72,29 @@ describe("material parsing", () => {
     const second = createSpanRows("11111111-1111-4111-8111-111111111111", "44444444-4444-4444-8444-444444444444", [unit]);
     expect(first[0].id).toBe(second[0].id);
     expect(first[0].locator_number).toBe(2);
+  });
+
+  it("accepts common image signatures and records a safe OCR gap", async () => {
+    const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64");
+    await expect(validateFileSignature(png, "image")).resolves.toBeUndefined();
+    const extraction = vi.spyOn(ModelGateway.prototype, "generateStructured").mockResolvedValue({
+      data: { text: "" },
+      provider: "openai",
+      configuredModel: "test-model",
+      actualModel: "test-model",
+      usage: null,
+      retryCount: 0,
+      parseMode: "parsed",
+    });
+    const parsed = await parseMaterial(png, "image");
+    extraction.mockRestore();
+    expect(parsed.units[0].locatorKind).toBe("image");
+    expect(parsed.units[0].readable).toBe(false);
+    expect(parsed.warnings[0].code).toBe("IMAGE_OCR_REQUIRED");
+  });
+
+  it("accepts legacy binary Office signatures for file-input extraction", async () => {
+    const legacyHeader = Buffer.from("d0cf11e0a1b11ae1", "hex");
+    await expect(validateFileSignature(legacyHeader, "ppt")).resolves.toBeUndefined();
   });
 });

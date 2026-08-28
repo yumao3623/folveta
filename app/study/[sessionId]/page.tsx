@@ -75,12 +75,12 @@ export default async function StudyWorkspacePage({ params, searchParams }: PageP
           const failed = source.status === "cannot_use";
           const tone = failed ? "destructive" : source.status === "ready_with_gaps" ? "warning" : "success";
           return <article key={source.id} className={`ui-surface flex gap-4 p-4 sm:p-5 ${failed ? "border-[#efc8c5] bg-[var(--danger-soft)]" : source.status === "ready_with_gaps" ? "border-[#ead695] bg-[var(--warning-soft)]" : ""}`}>
-            <IconFrame size="lg" tone={failed ? "destructive" : source.kind === "pptx" ? "source" : "neutral"}>{source.kind === "pptx" ? <Presentation className="h-5 w-5" strokeWidth={1.8} /> : <FileText className="h-5 w-5" strokeWidth={1.8} />}</IconFrame>
+            <IconFrame size="lg" tone={failed ? "destructive" : ["ppt", "pptx"].includes(source.kind) ? "source" : "neutral"}>{["ppt", "pptx"].includes(source.kind) ? <Presentation className="h-5 w-5" strokeWidth={1.8} /> : <FileText className="h-5 w-5" strokeWidth={1.8} />}</IconFrame>
             <div className="min-w-0 flex-1"><div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0"><h3 className="truncate font-semibold text-[var(--foreground)]">{source.display_name}</h3><p className="mt-1 text-sm text-[var(--muted)]">{source.kind.toUpperCase()} · {source.unit_count} page{source.kind === "pptx" ? "/slide" : ""} records · {source.readable_unit_count} readable</p></div>
+              <div className="min-w-0"><h3 className="truncate font-semibold text-[var(--foreground)]">{source.display_name}</h3><p className="mt-1 text-sm text-[var(--muted)]">{source.kind.toUpperCase()} · {source.unit_count} source records · {source.readable_unit_count} readable</p></div>
               <Badge tone={tone}>{statusLabels[source.status] ?? source.status}</Badge>
             </div>
-            {failed && <p className="mt-3 text-sm leading-6 text-[var(--danger)]"><strong>{source.error_code}:</strong> {source.error_message}</p>}
+            {failed && <p className="mt-3 text-sm leading-6 text-[var(--danger)]">{source.error_message ?? "This material could not be processed."}</p>}
             {warningCount > 0 && <details className="mt-3"><summary className="cursor-pointer text-sm font-semibold text-amber-900">Show {warningCount} parsing warning{warningCount === 1 ? "" : "s"}</summary><ul className="mt-2 space-y-1 text-sm leading-6 text-amber-900">{warnings.map((warning, index) => <li key={`${warning.code}-${index}`}>{warning.message}</li>)}</ul></details>}
             </div>
           </article>;

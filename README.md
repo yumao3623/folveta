@@ -4,7 +4,7 @@ Folveta is a Study Guide Maker that turns supported course materials into a stru
 
 Current implemented loop:
 
-`Upload PDF/PPTX -> parse -> generate Study Guide -> optional Quick Check -> return to relevant Guide sections`
+`Upload PDF/Word/Excel/PowerPoint/image -> parse -> generate Study Guide -> optional Quick Check -> return to relevant Guide sections`
 
 The repository is now governed by the v5 documents. Start with [docs/README.md](docs/README.md), then read:
 
@@ -19,18 +19,16 @@ The repository is now governed by the v5 documents. Start with [docs/README.md](
 
 Implemented:
 
-- Landing/upload, private PDF/PPTX parsing, structured Guide generation, source grounding, Study Guide workspace, Quick Check, and Results/Learning Loop.
+- Landing/upload, private multi-format parsing, structured Guide generation, source grounding, Study Guide workspace, Quick Check, and Results/Learning Loop.
 - Anonymous high-entropy session access with seven-day expiry.
 - Supabase Postgres/private Storage, OpenAI-compatible structured model pipeline, and focused parser/schema/Quick Check/SEO tests.
 - Public trust pages and the first SEO technical foundation.
 
-Not implemented:
+Open work:
 
-- Persistent Auth, My Guides, Recent Guides, Library, knowledge search, Profile, and multi-guide management.
 - Payment/Billing and entitlement enforcement.
 - Scheduled data deletion, full E2E/integration coverage, controlled pre-launch indexing, production monitoring, and public launch.
-
-The visible workspace Search/My Guides/Library/Profile controls are not real Product-3 features yet. Do not describe them as implemented.
+- AI-generation reliability hardening and repeated real-material Production validation.
 
 ## Run locally
 
@@ -48,6 +46,8 @@ Apply migrations in order:
 
 1. `supabase/migrations/202608240001_phase1.sql`
 2. `supabase/migrations/202608240002_phase2_quick_check.sql`
+3. Product-3 migrations through `202608260005`
+4. `supabase/migrations/202608280002_source_format_expansion.sql`
 
 ## Environment
 
@@ -66,11 +66,11 @@ Limits are centralized in `lib/config.ts`:
 
 - 5 files per session;
 - 25 MB per file;
-- 150 combined PDF pages/PPTX slides;
+- 150 combined source units;
 - 300,000 normalized extracted characters;
-- text-based PDF and PPTX only.
+- PDF, DOCX, XLSX, PPTX, legacy Office, and common image inputs; `.ppt` uses local slide-text extraction, while legacy `.doc/.xls` use controlled file-input extraction when local structural parsing is unavailable.
 
-OCR, handwriting, image/chart/diagram understanding, audio/video/URL input, pasted text, and open-web research are not currently supported.
+Common image files are accepted through constrained visual-text extraction. Scanned PDF pages, handwriting, and visual-only charts/diagrams may remain visible gaps when reliable text cannot be extracted. Audio/video/URL input, pasted text, and open-web research are not currently supported.
 
 ## Verification
 

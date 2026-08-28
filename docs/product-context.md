@@ -21,7 +21,7 @@ Delivery roadmap: `docs/v5-master-roadmap.md`
 
 Core loop:
 
-`Upload PDF/PPTX -> parse by page/slide -> generate structured Study Guide -> optional five-question Quick Check -> return to relevant Guide sections`
+`Upload PDF/Word/Excel/PowerPoint/image -> parse into anchored source units -> generate structured Study Guide -> optional five-question Quick Check -> return to relevant Guide sections`
 
 The Guide is the primary artifact. Quick Check is optional and subordinate. Folveta does not claim exam prediction, complete coverage, mastery certification, professor-style simulation, or open-web supplementation.
 
@@ -30,15 +30,15 @@ The Guide is the primary artifact. Quick Check is optional and subordinate. Folv
 The following exists in the current repository and passed build/typecheck/lint/tests during the 2026-08-27 Production pre-launch closeout:
 
 - Next.js 16.3.2 App Router, React 19, TypeScript, Tailwind CSS 4.
-- Folveta landing/upload experience with real PDF/PPTX input.
+- Folveta landing/upload experience with real PDF, Office, and image input.
 - Private Supabase Storage upload through signed upload URLs.
-- Text-based PDF and PPTX parsing with page/slide boundaries, warnings, duplicate detection, hashes, and stable evidence spans.
+- PDF, DOCX, XLSX, and PPTX parsing with page/slide/paragraph/sheet boundaries, warnings, duplicate detection, hashes, and stable evidence spans. Legacy `.ppt` uses local slide-text extraction; common images and legacy binary `.doc/.xls` use constrained model/file-input extraction with a single anchor only when no local structural parser is available.
 - Structured multi-stage model pipeline for topic extraction, topic merge, Guide generation, grounding verification, and persisted Guide JSON.
 - Study Guide workspace with priorities, concepts, definitions, processes/relationships, confusions, gaps, and source references.
 - Lazy five-question MCQ Quick Check, independent validation/filtering, answer-safe taking payload, deterministic scoring, persisted results, and Guide return links.
 - Anonymous high-entropy session cookie with a default seven-day expiry, plus repository-level Supabase Auth, owner claim, and persistent Guide foundations from Product-3A.
 - Account-owned My Guides and real Landing Recent Guides, with bounded pagination, source counts, stable-ID reopen, rename, archive/restore, and 30-day soft-delete staging from Product-3B.
-- Account-owned Source Library with PDF/PPTX filtering, sorting, pagination, real source metadata, and archived/deleted Guide relationship handling from Product-3C.
+- Account-owned Source Library with multi-format filtering, sorting, pagination, real source metadata, and archived/deleted Guide relationship handling from Product-3C.
 - Private PostgreSQL full-text knowledge Search across active Guide titles/topics/content and Source filenames/spans, with Guide/Topic/Source result types and bounded pagination from Product-3C.
 - A real Profile route with Supabase Auth email/creation date, owner-scoped Guide/Source totals, sign-out, and responsive Workspace navigation from Product-3C.
 - About, Privacy, Terms, canonical metadata, social images, JSON-LD, robots, sitemap, explicit study-route noindex rules, and fail-closed pre-launch indexing control.
@@ -59,7 +59,7 @@ Implemented UI milestones are UI-1 Study Guide Workspace, UI-2 Landing / Upload,
 - No Payment/Billing, pricing model, entitlement ledger, checkout, subscription status, billing portal, webhooks, or usage enforcement.
 - A protected Storage-first retention endpoint exists, but no deployment scheduler has been configured or verified yet.
 - No application rate limiting, abuse controls, analytics decision, real support/privacy-request channel, or production monitoring.
-- No pasted-text input, OCR, handwriting, image/chart/diagram interpretation, audio/video/URL ingestion, or open-web research.
+- No pasted-text input, handwriting interpretation, audio/video/URL ingestion, or open-web research. Common image files use constrained visual-text extraction; scanned PDF pages and image/chart/diagram-heavy units may remain visible grounding gaps.
 - Guide generation now has a source- and contract-bound checkpoint plus a conditional execution claim, so a retry can resume completed extraction/merge/topic work and concurrent retries do not start duplicate runs. The corresponding production migration and repeated live validation remain required before this is treated as stable.
 - Production AI pipeline functional but reliability hardening in progress. A controlled Production run succeeded on 2026-08-27, but a real-user nine-page PDF subsequently failed with `MODEL_EMPTY_OUTPUT` during both topic extraction and Guide generation. Local parsing of that private regression material remains healthy; its content is never logged or committed. Payment remains blocked pending migration deployment and repeated real-material production evidence.
 - `PRELAUNCH` now fails closed: a missing value, `PRELAUNCH=true`, or any Vercel non-production environment makes discovery pages `noindex,nofollow`; the sitemap is empty and robots does not advertise it. Only an explicit production `PRELAUNCH=false` restores the approved public index mode.

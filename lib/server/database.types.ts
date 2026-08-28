@@ -8,18 +8,18 @@ type SessionRow = {
   deleted_at: string | null; purge_after: string | null; created_at: string; updated_at: string;
 };
 type SourceRow = {
-  id: string; session_id: string; display_name: string; kind: "pdf" | "pptx"; mime_type: string;
+  id: string; session_id: string; display_name: string; kind: "pdf" | "ppt" | "pptx" | "doc" | "docx" | "xls" | "xlsx" | "image"; mime_type: string;
   size_bytes: number; storage_path: string; file_hash: string | null; status: string; unit_count: number;
   readable_unit_count: number; extracted_character_count: number; warnings: Json;
   error_code: string | null; error_message: string | null; created_at: string; updated_at: string;
 };
 type UnitRow = {
-  id: string; session_id: string; source_id: string; locator_kind: "page" | "slide"; locator_number: number;
+  id: string; session_id: string; source_id: string; locator_kind: "page" | "slide" | "paragraph" | "sheet" | "image" | "file"; locator_number: number;
   title: string | null; raw_text: string; normalized_text: string; readable: boolean; warnings: Json;
   content_hash: string;
 };
 type SpanRow = {
-  id: string; session_id: string; source_id: string; locator_kind: "page" | "slide"; locator_number: number;
+  id: string; session_id: string; source_id: string; locator_kind: "page" | "slide" | "paragraph" | "sheet" | "image" | "file"; locator_number: number;
   ordinal: number; text: string; excerpt: string; content_hash: string;
 };
 type RunRow = {
@@ -61,17 +61,17 @@ export type Database = {
         deleted_at?: string | null; purge_after?: string | null; created_at?: string; updated_at?: string;
       }>;
       sources: Table<SourceRow, {
-        id?: string; session_id: string; display_name: string; kind: "pdf" | "pptx"; mime_type: string;
+        id?: string; session_id: string; display_name: string; kind: "pdf" | "ppt" | "pptx" | "doc" | "docx" | "xls" | "xlsx" | "image"; mime_type: string;
         size_bytes: number; storage_path: string; file_hash?: string | null; status?: string; unit_count?: number;
         readable_unit_count?: number; extracted_character_count?: number; warnings?: Json;
         error_code?: string | null; error_message?: string | null; created_at?: string; updated_at?: string;
       }>;
       source_units: Table<UnitRow, {
-        id?: string; session_id: string; source_id: string; locator_kind: "page" | "slide"; locator_number: number;
+        id?: string; session_id: string; source_id: string; locator_kind: "page" | "slide" | "paragraph" | "sheet" | "image" | "file"; locator_number: number;
         title?: string | null; raw_text: string; normalized_text: string; readable: boolean; warnings?: Json; content_hash: string;
       }>;
       source_spans: Table<SpanRow, {
-        id: string; session_id: string; source_id: string; locator_kind: "page" | "slide"; locator_number: number;
+        id: string; session_id: string; source_id: string; locator_kind: "page" | "slide" | "paragraph" | "sheet" | "image" | "file"; locator_number: number;
         ordinal: number; text: string; excerpt: string; content_hash: string;
       }>;
       generation_runs: Table<RunRow, {

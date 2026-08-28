@@ -32,7 +32,7 @@ export default function OpenGraphImage() {
         </div>
       </div>
       <div style={{ display: "flex", gap: 16, fontSize: 24, color: "#536159" }}>
-        <span>PDF</span><span>+</span><span>PPTX</span><span>-&gt;</span><span>Study Guide</span>
+        <span>PDF</span><span>+</span><span>Office</span><span>+</span><span>Images</span><span>-&gt;</span><span>Study Guide</span>
       </div>
     </div>,
     size,

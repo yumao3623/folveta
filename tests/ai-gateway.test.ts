@@ -69,4 +69,15 @@ describe("AI gateway reliability contracts", () => {
     expect(JSON.stringify(diagnostics)).not.toContain("private source text");
     expect(JSON.stringify(diagnostics)).not.toContain("prompt");
   });
+
+  it("captures compatible gateway request and HTTP metadata without response content", () => {
+    const diagnostics = responseDiagnostics({
+      requestID: "gateway-request-id",
+      status: 503,
+      error: { message: "private provider detail" },
+    }, { provider: "openai", model: "gpt-5.6-sol", durationMs: 850, parseResult: "empty" });
+    expect(diagnostics.requestId).toBe("gateway-request-id");
+    expect(diagnostics.httpStatus).toBe(503);
+    expect(JSON.stringify(diagnostics)).not.toContain("private provider detail");
+  });
 });

@@ -68,16 +68,16 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
         <header className="border-b border-[var(--border)] pb-7">
           <p className="text-label-sm text-[var(--primary)]">Your source materials</p>
           <h1 className="mt-2 font-display text-[36px] font-extrabold leading-tight text-[var(--foreground)] sm:text-[44px]">Library</h1>
-          <p className="mt-3 max-w-2xl text-[15px] leading-6 text-[var(--muted)]">Browse the PDF and PowerPoint files already uploaded to your Guides.</p>
+          <p className="mt-3 max-w-2xl text-[15px] leading-6 text-[var(--muted)]">Browse the PDF, Office, PowerPoint, and image materials already uploaded to your Guides.</p>
         </header>
         <form className="mt-6 grid gap-3 sm:grid-cols-[minmax(0,180px)_minmax(0,200px)_auto]" action="/library">
-          <label className="text-[13px] font-medium text-[var(--foreground)]">File type<select name="type" defaultValue={options.type} className="ui-field-control mt-2"><option value="all">All files</option><option value="pdf">PDF</option><option value="pptx">PPTX</option></select></label>
+          <label className="text-[13px] font-medium text-[var(--foreground)]">File type<select name="type" defaultValue={options.type} className="ui-field-control mt-2"><option value="all">All files</option><option value="pdf">PDF</option><option value="docx">Word</option><option value="xlsx">Excel</option><option value="pptx">PowerPoint</option><option value="image">Image</option><option value="ppt">Legacy PPT</option></select></label>
           <label className="text-[13px] font-medium text-[var(--foreground)]">Sort by<select name="sort" defaultValue={options.sort} className="ui-field-control mt-2"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="name">Filename</option></select></label>
           <button type="submit" className={buttonClassName({ variant: "secondary", className: "self-end" })}>Apply</button>
         </form>
         <section className="mt-7 ui-surface ui-surface--base p-5 sm:p-6" aria-label="Uploaded source materials">
           {result.sources.length ? result.sources.map((source) => <SourceRow key={source.id} source={source} />) : (
-            <EmptyState icon={<FolderOpen className="h-5 w-5" />} title="No source materials" description={options.type === "all" ? "Upload a PDF or PPTX while creating a Guide and it will appear here." : `No ${options.type.toUpperCase()} files match this Library filter.`} action={<Link href="/#upload" className={buttonClassName({ size: "sm" })}>Upload material</Link>} />
+          <EmptyState icon={<FolderOpen className="h-5 w-5" />} title="No source materials" description={options.type === "all" ? "Upload course material while creating a Guide and it will appear here." : `No ${options.type.toUpperCase()} files match this Library filter.`} action={<Link href="/#upload" className={buttonClassName({ size: "sm" })}>Upload material</Link>} />
           )}
         </section>
         {(result.hasPreviousPage || result.hasNextPage) && <nav className="mt-5 flex items-center justify-between" aria-label="Library pages">{result.hasPreviousPage ? <Link href={libraryHref(options, result.page - 1)} className={buttonClassName({ variant: "secondary", size: "sm" })}>Previous</Link> : <span />}<span className="text-[12px] text-[var(--muted)]">Page {result.page}</span>{result.hasNextPage ? <Link href={libraryHref(options, result.page + 1)} className={buttonClassName({ variant: "secondary", size: "sm" })}>Next</Link> : <span />}</nav>}

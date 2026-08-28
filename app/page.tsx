@@ -29,7 +29,7 @@ import { getCurrentUser } from "@/lib/server/auth";
 
 const title = "Folveta | Study Guide Maker";
 const description =
-  "Turn text-based PDFs and PowerPoint slides into a clear, source-grounded study guide with priorities, key concepts, and an optional Quick Check.";
+  "Turn course PDFs, Word, Excel, PowerPoint, and image materials into a clear, source-grounded study guide with priorities, key concepts, and an optional Quick Check.";
 
 export const metadata: Metadata = {
   title: { absolute: title },
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
 const FAQ_ITEMS = [
   [
     "What files can I use with this study guide maker?",
-    `The current MVP accepts up to ${MVP_LIMITS.maxFiles} text-based PDF or PPTX files, up to ${formatMegabytes(MVP_LIMITS.maxFileBytes)} each and ${MVP_LIMITS.maxTotalUnits} pages or slides combined.`,
+    `The current MVP accepts up to ${MVP_LIMITS.maxFiles} course files, up to ${formatMegabytes(MVP_LIMITS.maxFileBytes)} each and ${MVP_LIMITS.maxTotalUnits} source units combined.`,
   ],
   [
     "What does the generated Study Guide include?",
@@ -60,7 +60,7 @@ const FAQ_ITEMS = [
   ],
   [
     "Can it read scanned PDFs or handwriting?",
-    "Not in the current MVP. Files need reliable selectable text. Image-only pages and visual-only content are shown as gaps instead of being guessed.",
+    "Common image files are supported through a constrained visual-text extraction step. Scanned or image-only pages inside PDFs, and visual-only charts or diagrams, may still be shown as material gaps when reliable text cannot be extracted.",
   ],
   [
     "What is Quick Check?",
@@ -428,7 +428,7 @@ export default function HomePage() {
                     Turn course material into a Guide you can actually study.
                   </h1>
                   <p className="mt-5 max-w-lg text-[17px] leading-[1.65] text-[var(--text-secondary)]">
-                    Upload text-based PDFs and lecture slides. Folveta organizes
+                    Upload PDFs, Word, Excel, PowerPoint, or image materials. Folveta organizes
                     the supported material into priorities, key concepts,
                     relationships, and source-linked review notes.
                   </p>
@@ -455,7 +455,7 @@ export default function HomePage() {
                     </Link>
                   </div>
                   <div className="mt-7 flex flex-wrap gap-x-3 gap-y-2 text-[11px] font-medium text-[var(--muted)] sm:gap-x-5 sm:text-[12px]">
-                    <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-[var(--primary)]" />PDF + PPTX</span>
+                    <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-[var(--primary)]" />PDF + Office + images</span>
                     <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-[var(--primary)]" />Source grounded</span>
                     <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-[var(--primary)]" />Private upload</span>
                   </div>
@@ -487,14 +487,14 @@ export default function HomePage() {
                           className="h-5 w-5 text-red-600"
                           strokeWidth={1.8}
                         />
-                        Text-based PDF
+                        PDF files
                       </p>
                       <p className="flex items-center gap-3 text-[14px]">
                         <Presentation
                           className="h-5 w-5 text-[var(--tertiary)]"
                           strokeWidth={1.8}
                         />
-                        PowerPoint PPTX
+                        Word, Excel, PowerPoint, and image files
                       </p>
                     </div>
                   </div>
@@ -533,7 +533,7 @@ export default function HomePage() {
                     <div>
                       <dt className="text-[var(--text-muted)]">Formats</dt>
                       <dd className="mt-1 font-semibold text-[var(--foreground)]">
-                        PDF, PPTX
+                        PDF, Office, images
                       </dd>
                     </div>
                   </dl>

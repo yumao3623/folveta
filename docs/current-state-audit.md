@@ -42,8 +42,8 @@ Automated coverage is focused, not comprehensive: parser, schemas, Quick Check v
 ### Verified implemented
 
 - Folveta brand in current UI and site helper.
-- Real landing upload for text-based PDF/PPTX, with five-file, 25 MB/file, 150-unit, and 300,000-character limits.
-- Private signed upload, deterministic validation/hash/duplicate checks, page/slide parsing, gaps, stable spans, and Postgres persistence.
+- Real landing upload for PDF, Word, Excel, PowerPoint (including legacy binary `.ppt/.doc/.xls`), and common image files, with five-file, 25 MB/file, 150-unit, and 300,000-character limits.
+- Private signed upload, deterministic validation/hash/duplicate checks, PDF/DOCX/XLSX/PPTX page/slide/paragraph/sheet parsing, local legacy `.ppt` slide-text extraction, controlled Responses file-input extraction for legacy `.doc/.xls` where no local structural parser is available, image text extraction, stable spans, and Postgres persistence.
 - Structured Guide generation with source evidence resolution and grounding verification.
 - Rich Guide schema/UI and direct source excerpts.
 - Optional five-question MCQ Quick Check, key-safe taking payload, deterministic scoring, persisted result, and return-to-Guide links.
@@ -59,7 +59,7 @@ Automated coverage is focused, not comprehensive: parser, schemas, Quick Check v
 - Payment/Billing, pricing, entitlements, usage meter/enforcement, checkout, webhooks, billing management, and billing legal copy.
 - Scheduled deletion of expired database rows/private objects.
 - Rate limiting/abuse prevention, analytics decision/instrumentation, support/privacy contact, production monitoring.
-- Pasted text, source roles, source remove/replace/retry, OCR/visual content, source viewing/download URLs.
+- Pasted text, source roles, source remove/replace/retry, advanced OCR/handwriting and visual-only chart/diagram interpretation, source viewing/download URLs.
 - Durable generation lease/checkpoint/resume, queue/worker, and full integration/E2E suite.
 - Production origin configuration and controlled pre-launch indexing mode.
 

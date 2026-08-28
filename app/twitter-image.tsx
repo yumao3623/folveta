@@ -24,7 +24,7 @@ export default function TwitterImage() {
         A clearer way to review your course materials
       </div>
       <div style={{ marginTop: 34, fontSize: 29, lineHeight: 1.4, color: "#cbd5cf" }}>
-        Upload text-based PDFs or PowerPoint slides. Get a structured Study Guide and optional Quick Check.
+        Upload PDFs, Office files, or images. Get a structured Study Guide and optional Quick Check.
       </div>
     </div>,
     size,

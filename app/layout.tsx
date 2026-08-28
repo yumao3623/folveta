@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description:
-    "Turn text-based PDFs and PowerPoint slides into a clear, source-grounded study guide with priorities and an optional Quick Check.",
+    "Turn course PDFs, Word, Excel, PowerPoint, and image materials into a clear, source-grounded study guide with priorities and an optional Quick Check.",
   applicationName: SITE_NAME,
   category: "education",
   robots: getPublicRobots(),

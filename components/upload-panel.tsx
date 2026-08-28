@@ -12,7 +12,7 @@ import {
   UploadCloud,
   X,
 } from "lucide-react";
-import { MVP_LIMITS } from "@/lib/config";
+import { MVP_LIMITS, sourceKindFromFilename, SUPPORTED_FILE_ACCEPT } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import { FieldLabel, Input } from "@/components/ui/field";
 import { Alert, Progress } from "@/components/ui/feedback";
@@ -61,7 +61,7 @@ export function UploadPanel() {
     }
     const invalid = selected.find(
       (file) =>
-        !/\.(pdf|pptx)$/i.test(file.name) ||
+        !sourceKindFromFilename(file.name) ||
         file.size > MVP_LIMITS.maxFileBytes,
     );
     if (invalid) {
@@ -119,7 +119,7 @@ export function UploadPanel() {
 
   async function submit() {
     if (!files.length) {
-      setFormError("Choose at least one PDF or PPTX file.");
+      setFormError("Choose at least one PDF, Word, Excel, PowerPoint, or image file.");
       return;
     }
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -176,7 +176,7 @@ export function UploadPanel() {
           if (uploadError) throw new Error(uploadError.message);
           uploadCompleted = true;
 
-          update(index, "parsing", "Extracting page/slide text");
+          update(index, "parsing", "Extracting source text");
           const parsed = await readJson(
             await fetch(`/api/sources/${sourceId}/parse`, { method: "POST" }),
           );
@@ -262,7 +262,7 @@ export function UploadPanel() {
           {dragging ? "Drop files to add them" : files.length > 0 ? "Add different files" : "Drop course files here"}
         </span>
         <span className="mt-2 block max-w-sm text-[14px] leading-6 text-[var(--text-muted)]">
-          PDF and PPTX with selectable text. Visual-only content is reported as a gap.
+          PDF, Word, Excel, PowerPoint, and common image files. Visual-only content is reported as a gap.
         </span>
         <span className="ui-button ui-button--secondary ui-button--sm mt-5 group-hover:border-[var(--border-strong)] group-hover:bg-[var(--secondary)]">
           Browse files
@@ -274,7 +274,7 @@ export function UploadPanel() {
           tabIndex={-1}
           aria-hidden="true"
           type="file"
-          accept=".pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+          accept={SUPPORTED_FILE_ACCEPT}
           multiple
           disabled={busy}
           onChange={(event) => selectFiles(event.target.files)}
@@ -332,12 +332,15 @@ function QueueItem({
   onRemove: () => void;
 }) {
   const isPdf = /\.pdf$/i.test(state.name);
+  const isImage = /\.(png|jpe?g|webp|gif|bmp|tiff?)$/i.test(state.name);
   const working = state.status === "uploading" || state.status === "parsing";
   const ready = state.status === "ready" || state.status === "ready_with_gaps";
   return (
     <li className="ui-surface flex items-center gap-3 p-3 sm:gap-4">
-      <IconFrame size="lg" tone={isPdf ? "destructive" : "source"}>
+      <IconFrame size="lg" tone={isPdf ? "destructive" : isImage ? "neutral" : "source"}>
         {isPdf ? (
+          <FileText className="h-5 w-5" strokeWidth={1.8} />
+        ) : isImage ? (
           <FileText className="h-5 w-5" strokeWidth={1.8} />
         ) : (
           <Presentation className="h-5 w-5" strokeWidth={1.8} />

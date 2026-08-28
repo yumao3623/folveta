@@ -19,7 +19,7 @@ The deployed schema contains all Product-3B/Library indexes and three GIN FTS in
 
 Library is the inventory of uploaded Sources. My Guides remains the Guide artifact manager.
 
-- Supported filters are All, PDF, and PPTX only.
+- Supported filters include All, PDF, Word, Excel, PowerPoint (including legacy PPT), and Image.
 - Sorting supports newest, oldest, and filename.
 - Pages default to 12 and are capped at 24 with one look-ahead row.
 - Each item exposes the real filename, kind, upload time, processing status, unit/page/slide count, readable unit count when different, and related Guide.
@@ -63,6 +63,6 @@ Delete Account is deliberately absent and deferred as a mandatory Payment/Produc
 
 Automated tests cover validators, pagination limits, Source fields, single/object PostgREST relationship mapping, archived/deleted relationships, owner query contracts, three search result types and targets, filename normalization, FTS/RLS/index contracts, empty/invalid/no-result states, Profile fields/count isolation, navigation, API anonymous denial, and private SEO.
 
-Real dev Product-3C two-account E2E passed after the migrations were applied. Account A verified My Guides/Recent, Library pagination and PDF/PPTX filters, all real Source fields, archived relationships, Guide title/Topic/content/filename/span FTS, case/special-character/no-result/invalid-query/pagination behavior, rename/archive/delete semantics, Profile counts, Quick Check, Results, sign out, and relogin persistence. Account B was denied Account A data across My Guides, Library, Search, direct Guide URL, application APIs, authenticated Supabase reads, spans, metadata, and Search RPC; anonymous direct reads/RPC also failed closed.
+Real dev Product-3C two-account E2E passed after the migrations were applied. Account A verified My Guides/Recent, Library pagination and file-type filters, all real Source fields, archived relationships, Guide title/Topic/content/filename/span FTS, case/special-character/no-result/invalid-query/pagination behavior, rename/archive/delete semantics, Profile counts, Quick Check, Results, sign out, and relogin persistence. Account B was denied Account A data across My Guides, Library, Search, direct Guide URL, application APIs, authenticated Supabase reads, spans, metadata, and Search RPC; anonymous direct reads/RPC also failed closed.
 
 Desktop and 390px browser QA found no horizontal overflow, no private metadata exposure, and no console warnings/errors. The mobile Workspace navigation uses a stable four-column layout so all destinations remain visible. The E2E used deterministic database fixtures and did not call the model pipeline; all four aggregates and both temporary Auth users were cleaned. The `portdan.com` Cloudflare 502 means real AI full-chain E2E remains a Production Readiness item, not a Product-3C pass claim.

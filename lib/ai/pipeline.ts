@@ -22,7 +22,7 @@ import {
 type SourceRow = {
   id: string;
   display_name: string;
-  kind: "pdf" | "pptx";
+  kind: "pdf" | "ppt" | "pptx" | "doc" | "docx" | "xls" | "xlsx" | "image";
   status: string;
   warnings: Array<{ code: string; message: string; locator: number | null }>;
   error_code: string | null;
@@ -32,7 +32,7 @@ type SourceRow = {
 type SpanRow = {
   id: string;
   source_id: string;
-  locator_kind: "page" | "slide";
+  locator_kind: "page" | "slide" | "paragraph" | "sheet" | "image" | "file";
   locator_number: number;
   text: string;
   excerpt: string;
@@ -71,6 +71,8 @@ const stageStates = {
 function modelForTask(task: ModelTask) {
   const env = getServerEnv();
   return {
+    image_extract: env.MODEL_TOPIC_EXTRACT,
+    file_extract: env.MODEL_TOPIC_EXTRACT,
     topic_extract: env.MODEL_TOPIC_EXTRACT,
     topic_merge: env.MODEL_TOPIC_MERGE,
     guide: env.MODEL_GUIDE,
@@ -109,7 +111,7 @@ async function trackedCall<T>(
     prompt_version: env.PROMPT_VERSION,
     schema_version: env.GUIDE_SCHEMA_VERSION,
     provider: env.MODEL_PROVIDER,
-    model: modelForTask(task),
+    model: modelForTask(task) ?? env.MODEL_TOPIC_EXTRACT,
   });
   try {
     const result = await call(async (attempt) => {
@@ -148,7 +150,7 @@ async function persistCheckpoint(sessionId: string, checkpoint: GenerationCheckp
 }
 
 function evidenceLine(span: SpanRow, source: SourceRow) {
-  const locator = span.locator_kind === "page" ? "Page" : "Slide";
+  const locator = span.locator_kind === "page" ? "Page" : span.locator_kind === "slide" ? "Slide" : span.locator_kind === "sheet" ? "Sheet" : span.locator_kind === "paragraph" ? "Paragraph" : span.locator_kind === "image" ? "Image" : "File";
   return `[${span.id}] ${source.display_name} · ${locator} ${span.locator_number}\n${span.text}`;
 }
 

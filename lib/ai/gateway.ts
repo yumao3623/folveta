@@ -1,10 +1,13 @@
 import OpenAI from "openai";
+import type { ResponseInput } from "openai/resources/responses/responses";
 import { zodTextFormat } from "openai/helpers/zod";
 import type { ZodType } from "zod";
 import { getServerEnv } from "@/lib/env";
 import { AppError } from "@/lib/server/http";
 
 export type ModelTask =
+  | "image_extract"
+  | "file_extract"
   | "topic_extract"
   | "topic_merge"
   | "guide"
@@ -20,6 +23,8 @@ const modelKeys: Record<ModelTask, keyof Pick<ReturnType<typeof getServerEnv>,
   | "MODEL_QUICK_CHECK"
   | "MODEL_QUESTION_VERIFY"
 >> = {
+  image_extract: "MODEL_TOPIC_EXTRACT",
+  file_extract: "MODEL_TOPIC_EXTRACT",
   topic_extract: "MODEL_TOPIC_EXTRACT",
   topic_merge: "MODEL_TOPIC_MERGE",
   guide: "MODEL_GUIDE",
@@ -83,8 +88,8 @@ export function responseDiagnostics(
   return {
     provider: input.provider,
     model: input.model,
-    requestId: typeof value.id === "string" ? value.id : typeof value._request_id === "string" ? value._request_id : typeof value.request_id === "string" ? value.request_id : null,
-    httpStatus: typeof value.status_code === "number" ? value.status_code : null,
+    requestId: typeof value.id === "string" ? value.id : typeof value._request_id === "string" ? value._request_id : typeof value.request_id === "string" ? value.request_id : typeof value.requestID === "string" ? value.requestID : null,
+    httpStatus: typeof value.status_code === "number" ? value.status_code : typeof value.status === "number" ? value.status : null,
     responseFields: Object.keys(value).sort(),
     outputItemCount: output ? output.length : null,
     outputItemTypes: outputTypes,
@@ -171,25 +176,33 @@ export class ModelGateway {
     schemaName,
     instructions,
     evidence,
+    transport = "structured",
     onRetry,
   }: {
     task: ModelTask;
     schema: ZodType<T>;
     schemaName: string;
     instructions: string;
-    evidence: string;
+    evidence: string | ResponseInput;
+    transport?: "structured" | "json_text";
     onRetry?: (attempt: number) => Promise<void> | void;
   }): Promise<StructuredResult<T>> {
     const configuredModel = this.env[modelKeys[task]];
     return withBoundedModelRetry(async (attempt) => {
       const startedAt = Date.now();
       try {
-        const response = await this.client.responses.parse({
-          model: configuredModel,
-          instructions,
-          input: evidence,
-          text: { format: zodTextFormat(schema, schemaName) },
-        });
+        const response = transport === "json_text"
+          ? await this.client.responses.create({
+            model: configuredModel,
+            instructions: `${instructions}\nReturn exactly one valid JSON object matching the requested schema. Do not include markdown or commentary.`,
+            input: evidence,
+          })
+          : await this.client.responses.parse({
+            model: configuredModel,
+            instructions,
+            input: evidence,
+            text: { format: zodTextFormat(schema, schemaName) },
+          });
         const responseValue = response as unknown as Record<string, unknown>;
         const hasRefusalItem = response.output?.some((item) => {
           const candidate = item as unknown as { type?: string; content?: unknown };
@@ -206,8 +219,8 @@ export class ModelGateway {
           logDiagnostics(responseDiagnostics(response, { provider: "openai", model: configuredModel, durationMs: Date.now() - startedAt, parseResult: "incomplete" }));
           throw error;
         }
-        if (response.output_parsed !== null && response.output_parsed !== undefined) {
-          const validation = schema.safeParse(response.output_parsed);
+        if (transport !== "json_text" && responseValue.output_parsed !== null && responseValue.output_parsed !== undefined) {
+          const validation = schema.safeParse(responseValue.output_parsed);
           if (!validation.success) {
             logDiagnostics(responseDiagnostics(response, { provider: "openai", model: configuredModel, durationMs: Date.now() - startedAt, parseResult: "schema_invalid" }));
             throw new AppError("MODEL_SCHEMA_VALIDATION_FAILED", "The model returned a result that did not match the required schema.", 502);

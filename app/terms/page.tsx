@@ -33,7 +33,7 @@ export default function TermsPage() {
             </section>
             <section>
               <h2 className="text-2xl font-semibold text-stone-950">Service limits</h2>
-              <p className="mt-4 leading-7">The current MVP supports bounded text-based PDF and PPTX inputs. It may reject unsupported, locked, duplicate, image-only, oversized, or unreadable files. Features and limits may change before a production release.</p>
+              <p className="mt-4 leading-7">The pre-launch MVP accepts bounded PDF, Word, Excel, PowerPoint, legacy Office, and common image inputs. It may reject malformed, locked, duplicate, oversized, or unreadable files. Scanned pages, handwriting, or visual-only content can remain a grounding gap when reliable text cannot be extracted.</p>
             </section>
             <section>
               <h2 className="text-2xl font-semibold text-stone-950">Availability</h2>

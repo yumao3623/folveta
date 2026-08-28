@@ -19,7 +19,7 @@ export type LibraryQueryRow = Pick<SourceRow, "id" | "display_name" | "kind" | "
 export type LibraryItem = {
   id: string;
   filename: string;
-  kind: "pdf" | "pptx";
+  kind: "pdf" | "ppt" | "pptx" | "doc" | "docx" | "xls" | "xlsx" | "image";
   status: string;
   unitCount: number;
   readableUnitCount: number;

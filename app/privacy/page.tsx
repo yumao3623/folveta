@@ -21,7 +21,7 @@ export default function PrivacyPage() {
           <div className="mt-10 space-y-10 text-stone-700">
             <section>
               <h2 className="text-2xl font-semibold text-stone-950">Data the product processes</h2>
-              <p className="mt-4 leading-7">The current implementation processes uploaded file metadata, original PDF or PPTX files, extracted page or slide text, generated Study Guides, Quick Check questions, selected answers, and Quick Check results.</p>
+              <p className="mt-4 leading-7">The current implementation processes uploaded file metadata, original course files, extracted source text, generated Study Guides, Quick Check questions, selected answers, and Quick Check results.</p>
             </section>
             <section>
               <h2 className="text-2xl font-semibold text-stone-950">How it is used</h2>

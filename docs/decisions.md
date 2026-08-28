@@ -38,7 +38,7 @@ Decision date: 2026-08-26
 
 Decision date: 2026-08-26
 
-- Library is the private, account-owned inventory of uploaded Sources, not a second Guide manager. It supports only the real PDF/PPTX formats, bounded pagination, type filtering, sorting, source status/count metadata, and related Guide navigation.
+- Library is the private, account-owned inventory of uploaded Sources, not a second Guide manager. It supports the real PDF, Word, Excel, PowerPoint, and image formats implemented by the upload/parser contract, bounded pagination, type filtering, sorting, source status/count metadata, and related Guide navigation.
 - Sources belonging to archived Guides remain visible in Library with an archived relationship; deleted aggregates are excluded. A deleted Guide relationship is never linked or exposed.
 - Knowledge Search is an authenticated PostgreSQL full-text search over active Guide titles, Guide topics/structured content, Source filenames, and Source spans. It returns Guide, Topic, and Source results with bounded pagination and real private destinations.
 - Search executes under the authenticated Supabase session through a `security invoker` RPC and existing owner RLS. It does not use embeddings, a vector database, RAG, or new AI calls.
@@ -231,7 +231,7 @@ Multi-file/multi-source input remains a **Table Stake** supported by several exi
 ### v3 MVP — maximum four core capabilities
 
 1. **Course-material input — Table Stake**  
-   Accept a bounded set of text-based PDF/PPTX files or pasted text; show parsing status and gaps; optionally classify review sheets, learning objectives, syllabi, and legitimate sample questions without granting any source type universal highest weight.
+   Accept a bounded set of PDF, Word, Excel, PowerPoint, legacy Office, and common image files; show parsing status and gaps; optionally classify review sheets, learning objectives, syllabi, and legitimate sample questions without granting any source type universal highest weight.
 
 2. **Structured priority Study Guide — Primary product**  
    Produce topic structure, key concepts, important definitions, relationships/processes, concise explanations, common confusions, priority/focus guidance, and useful page/slide references. The first successful result is the complete guide—not exam configuration or a test shell.
@@ -418,7 +418,7 @@ The evidence supports active recall, practice questions, past-paper calibration,
 ### Recommended MVP — maximum four core capabilities
 
 1. **Course-material intake and exam setup — Table Stake**  
-   Accept a bounded set of text-based PDF/PPTX files or pasted text, optional review sheet/objectives/legal sample questions, and the desired exam duration/question mix. This is required infrastructure, not the marketed difference.
+   Accept a bounded set of PDF, Word, Excel, PowerPoint, legacy Office, and common image files, plus optional review sheet/objectives/legal sample questions and the desired exam duration/question mix. This is required infrastructure, not the marketed difference.
 
 2. **Exam blueprint + priority study guide**  
    Produce topic priorities, intended depth, and question-type allocation with page/slide evidence and visible uncertainty. Do not claim to predict exact exam questions or let past questions define complete scope.
@@ -494,7 +494,7 @@ The student cannot tell what to study first, so limited preparation time is spre
 
 1. **Course-material intake**  
    → **User pain solved:** Students face too many fragmented lecture materials and do not know where to begin.  
-   → **Why needed in MVP:** The core job requires comparing course content and any available exam signals; support should stay limited to several text-based PDF/PPTX files and pasted text.
+   → **Why needed in MVP:** The core job requires comparing course content and any available exam signals; support should stay limited to several bounded course-material files across the implemented PDF/Office/image contract.
 
 2. **Priority-ranked exam guide with reasons, evidence, and uncertainty**  
    → **User pain solved:** Students do not know which topics matter most for the next exam, and AI-generated priorities are hard to trust when their basis is invisible.  

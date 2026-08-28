@@ -5,7 +5,7 @@ import { AppError, errorResponse } from "@/lib/server/http";
 import { createSpanRows, parseMaterial } from "@/lib/server/parser";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 async function failSource(sourceId: string, error: unknown) {
   const code = error instanceof AppError ? error.code : "PARSING_FAILED";
@@ -103,7 +103,7 @@ export async function POST(_request: Request, context: RouteContext<"/api/source
     }
 
     const readableCount = parsed.units.filter((unit) => unit.readable).length;
-    if (readableCount === 0) throw new AppError("NO_READABLE_TEXT", "No reliable text was found. Scanned or image-only materials are not supported.", 422);
+    if (readableCount === 0) throw new AppError("NO_READABLE_TEXT", "No reliable source text could be extracted from this file. The material may be scanned, image-only, locked, or otherwise unreadable.", 422);
     const status = parsed.warnings.length ? "ready_with_gaps" : "ready";
     const { error: updateError } = await admin.from("sources").update({
       file_hash: fileHash,
