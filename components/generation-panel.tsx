@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,10 @@ const stageLabels: Record<string, string> = {
 
 export function isGenerationActive(state: string, busy: boolean) {
   return busy || ["extracting_topics", "merging_topics", "generating_guide", "verifying_guide"].includes(state);
+}
+
+export function isPersistedGenerationInProgress(state: string) {
+  return ["extracting_topics", "merging_topics", "generating_guide", "verifying_guide"].includes(state);
 }
 
 export function GenerationPanel({
@@ -45,7 +49,7 @@ export function GenerationPanel({
     if (timer.current) clearInterval(timer.current);
   }, []);
 
-  async function poll() {
+  const poll = useCallback(async () => {
     const response = await fetch(`/api/sessions/${sessionId}/status`, { cache: "no-store" });
     const payload = await response.json().catch(() => null);
     if (response.ok && payload?.session) {
@@ -62,7 +66,13 @@ export function GenerationPanel({
         setBusy(false);
       }
     }
-  }
+  }, [router, sessionId]);
+
+  useEffect(() => {
+    if (!isPersistedGenerationInProgress(state) || timer.current) return;
+    void poll();
+    timer.current = setInterval(() => void poll(), 2000);
+  }, [poll, state]);
 
   async function generate() {
     setBusy(true);
