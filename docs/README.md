@@ -1,7 +1,7 @@
 # Folveta Documentation Index
 
 Status: **Active governance index**  
-Last updated: 2026-08-26
+Last updated: 2026-08-31
 
 ## Authority order
 
@@ -34,6 +34,7 @@ If current code contradicts a document's claim that something is implemented, th
 | `current-state-audit.md` | Dated audit, hygiene classification, and approved cleanup execution record |
 | `production-seo-checklist.md` | Operational pre-launch/launch/post-launch checklist |
 | `production-deployment.md` | Vercel, domain, environment, Supabase Auth, PRELAUNCH, and production verification runbook |
+| `ai-generation-workflow-rollout.md` | Durable AI Workflow Production rollout evidence, telemetry, privacy/retry/concurrency contract, and remaining risks |
 
 ## Supabase migration workflow
 

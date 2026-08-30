@@ -1,6 +1,6 @@
 # Folveta Production Pre-launch, Launch, and SEO Checklist
 
-Status: **Active operational checklist; AI reliability hardening in progress; public launch gates remain open**
+Status: **Active operational checklist; AI Workflow gate passed; public launch gates remain open**
 Canonical target: `https://folveta.com`  
 Architecture: `docs/seo-architecture.md`
 
@@ -8,7 +8,9 @@ Do not mark local assumptions as production verification. Protected deployment i
 
 ## Scoped Production pre-launch Gate (2026-08-27)
 
-The scoped pre-launch infrastructure gate passed on GitHub `main@2dcc4d9`, deployed Ready in Vercel Production. Live evidence covers `folveta.com` domain/TLS/redirects, anonymous session persistence and cookie behavior, same-browser Auth email confirmation/PKCE (`/signup 200`, `/verify 303`, `/token 200`, `/user 200`), anonymous claim, sign-in/refresh/sign-out/relogin, My Guides, Recent Guides, Library, Search, Profile, Guide reopen, Quick Check, persisted Results, and public/private noindex safety. Production AI pipeline functional but reliability hardening in progress: a controlled success does not close the real-material `MODEL_EMPTY_OUTPUT` blocker. The empty pre-launch sitemap and robots behavior remain intentional. This does not close the separate public launch, billing, deletion, retention, monitoring, rate-limit, support, SEO v2, or indexing cutover gates below.
+The scoped pre-launch infrastructure gate first passed on GitHub `main@2dcc4d9`, deployed Ready in Vercel Production. Live evidence covers `folveta.com` domain/TLS/redirects, anonymous session persistence and cookie behavior, same-browser Auth email confirmation/PKCE (`/signup 200`, `/verify 303`, `/token 200`, `/user 200`), anonymous claim, sign-in/refresh/sign-out/relogin, My Guides, Recent Guides, Library, Search, Profile, Guide reopen, Quick Check, persisted Results, and public/private noindex safety. The empty pre-launch sitemap and robots behavior remain intentional. The AI reliability blocker that was open in that original record is closed by the later Workflow rollout update below; public launch, billing, deletion, retention, monitoring, rate-limit, support, SEO v2, and indexing cutover gates remain separate.
+
+AI Workflow rollout update (2026-08-31): Production `main@613dbeb` is `READY`; the provider boundary probe, Workflow smoke, real PDF x3, legacy PPT x2, Supabase minute reconciler, Auth/claim, and Product-3 regression passed. `AI_GENERATION_WORKFLOW_ENABLED=true`, `PRELAUNCH=true`, and the temporary provider probe is absent. This closes the AI Workflow blocker only; it does not close Payment, retention/account deletion, monitoring, rate limiting, support/privacy, SEO v2, or public indexing.
 
 ## A. Before protected production testing
 
@@ -24,8 +26,8 @@ The scoped pre-launch infrastructure gate passed on GitHub `main@2dcc4d9`, deplo
 
 ## B. Product and commercial launch gates
 
-- [ ] Product-3 Auth/account ownership and multi-guide management pass their exit criteria.
-- [ ] My Guides, Recent Guides, Library, Search, Profile, reopen, rename, archive/restore, and delete are real or removed from launch UI.
+- [x] Product-3 Auth/account ownership and multi-guide management pass their exit criteria.
+- [x] My Guides, Recent Guides, Library, Search, Profile, reopen, rename, archive/restore, and delete are real or removed from launch UI.
 - [ ] Pricing model, free/paid entitlements, and usage units/limits are approved and visible before generation.
 - [ ] Checkout, verified billing events, subscription/payment status, billing management, success/cancel/failure, and server-side entitlement enforcement work.
 - [ ] Duplicate/out-of-order billing events are idempotent and cannot grant incorrect access.
@@ -50,7 +52,7 @@ The scoped pre-launch infrastructure gate passed on GitHub `main@2dcc4d9`, deplo
 - [x] `npm run lint` passes.
 - [x] `npm run build` passes.
 - [x] Full browser E2E passes for anonymous upload -> Guide -> Quick Check -> return.
-- [ ] Auth/anonymous claim/multi-guide/reopen/rename/archive/delete/search/Profile E2E passes.
+- [x] Auth/anonymous claim/multi-guide/reopen/rename/archive/delete/search/Profile E2E passes.
 - [ ] Free limit/upgrade/checkout/success/cancel/failure/billing-management/entitlement E2E passes.
 - [ ] Cleanup and deletion jobs are observed completing against safe production-like fixtures.
 - [ ] Model-quality release set passes Guide grounding/coverage and MCQ key/mapping gates.

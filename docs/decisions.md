@@ -57,7 +57,21 @@ Decision date: 2026-08-26
 - The Product-3 deterministic two-account dev Gate passed My Guides, Library, Search, Profile, Guide lifecycle, Quick Check/Results regression, page/API/direct-client/RPC isolation, sign-out, relogin, desktop/390px, noindex, and console checks. Test data and Auth users were removed.
 - Sign out and Auth expiry revoke browser access but do not delete owned data. Guide delete is immediate access revocation plus 30-day purge eligibility; it is not a promise of automatic physical deletion because production scheduling/retry monitoring is not deployed.
 - No Delete Account UI or request endpoint may appear before a complete Storage-first deletion orchestrator exists. That future flow must stop writes, coordinate billing cancellation, remove Storage, cascade database children, handle retries/audit needs, and delete the Auth user last.
-- With these current boundaries documented truthfully, Product-3/Phase 2 passes. The scoped Production pre-launch infrastructure Gate passed on `main@2dcc4d9`, including Auth/PKCE, anonymous claim, and workspace regression. Production AI pipeline functional but reliability hardening in progress: controlled success is not evidence of stable real-material generation after subsequent `MODEL_EMPTY_OUTPUT` failures. Full account deletion/recovery, deployed retention scheduling and retry monitoring, AI reliability validation, rate limiting, production monitoring, support/privacy channel, Payment, SEO v2, and indexing cutover remain later gates.
+- With these current boundaries documented truthfully, Product-3/Phase 2 passes. Its original Production pre-launch infrastructure evidence came from `main@2dcc4d9`; the later AI Workflow rollout and fresh Production Product-3 regression are recorded below. Full account deletion/recovery, retention scheduling, rate limiting, production monitoring, support/privacy operations, Payment, SEO v2, and indexing cutover remain later gates.
+
+### AI Workflow Production rollout decision
+
+Decision date: 2026-08-31
+
+- Vercel Workflow owns durable Guide orchestration; Supabase Postgres owns logical-run identity, dispatch epochs, operation CAS/fencing/leases, retry authorization, capacity, telemetry, and final settlement.
+- Execution semantics are at least once. The system guarantees idempotent/fenced persistence, not exactly-once provider execution.
+- OpenAI SDK and gateway retries remain disabled. Workflow may retry only after a database-authorized transition; each operation has three total attempts and each logical run has four shared retry credits.
+- Provider capacity remains four per run and eight globally. Supabase Cron, not Vercel Cron, invokes the protected reconciler every minute for dispatch gaps and watchdog recovery.
+- Workflow persistence and diagnostics carry opaque IDs and allowlisted metadata only; source material, prompts, Guide content, source spans, and raw provider bodies remain outside Workflow state/log/error surfaces.
+- Production commit `613dbeb` passed the provider boundary probe, Workflow smoke, real PDF x3, legacy PPT x2, Guide rendering/reload, Cron authorization, Auth/claim, and Product-3 regression. `AI_GENERATION_WORKFLOW_ENABLED=true`; `PRELAUNCH=true` remains mandatory.
+- Five real-material samples do not establish p95. Provider variability and the bounded duplicate-call window remain accepted pre-launch risks.
+- The AI Workflow Rollout Gate is PASS. Payment may resume only as its own explicitly scoped task; this decision does not start Payment, SEO v2, or public indexing.
+- Detailed evidence is in `docs/ai-generation-workflow-rollout.md`.
 
 ### Product identity and category ownership
 

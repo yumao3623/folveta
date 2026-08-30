@@ -1,7 +1,7 @@
 # Folveta Technical Architecture
 
 Status: **Current v5 architecture baseline and target boundaries**  
-Last verified: 2026-08-27
+Last verified: 2026-08-31
 Decision authority: `docs/decisions.md`
 
 ## 1. Architecture principle
@@ -26,12 +26,21 @@ Next.js 16 App Router / Node Route Handlers
   |-- Supabase Auth owner checks plus anonymous session-token compatibility
   |-- PDF/Office/image validation and parsing
   |-- stable source unit/span creation
-  |-- model gateway and structured generation
+  |-- 202 dispatch and status polling
   |-- deterministic reference resolution and MCQ scoring
+  v
+Vercel Workflow
+  |-- opaque-ID orchestration and durable replay
+  |-- plan -> bounded topic waves -> grounding -> finalize
+  `-- no private source/prompt/Guide content in Workflow state
   v
 Supabase Auth / Postgres / Storage
   |-- private Storage bucket
-  `-- Postgres artifacts and owner-scoped authenticated RLS
+  |-- Postgres artifacts and owner-scoped authenticated RLS
+  `-- logical runs, fenced operations, leases, retry/capacity authority
+
+Supabase Cron (every minute)
+  `-- authenticated dispatch reconciliation and watchdog recovery
 
 Configured OpenAI-compatible Responses API
   `-- task-specific structured outputs and verifier calls
@@ -47,10 +56,11 @@ Configured OpenAI-compatible Responses API
 | Identity/database/storage | Supabase Auth, Supabase Postgres, private Storage, `@supabase/ssr` |
 | Validation | Zod 4 strict schemas |
 | Model API | OpenAI SDK Responses structured parsing behind `ModelGateway` |
+| Durable execution | Vercel Workflow DevKit with Supabase Postgres ownership, idempotency, telemetry, and Supabase Cron reconciliation |
 | Parsing | `unpdf`, `officeparser`, `ppt-to-text`, `file-type`; PDF/DOCX/XLSX/PPTX are parsed into anchored units, legacy `.ppt` is parsed locally into slide anchors, images use constrained visual-text extraction, and legacy `.doc/.xls` use controlled Responses file-input extraction with explicit file anchors |
 | Tests | Vitest; synthetic PDF/PPTX fixtures use `pdf-lib` and `jszip`, plus real PDF and legacy Office material parser regressions |
 
-There is no ORM, job queue, worker, vector database, component framework, analytics SDK, Auth provider integration, or billing SDK in the current application.
+There is no ORM, custom queue/worker service, vector database, component framework, analytics SDK, or billing SDK in the current application. Durable generation uses Vercel Workflow rather than a custom worker.
 
 ## 3. Implemented routes
 
@@ -93,7 +103,8 @@ There is no ORM, job queue, worker, vector database, component framework, analyt
 | `POST /api/sources/[sourceId]/parse` | Verify ownership, download private object, validate/hash/parse, persist units/spans |
 | `POST /api/sources/[sourceId]/upload-failed` | Persist failed upload state |
 | `GET /api/sessions/[sessionId]/status` | Return owned session/source/Guide state |
-| `POST /api/sessions/[sessionId]/generate` | Run Guide generation inline with a 300-second max duration |
+| `POST /api/sessions/[sessionId]/generate` | Authorize and claim a logical run, dispatch Workflow, and return `202` when the Workflow flag is enabled; retain the legacy inline path behind the OFF fallback |
+| `GET /api/internal/generation-reconcile` | Bearer-protected dispatch-gap and watchdog reconciliation invoked by Supabase Cron |
 | `POST /api/sessions/[sessionId]/quick-check` | Reuse or lazily generate a five-to-ten item request; UI currently requests five |
 | `POST /api/sessions/[sessionId]/quick-check/submit` | Validate complete answers, score by immutable IDs, persist result |
 
@@ -105,7 +116,10 @@ There is no ORM, job queue, worker, vector database, component framework, analyt
 | `sources` | Session-owned file metadata, private object path, hash, parse state/counts/warnings |
 | `source_units` | Page/slide/paragraph/sheet/image raw and normalized text plus readability/warnings |
 | `source_spans` | Stable evidence blocks selected by model output, with the same locator kinds |
-| `generation_runs` | Model stage/status/version/provider/model/usage/error metadata |
+| `generation_runs` | Historical per-provider-attempt metadata, compatibly expanded with operation telemetry |
+| `generation_executions` | Logical generation identity, immutable input/contract identity, dispatch state, retry/invocation budgets, lifecycle, and privacy-safe terminal diagnostics |
+| `generation_operations` | Unique operation identity, dependencies, CAS owner/fence/lease, attempt state, private input/result references, and timing telemetry |
+| `generation_workflow_instances` | One-to-many Workflow execution/acknowledgement observability for a logical run |
 | `study_guides` | Stable-ID versioned Guide JSON plus normalized title/access/archive/delete metadata |
 | `quick_checks` | Versioned Quick Check JSON keyed to Guide checksum/requested count |
 | `quick_check_attempts` | Submitted answer and deterministic result JSON |
@@ -133,7 +147,7 @@ Product-3A adds the durable path:
 - Account-owned sessions have no anonymous expiry and can be reopened across browser sessions through owner authorization.
 - One unauthenticated browser cookie still represents only its current anonymous session. Product-3B provides durable multi-Guide listing only for authenticated owners.
 
-The schema and threat model are detailed in `docs/auth-and-persistence.md`. The official Supabase CLI channel is linked to dev and local/remote migration history matches through `202608260005`. Product-3B/Product-3C indexes, three GIN indexes, RPC security modes/grants, and RLS state were verified against the deployed schema. Scoped two-user Product-3 Auth/claim/management/Library/Search/Profile/RLS/browser E2E passed on 2026-08-26. A controlled Production AI run succeeded on 2026-08-27, but subsequent real-user material failures returned `MODEL_EMPTY_OUTPUT`; therefore Production AI pipeline functional but reliability hardening in progress. The production Gateway reliability migration and repeated real-material E2E remain open.
+The schema and threat model are detailed in `docs/auth-and-persistence.md`. The official Supabase channel is linked, and Production migration history is traceable through `20260830080742`. Product-3 ownership/RLS and Auth claim passed a fresh Production regression on 2026-08-31 after the Workflow rollout; temporary fixtures were cleaned.
 
 ## 6. Generation and assessment contracts
 
@@ -150,12 +164,13 @@ Implemented generation path:
 9. Send the browser a taking payload without key, explanation, references, or verdicts.
 10. Score a complete submission deterministically and persist the result.
 
+Guide generation is now durable and browser-independent. `generation_run_id` is the business identity; a `workflow_run_id` never grants execution rights. At-least-once Workflow steps must acquire database ownership, fencing, a DB-time lease, capacity, and attempt authorization before a provider call. SDK/gateway retries are disabled; Workflow schedules only database-authorized retry state. Capacity is four calls per run and eight globally. Current evidence and remaining risks are recorded in `docs/ai-generation-workflow-rollout.md`.
+
 Important limitations:
 
-- Guide generation runs inline in one request. Stage state is persisted, but the historical lease/checkpoint/resume design is not implemented.
-- There is no durable queue or worker.
+- At-least-once execution retains a bounded duplicate provider-call window if a provider succeeds immediately before a crash; settlement and Guide persistence remain fenced/idempotent.
 - Generation and Quick Check endpoints have no application rate limiter or entitlement check.
-- Model quality has deterministic tests and demo fixtures, but no frozen multi-course release evaluation set is present.
+- Five real-material Production samples are insufficient to establish p95 or a broad model-quality release set.
 
 ## 7. Current environment contract
 
@@ -166,6 +181,7 @@ Important limitations:
 - Supabase URL, anon key, Storage bucket, service-role key
 - OpenAI-compatible base URL/API key
 - task model aliases for topic extraction/merge, Guide, grounding, Quick Check, and question verification
+- `AI_GENERATION_WORKFLOW_ENABLED` and the server-only reconciler secret
 - prompt/schema versions and session retention days
 
 Current behavior and gaps:
@@ -175,7 +191,7 @@ Current behavior and gaps:
 - Auth redirect uses `NEXT_PUBLIC_SITE_URL` with the localhost fallback. The current Supabase project allows exact callbacks for `https://folveta.com/auth/callback` and `http://localhost:3000/auth/callback`.
 - `@supabase/ssr` uses PKCE. A fresh same-browser Production run passed `/signup 200`, `/verify 303`, `/token 200`, `/user 200`, returned to `https://folveta.com/profile`, and preserved the anonymous aggregate through claim. A separate cross-device confirmation attempt lacked a usable callback `code` and remains historical evidence only. The current default Supabase email template cannot be converted to a `token_hash`/`verifyOtp` pattern without Custom SMTP/template editing.
 - No payment provider/customer/webhook/price configuration.
-- No deployed cleanup scheduler or verified production retention secret; no rate-limit configuration.
+- Supabase Cron invokes the generation reconciler every minute. Retention cleanup scheduling remains separate and unverified; no rate-limit configuration exists.
 - Production environment values are live in Vercel Production; no secret values are recorded in the repository. Production Supabase/OpenAI credentials remain withheld from Preview.
 
 ## 8. Missing reliability, security, and privacy capabilities
@@ -183,11 +199,10 @@ Current behavior and gaps:
 - Deployment scheduling and monitoring for the implemented retention endpoint.
 - Application rate limits, abuse detection, and per-account/entitlement quotas.
 - Explicit origin/CSRF policy for future authenticated and billing mutations.
-- Durable generation concurrency lease/idempotency and resume strategy.
 - Password recovery, full Storage-first account deletion orchestration, and production support/privacy request handling. No Delete Account UI or request endpoint is exposed before that workflow exists.
 - Billing signature verification, event idempotency/reconciliation, and entitlement enforcement.
 - Production observability, structured redaction rules, alerting, support/privacy channel, and incident runbook.
-- Reusable automated migration/RLS CI and full release browser E2E beyond the completed scoped Product-3 dev Gate. The deterministic dev Gate and one controlled AI success are not substitutes for repeated production real-material generation, billing, or cross-browser verification.
+- Reusable automated migration/RLS CI, cross-browser verification, and a statistically meaningful Production latency/model-quality sample beyond the completed Workflow and Product-3 gates.
 - Separate production/preview service isolation proof.
 
 ## 9. Product-3 target architecture decisions

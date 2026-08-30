@@ -1,7 +1,7 @@
 # Folveta Production Deployment
 
-Status: **Production pre-launch infrastructure live; AI reliability hardening in progress; not a public launch record**
-Last updated: 2026-08-28
+Status: **AI Workflow rollout passed in Production pre-launch; not a public launch record**
+Last updated: 2026-08-31
 Canonical target: `https://folveta.com`
 
 ## Deployment identity
@@ -9,7 +9,7 @@ Canonical target: `https://folveta.com`
 | Item | Configuration | Current state |
 | --- | --- | --- |
 | GitHub repository | `https://github.com/yumao3623/folveta` | Vercel GitHub App access confirmed |
-| Production branch | `main` | GitHub-triggered Production deployment at `2dcc4d969baa03d4ef6e1deefb9d417c74b1eb1d` (`Ready`) |
+| Production branch | `main` | GitHub-triggered Production deployment at `613dbeb007d6af6652c1019494e62e279d70631b` (`READY`) |
 | Vercel team/project | `creen ai` / `folveta` | Live and connected to `yumao3623/folveta` |
 | Framework | Next.js 16.3.2 App Router | Vercel native Next.js preset |
 | Root directory | `./` | Confirmed |
@@ -52,6 +52,8 @@ No secret value belongs in this document, source control, screenshots, or chat.
 | `GUIDE_SCHEMA_VERSION` | Server-only | `1.0` |
 | `QUICK_CHECK_SCHEMA_VERSION` | Server-only | `1.0` |
 | `SESSION_RETENTION_DAYS` | Server-only | `7` |
+| `AI_GENERATION_WORKFLOW_ENABLED` | Server-only | `true`; legacy OFF fallback remains in code |
+| `CRON_SECRET` | Secret, server-only | Configured for the protected reconciler; never exported or recorded |
 | `RETENTION_JOB_SECRET` | Secret, server-only | Optional for app startup; required before scheduling retention cleanup |
 
 Preview is always `noindex,nofollow` through `VERCEL_ENV`, regardless of `PRELAUNCH`. Production Supabase and OpenAI secret credentials are withheld from Preview until an isolated preview service plan exists.
@@ -69,11 +71,11 @@ Changing `PRELAUNCH` to `false` is a public-launch action. It requires Payment, 
 
 ## AI reliability status
 
-Production AI pipeline functional but reliability hardening in progress. A controlled run has completed, but real-user material has also produced `MODEL_EMPTY_OUTPUT` through the configured `portdan.com` OpenAI-compatible gateway. The deployed status must not be described as stable until the checkpoint migration and reliability code are deployed and repeated real-material generations complete with recorded, privacy-safe diagnostics.
+The AI Workflow rollout gate passed on commit `613dbeb`. The Production provider boundary probe passed inside Vercel runtime and its temporary route was removed. A Workflow smoke, three fresh real-PDF generations, and two fresh legacy-PPT generations completed and rendered with no retry, deadline, or duplicate-settlement observation. Supabase Cron is the only reconciler scheduler and runs every minute. Detailed privacy-safe telemetry and remaining risks are in `docs/ai-generation-workflow-rollout.md`. The current five real-material samples do not establish p95.
 
 ## Supabase Auth and environment boundary
 
-The current pre-launch reuses the existing Supabase project named `study-guide-maker`, which contains migrations through `202608260005`, the private Storage bucket, and the verified Product-3 schema. The source-format expansion migration `202608280002_source_format_expansion.sql` is present locally and must be applied and verified before its expanded schema/storage contract is treated as deployed. This is a pragmatic pre-launch choice, not a claim of full environment isolation:
+The current pre-launch reuses the existing Supabase project named `study-guide-maker`, whose traceable remote migration history includes every repository migration through `20260830080742`, including source-format expansion and durable AI Workflow/Cron changes. This is a pragmatic pre-launch choice, not a claim of full environment isolation:
 
 - Supabase Site URL: `https://folveta.com`.
 - Exact redirect URLs: `https://folveta.com/auth/callback` and `http://localhost:3000/auth/callback`.
@@ -104,12 +106,14 @@ Verified locally and in Production:
 - Homepage emits `noindex,nofollow` in the default pre-launch state.
 - Automated index-mode tests cover fail-closed Production, Preview, robots, sitemap, and permanent private-route policy.
 - Supabase Auth Site URL and exact production/localhost callbacks were configured in the dashboard.
-- Vercel Production is Ready from GitHub `main` commit `2dcc4d969baa03d4ef6e1deefb9d417c74b1eb1d`; an empty optional `RETENTION_JOB_SECRET` is normalized to absent without accepting a short non-empty secret. The latest Production deployment is `folveta-c3nxpgivn-creen-ai.vercel.app` (Vercel ID `JE5XqsKHvQi3ikqEigfwEeNtnmW6`).
+- Vercel Production is `READY` from GitHub `main` commit `613dbeb007d6af6652c1019494e62e279d70631b`. The deployment is `folveta-7vi1z3l0u-creen-ai.vercel.app` (Vercel ID `dpl_F9X9ZYcRK1bBjeFyvVzZmBarHoj9`).
 - `folveta.com` returns `200` over HTTPS; HTTP and `www` redirect `308` to the preferred HTTPS apex.
 - Public `/`, `/about`, `/privacy`, and `/terms` return `200`, self-canonicalize to the Production origin, and emit `noindex,nofollow` while `PRELAUNCH=true`.
 - `robots.txt` returns `200` without advertising a sitemap; `sitemap.xml` returns `200` with an empty URL set.
 - Favicon/app icon, fonts, CSS, desktop/mobile rendering, and public-page console checks passed.
 - Anonymous session create/persist, signed Storage upload, PDF parse, AI Guide generation/grounding, anonymous-to-account claim, Guide reopen, My Guides, Library, Search, Profile, Quick Check, persisted Results, Auth refresh, sign-out isolation, and relogin passed against Production test data.
+- AI Workflow smoke plus real PDF x3 and legacy PPT x2 passed from new Production sessions; reload/browser loss did not own or stop Workflow execution.
+- `generation-reconcile` is active in Supabase Cron at `* * * * *`; recent runs succeeded, a direct authenticated call returned `200`, an unauthenticated call returned `401`, and no Vercel Cron remains.
 - The generated Production QA aggregate retained exactly one Guide and one Source after claim/relogin; the Quick Check result persisted at `5/5`.
 - Vercel Runtime Logs showed the exercised Production Guide/workspace routes with expected `200` responses and the reopen route with its expected `307`; the inspected rows contained no runtime error message.
 
@@ -117,7 +121,7 @@ Open or not live-verified:
 
 - Raw Supabase Auth `Set-Cookie` attribute inspection; functional refresh, sign-out, isolation, and relogin passed without recording token values.
 - A reusable automated browser suite, full cross-browser/accessibility/performance audit, and comprehensive runtime-log/observability review.
-- Deployment protection, retention scheduling, monitoring, production deletion, account deletion, rate limits, Payment, SEO v2, and indexing cutover.
+- Deployment protection, retention scheduling, monitoring, production deletion, account deletion, rate limits, Payment, SEO v2, and indexing cutover. Generation reconciliation is deployed; retention scheduling is a separate open item.
 - Preview remains intentionally unable to build against Production-only Supabase credentials; no Production secret should be added to Preview to clear that expected isolation failure.
 
 ## Rollback
