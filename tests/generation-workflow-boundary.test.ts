@@ -9,6 +9,7 @@ const execution = read("lib/ai/workflow-execution.ts");
 const gateway = read("lib/ai/gateway.ts");
 const envExample = read(".env.example");
 const reconcile = read("app/api/internal/generation-reconcile/route.ts");
+const providerProbe = read("app/api/internal/provider-probe/route.ts");
 const generateRoute = read("app/api/sessions/[sessionId]/generate/route.ts");
 
 describe("generation Workflow execution boundary", () => {
@@ -38,5 +39,13 @@ describe("generation Workflow execution boundary", () => {
     expect(generateRoute).toContain("if (getServerEnv().AI_GENERATION_WORKFLOW_ENABLED)");
     expect(generateRoute).toContain("generateGuideStep(sessionId, session.title)");
     expect(reconcile).toContain("if (!getServerEnv().AI_GENERATION_WORKFLOW_ENABLED)");
+  });
+
+  it("keeps the temporary provider probe fixed-input and metadata-only", () => {
+    expect(providerProbe).toContain("request.headers.get(\"authorization\")");
+    expect(providerProbe).toContain('evidence: "Return value ok."');
+    expect(providerProbe).not.toContain("request.json");
+    expect(providerProbe).not.toMatch(/output_text|raw response|prompt/i);
+    expect(providerProbe).toContain("providerRequestId");
   });
 });
