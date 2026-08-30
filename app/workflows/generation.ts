@@ -39,12 +39,13 @@ export async function generateStudyGuideWorkflow(input: WorkflowDispatchInput) {
     await completeProviderOperation(input.generationRunId, merge.operationKey);
     planOperationKey = merge.operationKey;
   }
-  const plan = await guideOperationsStep(input.generationRunId, planOperationKey);
-  if (plan.status !== "completed" || !("guideOperations" in plan)) throw new FatalError("TOPIC_PLANNING_FAILED");
-
   const groundings = [] as Array<{ operationId: string; operationKey: string }>;
-  for (let offset = 0; offset < plan.guideOperations.length; offset += 4) {
-    const wave = plan.guideOperations.slice(offset, offset + 4);
+  let offset = 0;
+  while (true) {
+    const plan = await guideOperationsStep(input.generationRunId, planOperationKey, offset, 4);
+    if (plan.status !== "completed" || !("guideOperations" in plan)) throw new FatalError("TOPIC_PLANNING_FAILED");
+    const wave = plan.guideOperations;
+    if (!wave.length) break;
     const completed = await Promise.all(wave.map(async (guide) => {
       await completeProviderOperation(input.generationRunId, guide.operationKey);
       const grounding = await groundingOperationStep(input.generationRunId, guide.operationKey, guide.index);
@@ -52,6 +53,8 @@ export async function generateStudyGuideWorkflow(input: WorkflowDispatchInput) {
       return grounding;
     }));
     groundings.push(...completed);
+    offset += wave.length;
+    if (offset >= plan.totalTopics) break;
   }
 
   const finalizeKey = await finalizeOperationStep(input.generationRunId, groundings);

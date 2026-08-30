@@ -24,10 +24,10 @@ export async function mergeOperationStep(generationRunId: string, extractions: A
   return createMergeOperation(generationRunId, extractions);
 }
 
-export async function guideOperationsStep(generationRunId: string, planOperationKey: string) {
+export async function guideOperationsStep(generationRunId: string, planOperationKey: string, offset: number, limit: number) {
   "use step";
   const { createGuideOperations } = await import("@/lib/ai/workflow-execution");
-  return createGuideOperations(generationRunId, planOperationKey);
+  return createGuideOperations(generationRunId, planOperationKey, offset, limit);
 }
 
 export async function groundingOperationStep(generationRunId: string, guideKey: string, index: number) {

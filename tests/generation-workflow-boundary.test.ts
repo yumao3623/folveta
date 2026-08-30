@@ -33,6 +33,13 @@ describe("generation Workflow execution boundary", () => {
     expect(execution).toContain('rpc("settle_generation_operation_retry_or_fail"');
   });
 
+  it("creates only the guide operations in the currently executing wave", () => {
+    expect(workflow).toContain("guideOperationsStep(input.generationRunId, planOperationKey, offset, 4)");
+    expect(workflow).toContain("offset += wave.length");
+    expect(execution).toContain("topics.slice(start, start + waveSize).entries()");
+    expect(execution).not.toContain("Promise.all(result.data.topics.slice(0, 12)");
+  });
+
   it("keeps the new execution path safely disabled by default", () => {
     expect(envExample).toContain("AI_GENERATION_WORKFLOW_ENABLED=false");
     expect(generateRoute).toContain("if (getServerEnv().AI_GENERATION_WORKFLOW_ENABLED)");

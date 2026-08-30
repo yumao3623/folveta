@@ -327,11 +327,21 @@ export async function createMergeOperation(
   return { operationId, operationKey };
 }
 
-export async function createGuideOperations(generationRunId: string, planOperationKey: string) {
+export async function createGuideOperations(
+  generationRunId: string,
+  planOperationKey: string,
+  offset: number,
+  limit: number,
+) {
   const context = await getOperationContext(generationRunId, planOperationKey);
   const result = mergedTopicsSchema.safeParse(context.result);
   if (!result.success || !context.resultHash) return { status: "terminal" as const };
-  const guideOperations = await Promise.all(result.data.topics.slice(0, 12).map(async (topic, index) => {
+  const topics = result.data.topics.slice(0, 12);
+  const start = Math.max(0, Math.trunc(offset));
+  const waveSize = Math.min(4, Math.max(1, Math.trunc(limit)));
+  const guideOperations = [] as Array<{ operationId: string; operationKey: string; index: number }>;
+  for (const [waveIndex, topic] of topics.slice(start, start + waveSize).entries()) {
+    const index = start + waveIndex;
     const suffix = createHash("sha256").update(`${generationRunId}:guide:${index}`, "utf8").digest("hex").slice(0, 24);
     const operationKey = `guide:op_${suffix}`;
     const operationId = await createOperation({
@@ -341,11 +351,12 @@ export async function createGuideOperations(generationRunId: string, planOperati
       privateInput: { topic } as unknown as Json,
       dependencies: [{ operationId: context.operationId, resultHash: context.resultHash! }],
     });
-    return { operationId, operationKey, index };
-  }));
+    guideOperations.push({ operationId, operationKey, index });
+  }
   return {
     status: "completed" as const,
     guideOperations,
+    totalTopics: topics.length,
   };
 }
 
