@@ -3,7 +3,15 @@ import { getSupabaseAdmin } from "@/lib/server/supabase";
 import { getServerEnv } from "@/lib/env";
 import { executionContract, PROVIDER_DEADLINES_MS } from "@/lib/ai/generation-contract";
 import { ModelGateway, SafeProviderError } from "@/lib/ai/gateway";
-import { groundingVerdictsSchema, mergedTopicsSchema, rawGuideTopicSchema, topicCandidatesSchema } from "@/lib/ai/schemas";
+import {
+  groundingVerdictsSchema,
+  mergedTopicsSchema,
+  mergedTopicsSchemaForSpanIds,
+  rawGuideTopicSchema,
+  rawGuideTopicSchemaForSpanIds,
+  topicCandidatesSchema,
+  topicCandidatesSchemaForSpanIds,
+} from "@/lib/ai/schemas";
 import { PROMPTS } from "@/lib/ai/prompts";
 import { allRawClaims, evidenceLine, type GenerationSourceRow, type GenerationSpanRow } from "@/lib/ai/pipeline";
 import { buildTopic, forbiddenLanguage } from "@/lib/ai/pipeline";
@@ -111,6 +119,26 @@ function material(context: Context) {
   return { sources, spans, sourcesById: new Map(sources.map((source) => [source.id, source])) };
 }
 
+type EvidenceValidationContext = {
+  operationKind: Context["operationKind"];
+  input: Record<string, unknown>;
+  spans: Array<{ id: string }>;
+};
+
+export function allowedEvidenceSpanIds(context: EvidenceValidationContext) {
+  const availableIds = new Set(context.spans.map((span) => span.id));
+  if (context.operationKind === "plan_topics" || context.operationKind === "extract_topics") {
+    const requestedIds = Array.isArray(context.input.spanIds) ? context.input.spanIds as string[] : [...availableIds];
+    return [...new Set(requestedIds)].filter((id) => availableIds.has(id));
+  }
+  if (context.operationKind === "generate_guide") {
+    const topic = context.input.topic as { evidence_span_ids?: unknown };
+    const requestedIds = Array.isArray(topic?.evidence_span_ids) ? topic.evidence_span_ids as string[] : [];
+    return [...new Set(requestedIds)].filter((id) => availableIds.has(id));
+  }
+  return [...availableIds];
+}
+
 function providerRequest(context: Context): {
   task: "topic_extract" | "topic_merge" | "guide" | "grounding_verify";
   schema: ZodType<unknown>;
@@ -121,29 +149,32 @@ function providerRequest(context: Context): {
 } {
   const { spans, sourcesById } = material(context);
   const lines = (selected: GenerationSpanRow[]) => selected.map((span) => evidenceLine(span, sourcesById.get(span.source_id)!)).join("\n\n");
-  const requestedSpanIds = new Set(Array.isArray(context.input.spanIds) ? context.input.spanIds as string[] : spans.map((span) => span.id));
-  const requestedSpans = spans.filter((span) => requestedSpanIds.has(span.id));
   if (context.operationKind === "plan_topics") {
+    const allowedSpanIds = allowedEvidenceSpanIds(context);
+    const allowed = new Set(allowedSpanIds);
     return {
       task: "topic_merge" as const,
-      schema: mergedTopicsSchema,
+      schema: mergedTopicsSchemaForSpanIds(allowedSpanIds),
       schemaName: "merged_topics",
       instructions: `${PROMPTS.topicExtract}\n${PROMPTS.topicMerge}`,
-      evidence: `Maximum topics: 12\n\n${lines(requestedSpans)}`,
+      evidence: `Maximum topics: 12\n\n${lines(spans.filter((span) => allowed.has(span.id)))}`,
       requestTimeoutMs: PROVIDER_DEADLINES_MS.plan_topics,
     };
   }
   if (context.operationKind === "extract_topics") {
+    const allowedSpanIds = allowedEvidenceSpanIds(context);
+    const allowed = new Set(allowedSpanIds);
     return {
       task: "topic_extract" as const,
-      schema: topicCandidatesSchema,
+      schema: topicCandidatesSchemaForSpanIds(allowedSpanIds),
       schemaName: "topic_candidates",
       instructions: PROMPTS.topicExtract,
-      evidence: lines(requestedSpans),
+      evidence: lines(spans.filter((span) => allowed.has(span.id))),
       requestTimeoutMs: PROVIDER_DEADLINES_MS.extract_topics,
     };
   }
   if (context.operationKind === "merge_topics") {
+    const allowedSpanIds = allowedEvidenceSpanIds(context);
     const candidates = context.dependencies.flatMap((dependency) => {
       const parsed = topicCandidatesSchema.safeParse(dependency.result);
       if (!parsed.success) throw new SafeProviderError("GENERATION_DEPENDENCY_CONTRACT_MISMATCH", "execution_contract", false, null, null, "non_retryable");
@@ -151,7 +182,7 @@ function providerRequest(context: Context): {
     });
     return {
       task: "topic_merge" as const,
-      schema: mergedTopicsSchema,
+      schema: mergedTopicsSchemaForSpanIds(allowedSpanIds),
       schemaName: "merged_topics",
       instructions: PROMPTS.topicMerge,
       evidence: `Maximum topics: 12\nValid span IDs: ${spans.map((span) => span.id).join(", ")}\n\nCandidates:\n${JSON.stringify(candidates)}`,
@@ -160,10 +191,11 @@ function providerRequest(context: Context): {
   }
   if (context.operationKind === "generate_guide") {
     const topic = context.input.topic as Record<string, unknown>;
-    const allowed = new Set(Array.isArray(topic.evidence_span_ids) ? topic.evidence_span_ids as string[] : []);
+    const allowedSpanIds = allowedEvidenceSpanIds(context);
+    const allowed = new Set(allowedSpanIds);
     return {
       task: "guide" as const,
-      schema: rawGuideTopicSchema,
+      schema: rawGuideTopicSchemaForSpanIds(allowedSpanIds),
       schemaName: "study_guide_topic",
       instructions: PROMPTS.guideTopic,
       evidence: `Topic contract: ${JSON.stringify(topic)}\n\nEvidence:\n${lines(spans.filter((span) => allowed.has(span.id)))}`,
@@ -183,7 +215,7 @@ function providerRequest(context: Context): {
   };
 }
 
-function validateProviderResult(context: Context, value: unknown, result: { providerStatus: number; providerRequestId: string | null }) {
+export function validateProviderResult(context: EvidenceValidationContext, value: unknown, result: { providerStatus: number; providerRequestId: string | null }) {
   const invalidReference = () => new SafeProviderError(
     "MODEL_INVALID_SOURCE_REFERENCE",
     "invalid_output",
@@ -193,18 +225,17 @@ function validateProviderResult(context: Context, value: unknown, result: { prov
     "invalid_source_reference",
   );
   if (context.operationKind === "extract_topics") {
-    const allowed = new Set(Array.isArray(context.input.spanIds) ? context.input.spanIds as string[] : []);
+    const allowed = new Set(allowedEvidenceSpanIds(context));
     const parsed = topicCandidatesSchema.parse(value);
     if (parsed.candidates.some((candidate) => candidate.evidence_span_ids.some((id) => !allowed.has(id)))) throw invalidReference();
   }
   if (context.operationKind === "plan_topics" || context.operationKind === "merge_topics") {
-    const allowed = new Set(context.spans.map((span) => span.id));
+    const allowed = new Set(allowedEvidenceSpanIds(context));
     const parsed = mergedTopicsSchema.parse(value);
     if (parsed.topics.some((topic) => topic.evidence_span_ids.some((id) => !allowed.has(id)))) throw invalidReference();
   }
   if (context.operationKind === "generate_guide") {
-    const topic = context.input.topic as { evidence_span_ids?: string[] };
-    const allowed = new Set(topic.evidence_span_ids ?? []);
+    const allowed = new Set(allowedEvidenceSpanIds(context));
     const parsed = rawGuideTopicSchema.parse(value);
     if (allRawClaims(parsed).some((claim) => claim.span_ids.some((id) => !allowed.has(id)))) throw invalidReference();
   }

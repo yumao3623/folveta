@@ -1,59 +1,90 @@
 import { z } from "zod";
 import { prioritySchema } from "@/lib/schemas";
 
-export const topicCandidatesSchema = z.object({
-  candidates: z.array(z.object({
-    title: z.string().min(1),
-    aliases: z.array(z.string().min(1)),
-    focus_reason: z.string().min(1),
-    evidence_span_ids: z.array(z.string().min(1)).min(1),
-  }).strict()).min(1),
-}).strict();
+function allowedSpanIdSchema(allowedSpanIds: readonly string[]) {
+  const uniqueIds = [...new Set(allowedSpanIds)];
+  if (!uniqueIds.length) throw new Error("ALLOWED_EVIDENCE_SPAN_IDS_EMPTY");
+  return z.enum(uniqueIds as [string, ...string[]]);
+}
 
-export const mergedTopicsSchema = z.object({
-  topics: z.array(z.object({
-    id: z.string().regex(/^[a-z0-9-]+$/),
+function createTopicCandidatesSchema(spanIdSchema: z.ZodType<string>) {
+  return z.object({
+    candidates: z.array(z.object({
+      title: z.string().min(1),
+      aliases: z.array(z.string().min(1)),
+      focus_reason: z.string().min(1),
+      evidence_span_ids: z.array(spanIdSchema).min(1),
+    }).strict()).min(1),
+  }).strict();
+}
+
+function createMergedTopicsSchema(spanIdSchema: z.ZodType<string>) {
+  return z.object({
+    topics: z.array(z.object({
+      id: z.string().regex(/^[a-z0-9-]+$/),
+      title: z.string().min(1),
+      priority: prioritySchema,
+      focus_reason: z.string().min(1),
+      evidence_span_ids: z.array(spanIdSchema).min(1),
+    }).strict()).min(1),
+  }).strict();
+}
+
+function createRawClaimSchema(spanIdSchema: z.ZodType<string>) {
+  return z.object({
+    id: z.string().min(1),
+    text: z.string().min(1),
+    support_status: z.enum(["direct", "partial", "conflict"]),
+    span_ids: z.array(spanIdSchema).min(1),
+  }).strict();
+}
+
+function createRawGuideTopicSchema(spanIdSchema: z.ZodType<string>) {
+  const claimSchema = createRawClaimSchema(spanIdSchema);
+  return z.object({
+    id: z.string().min(1),
     title: z.string().min(1),
     priority: prioritySchema,
     focus_reason: z.string().min(1),
-    evidence_span_ids: z.array(z.string().min(1)).min(1),
-  }).strict()).min(1),
-}).strict();
+    explanation: z.array(claimSchema),
+    key_concepts: z.array(z.object({
+      id: z.string().min(1),
+      name: z.string().min(1),
+      explanation: z.array(claimSchema),
+    }).strict()),
+    definitions: z.array(z.object({
+      id: z.string().min(1),
+      term: z.string().min(1),
+      definition: z.array(claimSchema),
+    }).strict()),
+    processes_relationships: z.array(claimSchema),
+    common_confusions: z.array(z.object({
+      id: z.string().min(1),
+      confusion: z.array(claimSchema),
+      clarification: z.array(claimSchema),
+    }).strict()),
+    gaps: z.array(z.object({
+      id: z.string().min(1),
+      text: z.string().min(1),
+    }).strict()),
+  }).strict();
+}
 
-export const rawClaimSchema = z.object({
-  id: z.string().min(1),
-  text: z.string().min(1),
-  support_status: z.enum(["direct", "partial", "conflict"]),
-  span_ids: z.array(z.string().min(1)).min(1),
-}).strict();
+const unrestrictedSpanIdSchema = z.string().min(1);
 
-export const rawGuideTopicSchema = z.object({
-  id: z.string().min(1),
-  title: z.string().min(1),
-  priority: prioritySchema,
-  focus_reason: z.string().min(1),
-  explanation: z.array(rawClaimSchema),
-  key_concepts: z.array(z.object({
-    id: z.string().min(1),
-    name: z.string().min(1),
-    explanation: z.array(rawClaimSchema),
-  }).strict()),
-  definitions: z.array(z.object({
-    id: z.string().min(1),
-    term: z.string().min(1),
-    definition: z.array(rawClaimSchema),
-  }).strict()),
-  processes_relationships: z.array(rawClaimSchema),
-  common_confusions: z.array(z.object({
-    id: z.string().min(1),
-    confusion: z.array(rawClaimSchema),
-    clarification: z.array(rawClaimSchema),
-  }).strict()),
-  gaps: z.array(z.object({
-    id: z.string().min(1),
-    text: z.string().min(1),
-  }).strict()),
-}).strict();
+export const topicCandidatesSchema = createTopicCandidatesSchema(unrestrictedSpanIdSchema);
+export const mergedTopicsSchema = createMergedTopicsSchema(unrestrictedSpanIdSchema);
+export const rawClaimSchema = createRawClaimSchema(unrestrictedSpanIdSchema);
+export const rawGuideTopicSchema = createRawGuideTopicSchema(unrestrictedSpanIdSchema);
+
+export const topicCandidatesSchemaForSpanIds = (allowedSpanIds: readonly string[]) =>
+  createTopicCandidatesSchema(allowedSpanIdSchema(allowedSpanIds));
+
+export const mergedTopicsSchemaForSpanIds = (allowedSpanIds: readonly string[]) =>
+  createMergedTopicsSchema(allowedSpanIdSchema(allowedSpanIds));
+
+export const rawGuideTopicSchemaForSpanIds = (allowedSpanIds: readonly string[]) =>
+  createRawGuideTopicSchema(allowedSpanIdSchema(allowedSpanIds));
 
 export const groundingVerdictsSchema = z.object({
   verdicts: z.array(z.object({
