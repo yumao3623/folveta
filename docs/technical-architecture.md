@@ -60,7 +60,7 @@ Configured OpenAI-compatible Responses API
 | Parsing | `unpdf`, `officeparser`, `ppt-to-text`, `file-type`; PDF/DOCX/XLSX/PPTX are parsed into anchored units, legacy `.ppt` is parsed locally into slide anchors, images use constrained visual-text extraction, and legacy `.doc/.xls` use controlled Responses file-input extraction with explicit file anchors |
 | Tests | Vitest; synthetic PDF/PPTX fixtures use `pdf-lib` and `jszip`, plus real PDF and legacy Office material parser regressions |
 
-There is no ORM, custom queue/worker service, vector database, component framework, analytics SDK, or billing SDK in the current application. Durable generation uses Vercel Workflow rather than a custom worker.
+There is no ORM, custom queue/worker service, vector database, component framework, or analytics SDK in the current application. Durable generation uses Vercel Workflow rather than a custom worker. Paddle.js and the Paddle Node SDK are present only for the isolated Paddle Sandbox billing flow; no Live Paddle configuration is present.
 
 ## 3. Implemented routes
 
@@ -190,7 +190,7 @@ Current behavior and gaps:
 - Pre-launch discovery pages emit `noindex,nofollow`, sitemap returns no URLs, and robots omits the sitemap declaration while keeping discovery pages crawlable enough to observe their page directive.
 - Auth redirect uses `NEXT_PUBLIC_SITE_URL` with the localhost fallback. The current Supabase project allows exact callbacks for `https://folveta.com/auth/callback` and `http://localhost:3000/auth/callback`.
 - `@supabase/ssr` uses PKCE. A fresh same-browser Production run passed `/signup 200`, `/verify 303`, `/token 200`, `/user 200`, returned to `https://folveta.com/profile`, and preserved the anonymous aggregate through claim. A separate cross-device confirmation attempt lacked a usable callback `code` and remains historical evidence only. The current default Supabase email template cannot be converted to a `token_hash`/`verifyOtp` pattern without Custom SMTP/template editing.
-- No payment provider/customer/webhook/price configuration.
+- The isolated `folveta-paddle-sandbox` deployment has a Paddle Sandbox Product/Price, Checkout, Customer Portal, webhook destination, and server-side billing configuration. Formal `folveta.com` has no Live Paddle configuration and remains `PRELAUNCH=true`.
 - Supabase Cron invokes the generation reconciler every minute. Retention cleanup scheduling remains separate and unverified; no rate-limit configuration exists.
 - Production environment values are live in Vercel Production; no secret values are recorded in the repository. Production Supabase/OpenAI credentials remain withheld from Preview.
 
@@ -200,7 +200,7 @@ Current behavior and gaps:
 - Application rate limits, abuse detection, and per-account/entitlement quotas.
 - Explicit origin/CSRF policy for future authenticated and billing mutations.
 - Password recovery, full Storage-first account deletion orchestration, and production support/privacy request handling. No Delete Account UI or request endpoint is exposed before that workflow exists.
-- Billing signature verification, event idempotency/reconciliation, and entitlement enforcement.
+- Live billing merchant onboarding, final legal/payout policy, Live webhook configuration, and billing-record retention policy.
 - Production observability, structured redaction rules, alerting, support/privacy channel, and incident runbook.
 - Reusable automated migration/RLS CI, cross-browser verification, and a statistically meaningful Production latency/model-quality sample beyond the completed Workflow and Product-3 gates.
 - Separate production/preview service isolation proof.
@@ -218,9 +218,9 @@ Product-3A resolved identity/persistence, Product-3B implements Guide management
 7. **Storage:** preserve private object paths and verify ownership before issuing any view/download URL.
 8. **Deletion:** account/Guide deletion must cascade to generated artifacts and Storage through a reliable, observable cleanup workflow.
 
-## 10. Payment target architecture boundaries
+## 10. Payment architecture boundaries
 
-The 2026-08-31 Payment/Billing v1 architecture draft is in `docs/payment-billing-architecture.md`. It is not an approved provider or commercial decision. The current code has no billing tables, provider integration, entitlement enforcement, Checkout, webhook, or payment configuration.
+The current Payment/Billing v1 record is in `docs/payment-billing-architecture.md`. Paddle is implemented and validated in a dedicated Sandbox deployment, but the commercial and Live rollout decisions remain unapproved. The application has billing tables, entitlement enforcement, Checkout, webhooks, Customer Portal, and an environment-scoped subscription mirror for Sandbox only.
 
 - Product code owns provider-independent plan, entitlement, usage, and account access decisions.
 - The provider owns sensitive payment method handling and the hosted payment/customer-management surface where practical.
@@ -228,8 +228,10 @@ The 2026-08-31 Payment/Billing v1 architecture draft is in `docs/payment-billing
 - Store unique external event IDs and process events idempotently and order-tolerantly.
 - Enforce usage at the server entry to expensive generation, with atomic/reservation behavior where concurrency can exceed a limit.
 - Checkout, portal, success/cancel/failure, and account billing routes are private/noindex.
-- No provider is selected in the current architecture.
-- Any future implementation must wrap the existing generation admission boundary with an atomic, `auth.users.id`-owned usage reservation; it must not alter the durable AI Workflow execution semantics.
+- Paddle is the Sandbox provider. Live provider selection and merchant approval remain owner gates.
+- Billing wraps the existing generation admission boundary with an atomic, `auth.users.id`-owned usage reservation and does not alter durable AI Workflow execution semantics. A successful Guide is consumed exactly once; Quick Check is included.
+- Every provider-specific record and access query is scoped to a server-derived `billing_environment` of `sandbox` or `live`. Missing, unknown, and legacy environments fail closed. Sandbox paid access cannot produce formal Live paid access, and the reverse is also true.
+- The Sandbox test plan is Free + Folveta Pro monthly at USD 12/month, with Free `2` and Pro `10` successful Guides/month. Active subscriptions scheduled to cancel remain entitled through their current period.
 
 ## 11. Pre-launch and deployment target
 

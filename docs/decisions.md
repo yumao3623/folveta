@@ -15,7 +15,7 @@ Decision date: 2026-08-26
 - `study_guides` remains the independent, stable-ID persistent artifact and receives normalized title/access/lifecycle metadata.
 - Anonymous conversion requires both a verified Supabase user and possession of the current anonymous cookie. The database claim is atomic, uses `auth.uid()`, accepts no Guide ID, clears anonymous credentials, and cannot claim expired, deleted, or already-owned data.
 - Authenticated RLS is owner-scoped; anonymous roles retain no direct table access. Server service-role queries remain behind explicit DAL authorization.
-- Payment is not implemented. Future provider-independent customer, entitlement, plan, and usage records attach to the durable user owner.
+- Paddle Billing is implemented and verified in the isolated Sandbox deployment only. Provider-independent customer, entitlement, plan, and usage records attach to the durable user owner; formal Live billing remains disabled pending merchant and payout approval.
 - The full rationale, lifecycle, retention, repair, and privacy contract is in `docs/auth-and-persistence.md`.
 
 ### Product-3B Guide management decision
@@ -154,6 +154,16 @@ The design-token foundation, Product-3 technical design, SEO research/page owner
 - Entitlement, usage, webhook idempotency, and Paddle provider-ID uniqueness require an exact environment match and fail closed for missing or unknown environments. A Sandbox subscription therefore cannot produce a paid entitlement in the formal deployment; a future Live subscription cannot appear in the Sandbox deployment.
 - Pre-isolation legacy rows remain unscoped and are deliberately Free-only. They cannot grant Pro access in either environment. This is an expand-only migration (`20260831084257_billing_environment_isolation.sql`) and is not a Live Paddle rollout or approval to charge users.
 - The Sandbox deployment must use `PADDLE_ENV=sandbox` and `NEXT_PUBLIC_PADDLE_ENV=sandbox`; the formal deployment must not receive a Live billing configuration until the owner explicitly approves it. `PRELAUNCH=true` remains mandatory.
+
+### Paddle Sandbox Billing v1 closeout decision (2026-09-01)
+
+- The implemented Sandbox offer is **Free + Folveta Pro monthly**. The Sandbox test price is **USD 12/month**; it is not a Live pricing authorization.
+- A usage unit is one **successful Study Guide generation**. Quick Check is included and never consumes a separate unit. Failed generations, Workflow retry/replay, and duplicate requests do not consume a second unit.
+- Sandbox limits are Free `2` successful Guides/month and Pro `10` successful Guides/month. Limits, plans, and file/source limits are centralized in billing configuration.
+- Verified Paddle webhooks use raw-body signature verification, environment-scoped event idempotency, and order-tolerant subscription upserts. Browser checkout success never grants access; the environment-scoped subscription mirror does.
+- The Paddle Customer Portal is the billing-management surface. An active Pro subscription with a Paddle `scheduled_change.cancel` remains Pro through the current period, displays its scheduled end date, retains the Pro quota, and suppresses a duplicate cancel action.
+- The Sandbox Checkout, webhook, environment-isolation, Customer Portal, cancellation, refresh-persistence, quota, and duplicate/idempotency gates passed. This does not authorize Live Paddle, real charges, a Live Product/Price, a formal deployment billing configuration, SEO v2, or `PRELAUNCH=false`.
+- Live merchant onboarding, operator eligibility, payout route, final price/quotas, refund and cancellation policy, tax/MoR wording, and billing-record retention remain owner approval and Live-readiness requirements.
 
 ## Historical decision — v4 (Folveta Study Workspace)
 

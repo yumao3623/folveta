@@ -56,8 +56,8 @@ Implemented UI milestones are UI-1 Study Guide Workspace, UI-2 Landing / Upload,
 - Product-3C passed a real dev two-account/RLS/browser Gate covering Library, Search, Profile, workspace navigation, cross-owner page/API/direct-client denial, signed-out isolation, relogin persistence, query behavior, and regression paths. All temporary aggregates and Auth users were cleaned.
 - A single `sgm_session` cookie represents one anonymous session token; creating another session replaces browser access to the prior session.
 - Account deletion is deliberately unavailable rather than partially implemented. The required Storage-first, child-record/Auth cleanup, retry, retention, request-channel, and future billing-cancellation orchestration is deferred as a mandatory Payment/Production prerequisite; deleting only `auth.users` is not accepted.
-- Payment, Pricing, final SEO v2, and public indexing remain unimplemented. The AI Workflow rollout is live on `main@613dbeb` with `AI_GENERATION_WORKFLOW_ENABLED=true` and `PRELAUNCH=true`.
-- No Payment/Billing, pricing model, entitlement ledger, checkout, subscription status, billing portal, webhooks, or usage enforcement.
+- Live Payment, final pricing, SEO v2, and public indexing remain unimplemented. The AI Workflow rollout is live on `main@613dbeb` with `AI_GENERATION_WORKFLOW_ENABLED=true` and `PRELAUNCH=true`.
+- Paddle Billing v1 is implemented and validated in the isolated Sandbox deployment: Free + Folveta Pro monthly, Sandbox test price USD 12/month, environment-scoped entitlement/usage, Checkout, signed and idempotent webhooks, Customer Portal, cancellation scheduling, and server-side usage enforcement. Formal Live billing remains absent.
 - A protected Storage-first retention endpoint exists, but no deployment scheduler has been configured or verified yet.
 - No application rate limiting, abuse controls, analytics decision, real support/privacy-request channel, or production monitoring.
 - No pasted-text input, handwriting interpretation, audio/video/URL ingestion, or open-web research. Common image files use constrained visual-text extraction; scanned PDF pages and image/chart/diagram-heavy units may remain visible grounding gaps.
@@ -132,9 +132,11 @@ Product-3A repository implementation uses Supabase Auth email/password, preserve
 
 ## Commercial target
 
-Payment is a launch requirement, not yet an approved implementation choice. The 2026-08-31 architecture draft in `docs/payment-billing-architecture.md` proposes Free + one Paid monthly subscription, Study Guide success as the user-facing usage unit, Quick Check included in that unit, and provider-independent server-side entitlement/reservation keyed by `auth.users.id`. Paddle Billing is the conditional primary candidate and Lemon Squeezy the conditional backup; operator country/entity/payout eligibility remains unconfirmed. No SDK, Checkout, webhook, live Product/Price, production billing setting, or `PRELAUNCH` change is authorized.
+Paddle Billing v1 is validated in Sandbox only. The implemented Sandbox shape is Free + Folveta Pro monthly at a USD 12/month test price. The user-facing unit is one successful Study Guide generation; Quick Check is included, and failed generation, Workflow retry/replay, and duplicate requests do not consume an extra unit. Sandbox Free is `2` successful Guides/month and Sandbox Pro is `10`.
 
-Pricing and limits remain hypotheses until the owner confirms provider eligibility, final quotas, price, refund/cancellation policy, tax responsibility, and retention policy. Owner-confirmation research found Paddle's official market table includes China/CNY but does not guarantee Mainland China seller onboarding; Lemon Squeezy's official bank payout list excludes Mainland China. Pricing must be visible before a student commits costly processing and must not introduce a surprise result-stage paywall.
+Billing ownership is `auth.users.id`; Checkout, webhooks, subscriptions, entitlements, usage, and generation reservations are scoped by a server-derived `billing_environment`. Raw-card handling remains Paddle-hosted. Signature-verified, idempotent webhooks, rather than a checkout redirect, grant access. The Customer Portal manages the subscription. A scheduled end-of-period cancellation preserves Pro and its quota until the effective date.
+
+This is not a Live commercial authorization. Paddle Live merchant approval, Mainland-China operator/entity and payout eligibility, final quotas/price, refund/cancellation policy, tax/MoR wording, billing-record retention, and all Live Paddle configuration remain owner gates. `PRELAUNCH=true` remains mandatory and formal `folveta.com` does not receive a Live billing configuration.
 
 ## SEO and launch context
 

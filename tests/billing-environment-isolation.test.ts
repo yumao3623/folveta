@@ -4,9 +4,12 @@ import { describe, expect, it } from "vitest";
 
 const read = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
 const migration = read("supabase/migrations/20260831084257_billing_environment_isolation.sql");
+const webhookUuidAccessMigration = read("supabase/migrations/20260831092740_restore_billing_webhook_uuid_default_access.sql");
+const usageSummaryMigration = read("supabase/migrations/20260831101657_billing_usage_summary_entitlement_fallback.sql");
 const webhookRoute = read("app/api/paddle/webhook/route.ts");
 const webhookSync = read("lib/server/paddle-webhook.ts");
 const billing = read("lib/server/billing.ts");
+const billingPanel = read("components/billing-panel.tsx");
 const dispatch = read("lib/ai/generation-dispatch.ts");
 
 describe("billing environment isolation", () => {
@@ -54,5 +57,32 @@ describe("billing environment isolation", () => {
     expect(webhookRoute).toContain("processPaddleEvent(billingEnvironment, event)");
     expect(dispatch).toContain("p_billing_environment: getBillingEnvironment()");
     expect(migration).toContain("where billing_environment is not distinct from v_reservation.billing_environment");
+  });
+
+  it("allows only the server webhook role to use billing UUID defaults", () => {
+    expect(webhookUuidAccessMigration).toContain("grant execute on function public.gen_random_uuid() to service_role;");
+    expect(webhookUuidAccessMigration).not.toMatch(/grant execute on function [^(]+\([^)]*\) to (anon|authenticated|public);/i);
+  });
+
+  it("supports the Paddle Node SDK's verified webhook field names", () => {
+    expect(webhookSync).toContain('stringField(data, "customer_id", "customerId")');
+    expect(webhookSync).toContain('stringField(price, "price_id", "priceId")');
+    expect(webhookSync).toContain('stringField(price, "product_id", "productId")');
+    expect(webhookSync).toContain("data.scheduled_change ?? data.scheduledChange");
+  });
+
+  it("derives a Sandbox or Live profile quota from its own entitlement before any guide is generated", () => {
+    expect(usageSummaryMigration).toContain("from public.billing_quota_for_user(p_user_id, p_billing_environment) entitlement");
+    expect(usageSummaryMigration).toContain("'plan', entitlement.plan");
+    expect(usageSummaryMigration).toContain("'quota', entitlement.quota");
+    expect(usageSummaryMigration).toContain("and period.billing_environment = p_billing_environment");
+    expect(usageSummaryMigration).toContain("where p_billing_environment in ('sandbox', 'live');");
+  });
+
+  it("reads scheduled cancellation state only from the current billing environment", () => {
+    expect(billing).toContain('.eq("billing_environment", billingEnvironment)');
+    expect(billing).toContain("getScheduledCancellation(subscription)");
+    expect(billingPanel).toContain("Cancels on");
+    expect(billingPanel).toContain("!cancellationScheduled && <Button");
   });
 });

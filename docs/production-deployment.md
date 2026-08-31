@@ -20,6 +20,14 @@ Canonical target: `https://folveta.com`
 
 The pre-launch infrastructure and environment hotfix are on `main`. Later closeout changes still require an independent reviewed commit; do not perform a public indexing cutover from this task.
 
+## Paddle Sandbox boundary
+
+Paddle Billing v1 is deployed only to the separate `folveta-paddle-sandbox` Vercel project. Its Sandbox environment uses a Paddle Sandbox API key, client-side token, notification secret, Product/Price, and `PADDLE_ENV=sandbox`; secret values are not recorded here. The notification destination is active at the Sandbox webhook route and recent subscription and transaction deliveries succeeded.
+
+The existing shared Supabase project is isolated at the billing-record level by the server-derived `billing_environment` (`sandbox` or `live`). All provider IDs, entitlement reads, usage/reservations, generation accounting, and webhook idempotency are scoped to that value; missing, unknown, or legacy environments fail closed. Therefore a Sandbox subscription cannot grant Pro on `folveta.com`.
+
+Formal `folveta.com` has not been changed for Paddle Live: no Live API key, Product/Price, webhook, or real-charge flow is configured. `PRELAUNCH=true` remains required. Paddle merchant/KYC/payout approval, final Live commercial policy, and explicit owner authorization are required before any Live rollout.
+
 ## Domain and DNS strategy
 
 Both `folveta.com` and `www.folveta.com` are attached to the single Vercel project. The apex is the production primary domain; `www` redirects directly to it. The verified public DNS values are `A folveta.com -> 216.198.79.1` and `CNAME www.folveta.com -> 83541033d72053fa.vercel-dns-017.com`. No unrelated DNS record was removed.

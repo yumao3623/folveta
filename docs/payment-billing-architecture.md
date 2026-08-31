@@ -519,7 +519,7 @@ These are positioning and cost-space comparisons, not USD margin calculations. F
 
 No item above authorizes SDK installation, Product/Price creation, Checkout, webhook implementation, Production billing configuration, SEO v2, indexing, or changing `PRELAUNCH=true`.
 
-## 25. Sandbox / Live billing environment isolation (2026-08-31)
+## 27. Sandbox / Live billing environment isolation (2026-08-31)
 
 Folveta deliberately uses the existing shared Supabase project for its Paddle Sandbox deployment and its future formal deployment. This is safe only because Paddle provider state is now namespaced by a server-derived `billing_environment` value:
 
@@ -531,3 +531,18 @@ Folveta deliberately uses the existing shared Supabase project for its Paddle Sa
 The formal migration is `20260831084257_billing_environment_isolation.sql`. It was applied to the shared project and verified without inspecting user content. The record audit found only 11 pre-isolation, `NULL`-environment webhook rows; no Sandbox or Live customer, subscription, usage, reservation, or entitlement records were present. Those legacy rows cannot create Pro entitlement.
 
 This is a Sandbox isolation boundary, not a Live billing launch approval. It authorizes only Sandbox deployment and non-payment isolation testing. It does not authorize a formal Paddle configuration, payment collection, public indexing, SEO v2, or `PRELAUNCH=false`.
+
+## 28. Paddle Sandbox Billing v1 closeout (2026-09-01)
+
+The completed Sandbox implementation follows the approved draft boundary without changing the AI Workflow architecture:
+
+- **Offer:** Free + Folveta Pro monthly. The Sandbox Product/Price is USD 12/month for testing only, not a final Live price.
+- **Usage:** exactly one successfully completed Study Guide consumes one unit. Quick Check is included. Failed generations, Workflow retries/replays, and duplicate Generate requests do not consume additional units.
+- **Limits:** Free is `2` successful Guides/month; Pro is `10`. File/source limits are centralized with the same plan configuration.
+- **Ownership and isolation:** billing ownership is `auth.users.id`. Provider-specific data and every entitlement, usage, reservation, generation-accounting, and webhook query use the server-derived `billing_environment`. Sandbox and Live Paddle IDs may coexist; missing, unknown, and legacy environments fail closed.
+- **Provider sync:** the webhook reads the raw request body, verifies the Paddle signature server-side, deduplicates events in the environment namespace, and applies order-tolerant subscription/customer updates. Checkout success redirects are never used as payment proof.
+- **Management and cancellation:** the Paddle Customer Portal is the management surface. A subscription with `scheduled_change.action=cancel` remains active and Pro until its effective/current-period-end date, shows that date in Profile, retains its quota, and does not expose a duplicate cancel action.
+
+Sandbox Checkout, transaction/subscription sync, entitlement persistence after refresh, Sandbox/Live isolation, quota display, Customer Portal access, cancel-at-period-end synchronization, scheduled-cancellation Profile UI, and duplicate/idempotency checks passed. The retained Sandbox notification destination is active and recent relevant deliveries are successful.
+
+`PRELAUNCH=true` remains unchanged. Formal `folveta.com` has no Live Paddle configuration, no Live Product/Price, no Live webhook, and no authority to charge users. Live merchant/KYC/payout approval, final provider and commercial policy, refund/cancellation terms, tax/MoR terms, billing-record retention, legal review, and an explicit owner Live-rollout approval remain required.

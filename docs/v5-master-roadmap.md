@@ -1,7 +1,7 @@
 # Folveta v5 Master Roadmap
 
 Status: **Current roadmap**  
-Last updated: 2026-08-28
+Last updated: 2026-09-01
 Decision authority: `docs/decisions.md`  
 Baseline audit: `docs/current-state-audit.md`
 
@@ -290,7 +290,7 @@ Current exit judgment: **PASS**. Product-3 feature scope, formal migrations, dev
 
 ## Phase 3 — Payment and Billing
 
-Current task status (2026-08-31): **Architecture draft and owner-confirmation verification complete; implementation still blocked on owner approval.** The cost audit, real Production operation evidence, quota/price candidates, usage/reservation model, schema, webhook boundary, deletion/retention dependencies, and provider comparison are recorded in `docs/payment-billing-architecture.md`. Paddle's official table includes China/CNY but seller onboarding remains unconfirmed; Lemon Squeezy's official bank payout list excludes Mainland China. No provider, price, SDK, Checkout, webhook, live Product/Price, or production billing setting is approved. `PRELAUNCH=true` remains mandatory.
+Current task status (2026-09-01): **Paddle Sandbox Billing v1 implementation and E2E gates passed; Live rollout remains blocked.** The Sandbox product is Free + Folveta Pro monthly at a USD 12/month test price, with `2` and `10` successful Study Guide generations/month respectively. Quick Check is included. Checkout, raw-body signed/idempotent webhooks, Customer Portal, cancel-at-period-end, refresh persistence, usage enforcement, and shared-Supabase Sandbox/Live isolation passed. All Paddle provider state is server-scoped by `billing_environment`; legacy/unknown environments fail closed. Formal `folveta.com` has no Live Paddle configuration, `PRELAUNCH=true` remains mandatory, and no real charges are authorized. Live merchant/payout approval, final commercial/legal policies, and explicit owner approval remain Phase 3 exit dependencies.
 
 **Goal**
 

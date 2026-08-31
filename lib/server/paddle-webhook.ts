@@ -13,6 +13,11 @@ function customUserId(data: Record<string, unknown>) {
   return typeof userId === "string" && userId.length > 0 ? userId : null;
 }
 
+function stringField(data: Record<string, unknown>, snakeCase: string, camelCase: string) {
+  const value = data[snakeCase] ?? data[camelCase];
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
 function dateValue(value: unknown) {
   return typeof value === "string" && !Number.isNaN(Date.parse(value)) ? value : null;
 }
@@ -46,7 +51,7 @@ async function upsertCustomer(billingEnvironment: BillingEnvironment, userId: st
 async function resolveUserId(billingEnvironment: BillingEnvironment, data: Record<string, unknown>) {
   const explicit = customUserId(data);
   if (explicit) return explicit;
-  const customerId = typeof data.customer_id === "string" ? data.customer_id : null;
+  const customerId = stringField(data, "customer_id", "customerId");
   if (!customerId) return null;
   const { data: row } = await getSupabaseAdmin()
     .from("billing_customers")
@@ -60,7 +65,7 @@ async function resolveUserId(billingEnvironment: BillingEnvironment, data: Recor
 async function processCustomer(billingEnvironment: BillingEnvironment, event: PaddleEvent) {
   const data = asRecord(event.data);
   const userId = customUserId(data);
-  const customerId = typeof data.id === "string" ? data.id : null;
+  const customerId = stringField(data, "id", "id");
   if (!userId || !customerId) return "ignored" as const;
   const email = typeof data.email === "string" ? data.email : null;
   await upsertCustomer(billingEnvironment, userId, customerId, email);
@@ -70,7 +75,7 @@ async function processCustomer(billingEnvironment: BillingEnvironment, event: Pa
 async function processTransaction(billingEnvironment: BillingEnvironment, event: PaddleEvent) {
   const data = asRecord(event.data);
   const userId = customUserId(data);
-  const customerId = typeof data.customer_id === "string" ? data.customer_id : null;
+  const customerId = stringField(data, "customer_id", "customerId");
   if (!userId || !customerId) return "ignored" as const;
   const customer = asRecord(data.customer);
   await upsertCustomer(billingEnvironment, userId, customerId, typeof customer.email === "string" ? customer.email : null);
@@ -79,12 +84,12 @@ async function processTransaction(billingEnvironment: BillingEnvironment, event:
 
 async function processSubscription(billingEnvironment: BillingEnvironment, event: PaddleEvent) {
   const data = asRecord(event.data);
-  const subscriptionId = typeof data.id === "string" ? data.id : null;
-  const customerId = typeof data.customer_id === "string" ? data.customer_id : null;
+  const subscriptionId = stringField(data, "id", "id");
+  const customerId = stringField(data, "customer_id", "customerId");
   const price = asRecord(data.items && Array.isArray(data.items) ? data.items[0] : null);
   const priceEntity = asRecord(price.price);
-  const priceId = typeof price.price_id === "string" ? price.price_id : typeof priceEntity.id === "string" ? priceEntity.id : "unknown";
-  const productId = typeof price.product_id === "string" ? price.product_id : typeof priceEntity.product_id === "string" ? priceEntity.product_id : "unknown";
+  const priceId = stringField(price, "price_id", "priceId") ?? stringField(priceEntity, "id", "id") ?? "unknown";
+  const productId = stringField(price, "product_id", "productId") ?? stringField(priceEntity, "product_id", "productId") ?? "unknown";
   if (!subscriptionId || !customerId) return "ignored" as const;
   const userId = await resolveUserId(billingEnvironment, data);
   const period = subscriptionPeriod(data);
@@ -108,9 +113,9 @@ async function processSubscription(billingEnvironment: BillingEnvironment, event
     status: normalizedStatus(data.status),
     current_period_start: period.start,
     current_period_end: period.end,
-    scheduled_change: (data.scheduled_change ?? null) as Json | null,
-    cancel_at_period_end: asRecord(data.scheduled_change).action === "cancel",
-    next_billed_at: dateValue(data.next_billed_at),
+    scheduled_change: (data.scheduled_change ?? data.scheduledChange ?? null) as Json | null,
+    cancel_at_period_end: asRecord(data.scheduled_change ?? data.scheduledChange).action === "cancel",
+    next_billed_at: dateValue(data.next_billed_at ?? data.nextBilledAt),
     last_event_occurred_at: incomingOccurred,
     raw_data: {
       id: subscriptionId,
