@@ -3,6 +3,7 @@ import { start } from "workflow/api";
 import { generateStudyGuideWorkflow } from "@/app/workflows/generation";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 import { getServerEnv } from "@/lib/env";
+import { getBillingEnvironment } from "@/lib/server/billing-environment";
 import { executionContract, OPERATION_VERSION, planningBatches, planningBudget } from "@/lib/ai/generation-contract";
 import type { Json } from "@/lib/server/database.types";
 
@@ -21,7 +22,11 @@ function safeError(code: string) {
 async function rpc(name: string, args: Record<string, unknown>) {
   const client = getSupabaseAdmin() as unknown as { rpc: (fn: string, params: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }> };
   const { data, error } = await client.rpc(name, args);
-  if (error) throw safeError(`DB_${name.toUpperCase()}_FAILED`);
+  if (error) {
+    const details = error as { message?: string };
+    if (details.message?.includes("billing_quota_exceeded")) throw safeError("BILLING_QUOTA_EXCEEDED");
+    throw safeError(`DB_${name.toUpperCase()}_FAILED`);
+  }
   return data as RpcResult;
 }
 
@@ -85,6 +90,7 @@ export async function claimLogicalGeneration(sessionId: string) {
     p_plan_operation_kind: budget.singleCall ? "plan_topics" : "extract_topics",
     p_plan_operation_input_hash: createHash("sha256").update(JSON.stringify(privateInput), "utf8").digest("hex"),
     p_plan_input_json: privateInput,
+    p_billing_environment: getBillingEnvironment(),
   });
 }
 

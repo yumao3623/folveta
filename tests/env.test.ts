@@ -19,6 +19,7 @@ const requiredEnvironment = {
   GUIDE_SCHEMA_VERSION: "1.0",
   QUICK_CHECK_SCHEMA_VERSION: "1.0",
   SESSION_RETENTION_DAYS: "7",
+  PADDLE_ENV: "sandbox",
 } as const;
 
 function stubRequiredEnvironment() {
@@ -49,5 +50,12 @@ describe("server environment", () => {
     vi.stubEnv("RETENTION_JOB_SECRET", "a".repeat(32));
 
     expect(getServerEnv().RETENTION_JOB_SECRET).toHaveLength(32);
+  });
+
+  it("rejects a client Paddle environment that does not match the server environment", () => {
+    stubRequiredEnvironment();
+    vi.stubEnv("NEXT_PUBLIC_PADDLE_ENV", "production");
+
+    expect(() => getServerEnv()).toThrow("PADDLE_ENV and NEXT_PUBLIC_PADDLE_ENV");
   });
 });

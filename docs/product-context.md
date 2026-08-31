@@ -132,7 +132,9 @@ Product-3A repository implementation uses Supabase Auth email/password, preserve
 
 ## Commercial target
 
-Payment is a launch requirement, not yet an implementation choice. The product must define predictable free/paid value, usage units, limits, entitlement states, checkout and billing management, server-verified events, enforcement, recovery states, and billing/privacy/terms copy. Pricing must be visible before a student commits costly processing and must not introduce a surprise result-stage paywall.
+Payment is a launch requirement, not yet an approved implementation choice. The 2026-08-31 architecture draft in `docs/payment-billing-architecture.md` proposes Free + one Paid monthly subscription, Study Guide success as the user-facing usage unit, Quick Check included in that unit, and provider-independent server-side entitlement/reservation keyed by `auth.users.id`. Paddle Billing is the conditional primary candidate and Lemon Squeezy the conditional backup; operator country/entity/payout eligibility remains unconfirmed. No SDK, Checkout, webhook, live Product/Price, production billing setting, or `PRELAUNCH` change is authorized.
+
+Pricing and limits remain hypotheses until the owner confirms provider eligibility, final quotas, price, refund/cancellation policy, tax responsibility, and retention policy. Owner-confirmation research found Paddle's official market table includes China/CNY but does not guarantee Mainland China seller onboarding; Lemon Squeezy's official bank payout list excludes Mainland China. Pricing must be visible before a student commits costly processing and must not introduce a surprise result-stage paywall.
 
 ## SEO and launch context
 
@@ -158,3 +160,4 @@ Open questions for staged validation:
 5. What cross-guide search scope is valuable without requiring a premature vector platform?
 6. Which UI changes improve clarity and trust rather than adding decoration?
 7. Which public pages have enough distinct user value to deserve indexing after launch?
+8. Which provider can the operator actually onboard and settle to in the intended country/entity/bank configuration?

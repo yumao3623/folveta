@@ -50,6 +50,9 @@ export async function POST(_request: Request, context: RouteContext<"/api/sessio
     const step = await generateGuideStep(sessionId, session.title);
     return Response.json({ complete: step.complete, currentStage: step.stage });
   } catch (error) {
+    if (error instanceof Error && error.message === "BILLING_QUOTA_EXCEEDED") {
+      return errorResponse(new AppError("BILLING_QUOTA_EXCEEDED", "Your monthly Study Guide limit has been reached. Upgrade to Folveta Pro to continue.", 429));
+    }
     if (authorized) {
       if (claimed && leaseId) {
         const admin = getSupabaseAdmin();

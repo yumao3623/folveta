@@ -4,9 +4,11 @@ import { redirect } from "next/navigation";
 import { BookOpen, CalendarDays, Files, LogOut, Mail } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 import { WorkspaceShell } from "@/components/workspace-shell";
+import { BillingPanel } from "@/components/billing-panel";
 import { buttonClassName } from "@/components/ui/styles";
 import { getCurrentUser } from "@/lib/server/auth";
 import { getOwnedProfileSummary } from "@/lib/server/profile";
+import { getBillingSummary } from "@/lib/server/billing";
 
 export const metadata: Metadata = { title: "Profile", robots: { index: false, follow: false } };
 
@@ -17,7 +19,7 @@ function formatDate(value: string) {
 export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/auth?next=/profile");
-  const summary = await getOwnedProfileSummary(user.id);
+  const [summary, billing] = await Promise.all([getOwnedProfileSummary(user.id), getBillingSummary(user.id)]);
   return (
     <WorkspaceShell active="profile">
       <div className="mx-auto w-full max-w-[800px]">
@@ -37,6 +39,7 @@ export default async function ProfilePage() {
           <Link href="/my-guides" className="ui-surface ui-surface--interactive flex items-center gap-4 p-5"><span className="ui-icon-frame ui-icon-frame--md ui-icon-frame--primary"><BookOpen className="h-5 w-5" /></span><span><strong className="block text-[24px] leading-none">{summary.guideCount}</strong><span className="mt-1 block text-[13px] text-[var(--muted)]">Guide{summary.guideCount === 1 ? "" : "s"}</span></span></Link>
           <Link href="/library" className="ui-surface ui-surface--interactive flex items-center gap-4 p-5"><span className="ui-icon-frame ui-icon-frame--md ui-icon-frame--source"><Files className="h-5 w-5" /></span><span><strong className="block text-[24px] leading-none">{summary.sourceCount}</strong><span className="mt-1 block text-[13px] text-[var(--muted)]">Source{summary.sourceCount === 1 ? "" : "s"}</span></span></Link>
         </section>
+        <BillingPanel summary={billing} />
         <section className="mt-7 border-t border-[var(--border-soft)] pt-6"><form action={signOut}><button type="submit" className={buttonClassName({ variant: "secondary" })}><LogOut className="h-4 w-4" /> Sign out</button></form></section>
       </div>
     </WorkspaceShell>

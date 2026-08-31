@@ -139,6 +139,22 @@ The design-token foundation, Product-3 technical design, SEO research/page owner
 
 **GO with the v5 staged route.** This decision authorizes planning and documentation governance in the current task. It does not authorize Product-3 implementation, payment integration, broad UI changes, SEO v2 code changes, deployment, indexing, or file deletion.
 
+### Payment / Billing v1 architecture status (2026-08-31)
+
+- Payment/Billing v1 has been audited and documented in `docs/payment-billing-architecture.md`.
+- This is a **draft awaiting owner confirmation**, not an approved commercial decision. No provider, price, quota, SDK, Checkout, webhook, live Product/Price, or production billing setting is approved.
+- The current proposal is Free + one Paid monthly subscription, Study Guide success as the user-facing usage unit, Quick Check included in that unit, and a provider-independent entitlement/reservation boundary keyed by `auth.users.id`.
+- Paddle Billing is the conditional primary candidate and Lemon Squeezy the conditional backup; Stripe remains conditional on an eligible overseas entity and settlement account. Mainland China onboarding and payout eligibility must be confirmed by the operator.
+- Owner-confirmation research update: Paddle's official supported-market table includes `CN China` and CNY, but this confirms transaction/currency support rather than seller approval; Lemon Squeezy's official bank-payout country list excludes Mainland China, and its PayPal statement does not prove a Mainland China merchant payout path.
+- `PRELAUNCH=true` and the stable AI Workflow architecture remain unchanged.
+
+### Paddle Sandbox / Live isolation decision (2026-08-31)
+
+- Paddle Sandbox and future Paddle Live billing share the existing Supabase project, but every Paddle provider record is now scoped by the server-derived `billing_environment` (`sandbox` or `live`). This scope applies to billing customers, subscriptions, usage periods, generation reservations, webhook events, and generation executions.
+- Entitlement, usage, webhook idempotency, and Paddle provider-ID uniqueness require an exact environment match and fail closed for missing or unknown environments. A Sandbox subscription therefore cannot produce a paid entitlement in the formal deployment; a future Live subscription cannot appear in the Sandbox deployment.
+- Pre-isolation legacy rows remain unscoped and are deliberately Free-only. They cannot grant Pro access in either environment. This is an expand-only migration (`20260831084257_billing_environment_isolation.sql`) and is not a Live Paddle rollout or approval to charge users.
+- The Sandbox deployment must use `PADDLE_ENV=sandbox` and `NEXT_PUBLIC_PADDLE_ENV=sandbox`; the formal deployment must not receive a Live billing configuration until the owner explicitly approves it. `PRELAUNCH=true` remains mandatory.
+
 ## Historical decision — v4 (Folveta Study Workspace)
 
 Status: **Superseded by v5.** Retained as the decision that established Folveta, the Academic Editorial direction, and the staged workspace concept. Its claim that Stitch is the final design source of truth and its phase list are replaced by the v5 decision above.

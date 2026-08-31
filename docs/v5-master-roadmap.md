@@ -290,6 +290,8 @@ Current exit judgment: **PASS**. Product-3 feature scope, formal migrations, dev
 
 ## Phase 3 — Payment and Billing
 
+Current task status (2026-08-31): **Architecture draft and owner-confirmation verification complete; implementation still blocked on owner approval.** The cost audit, real Production operation evidence, quota/price candidates, usage/reservation model, schema, webhook boundary, deletion/retention dependencies, and provider comparison are recorded in `docs/payment-billing-architecture.md`. Paddle's official table includes China/CNY but seller onboarding remains unconfirmed; Lemon Squeezy's official bank payout list excludes Mainland China. No provider, price, SDK, Checkout, webhook, live Product/Price, or production billing setting is approved. `PRELAUNCH=true` remains mandatory.
+
 **Goal**
 
 Introduce a truthful, server-verified commercial model with predictable limits and durable entitlements, without surprise paywalls or provider-coupled product logic.

@@ -220,6 +220,8 @@ Product-3A resolved identity/persistence, Product-3B implements Guide management
 
 ## 10. Payment target architecture boundaries
 
+The 2026-08-31 Payment/Billing v1 architecture draft is in `docs/payment-billing-architecture.md`. It is not an approved provider or commercial decision. The current code has no billing tables, provider integration, entitlement enforcement, Checkout, webhook, or payment configuration.
+
 - Product code owns provider-independent plan, entitlement, usage, and account access decisions.
 - The provider owns sensitive payment method handling and the hosted payment/customer-management surface where practical.
 - A verified server event or reconciliation result changes durable billing state; a browser redirect never grants entitlement.
@@ -227,6 +229,7 @@ Product-3A resolved identity/persistence, Product-3B implements Guide management
 - Enforce usage at the server entry to expensive generation, with atomic/reservation behavior where concurrency can exceed a limit.
 - Checkout, portal, success/cancel/failure, and account billing routes are private/noindex.
 - No provider is selected in the current architecture.
+- Any future implementation must wrap the existing generation admission boundary with an atomic, `auth.users.id`-owned usage reservation; it must not alter the durable AI Workflow execution semantics.
 
 ## 11. Pre-launch and deployment target
 

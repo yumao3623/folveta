@@ -3,6 +3,7 @@ import { MVP_LIMITS, STORAGE_BUCKET } from "@/lib/config";
 import { requireOwnedSource } from "@/lib/server/auth";
 import { AppError, errorResponse } from "@/lib/server/http";
 import { createSpanRows, parseMaterial } from "@/lib/server/parser";
+import { getBillingLimitsForUser } from "@/lib/server/billing";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 
 export const maxDuration = 300;
@@ -36,6 +37,13 @@ export async function POST(_request: Request, context: RouteContext<"/api/source
     if (!source) throw new AppError("SOURCE_NOT_FOUND", "This source is missing or expired.", 404);
     authorized = true;
     const admin = getSupabaseAdmin();
+    const { data: sessionOwner, error: sessionOwnerError } = await admin
+      .from("preparation_sessions")
+      .select("owner_user_id")
+      .eq("id", source.session_id)
+      .maybeSingle();
+    if (sessionOwnerError) throw sessionOwnerError;
+    const limits = await getBillingLimitsForUser(sessionOwner?.owner_user_id ?? null);
     await admin.from("sources").update({ status: "parsing", error_code: null, error_message: null }).eq("id", sourceId);
     await admin.from("preparation_sessions").update({ state: "parsing", current_stage: "parsing" }).eq("id", source.session_id);
 
@@ -71,11 +79,11 @@ export async function POST(_request: Request, context: RouteContext<"/api/source
     if (totalsError) throw totalsError;
     const existingUnits = (otherSources ?? []).reduce((sum, item) => sum + Number(item.unit_count), 0);
     const existingCharacters = (otherSources ?? []).reduce((sum, item) => sum + Number(item.extracted_character_count), 0);
-    if (existingUnits + parsed.units.length > MVP_LIMITS.maxTotalUnits) {
-      throw new AppError("UNIT_LIMIT_EXCEEDED", `This upload would exceed the ${MVP_LIMITS.maxTotalUnits} combined page/slide limit.`, 413);
+    if (existingUnits + parsed.units.length > limits.maxUnits) {
+      throw new AppError("UNIT_LIMIT_EXCEEDED", `This upload would exceed the ${limits.maxUnits} combined page/slide limit for your ${limits.label} plan.`, 413);
     }
-    if (existingCharacters + extractedCharacters > MVP_LIMITS.maxExtractedCharacters) {
-      throw new AppError("TEXT_LIMIT_EXCEEDED", `This upload would exceed the ${MVP_LIMITS.maxExtractedCharacters.toLocaleString()} extracted-character limit.`, 413);
+    if (existingCharacters + extractedCharacters > limits.maxCharacters) {
+      throw new AppError("TEXT_LIMIT_EXCEEDED", `This upload would exceed the ${limits.maxCharacters.toLocaleString()} extracted-character limit for your ${limits.label} plan.`, 413);
     }
 
     const unitRows = parsed.units.map((unit) => ({

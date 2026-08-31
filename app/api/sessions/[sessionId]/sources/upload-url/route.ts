@@ -3,6 +3,7 @@ import { z } from "zod";
 import { isSupportedSourceMimeType, MVP_LIMITS, sourceKindFromFilename, STORAGE_BUCKET } from "@/lib/config";
 import { requireOwnedSession } from "@/lib/server/auth";
 import { AppError, errorResponse } from "@/lib/server/http";
+import { getBillingLimitsForUser } from "@/lib/server/billing";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 
 const inputSchema = z.object({
@@ -31,6 +32,7 @@ export async function POST(request: Request, context: RouteContext<"/api/session
     if (!isSupportedSourceMimeType(kind, input.mimeType)) {
       throw new AppError("UNSUPPORTED_FILE", "The file type does not match its supported format.", 415);
     }
+    const limits = await getBillingLimitsForUser(session.owner_user_id);
     const admin = getSupabaseAdmin();
 
     const { count, error: countError } = await admin
@@ -38,8 +40,8 @@ export async function POST(request: Request, context: RouteContext<"/api/session
       .select("id", { count: "exact", head: true })
       .eq("session_id", sessionId);
     if (countError) throw countError;
-    if ((count ?? 0) >= MVP_LIMITS.maxFiles) {
-      throw new AppError("FILE_LIMIT_EXCEEDED", `You can upload at most ${MVP_LIMITS.maxFiles} files in one session.`, 413);
+    if ((count ?? 0) >= limits.maxFiles) {
+      throw new AppError("FILE_LIMIT_EXCEEDED", `Your ${limits.label} plan allows at most ${limits.maxFiles} files in one session.`, 413);
     }
 
     const sourceId = randomUUID();

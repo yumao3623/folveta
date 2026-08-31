@@ -2,12 +2,16 @@ import { createHash } from "node:crypto";
 import { fileTypeFromBuffer } from "file-type";
 import type { OfficeContentNode } from "officeparser";
 import { MVP_LIMITS } from "@/lib/config";
+import { BILLING_PLANS } from "@/lib/billing/config";
 import type { SourceWarning } from "@/lib/schemas";
 import { AppError } from "@/lib/server/http";
 import { stableId } from "@/lib/server/crypto";
 import type { SourceKind } from "@/lib/schemas/source";
 import { z } from "zod";
 import { ModelGateway } from "@/lib/ai/gateway";
+
+const MAX_PARSE_UNITS = Math.max(...Object.values(BILLING_PLANS).map((plan) => plan.maxUnits));
+const MAX_PARSE_CHARACTERS = Math.max(...Object.values(BILLING_PLANS).map((plan) => plan.maxCharacters));
 
 export type ParsedUnit = {
   locatorKind: "page" | "slide" | "paragraph" | "sheet" | "image" | "file";
@@ -101,8 +105,8 @@ async function parsePdf(buffer: Buffer): Promise<ParsedMaterial> {
   let document: Awaited<ReturnType<typeof getDocumentProxy>> | undefined;
   try {
     document = await getDocumentProxy(new Uint8Array(buffer), { maxImageSize: 16_777_216 });
-    if (document.numPages > MVP_LIMITS.maxTotalUnits) {
-      throw new AppError("UNIT_LIMIT_EXCEEDED", `This PDF has ${document.numPages} pages; the MVP limit is ${MVP_LIMITS.maxTotalUnits} combined pages/slides.`, 413);
+    if (document.numPages > MAX_PARSE_UNITS) {
+      throw new AppError("UNIT_LIMIT_EXCEEDED", `This PDF has ${document.numPages} pages; the parser limit is ${MAX_PARSE_UNITS} combined pages/slides.`, 413);
     }
 
     const units: ParsedUnit[] = [];
@@ -178,8 +182,8 @@ async function parsePptx(buffer: Buffer): Promise<ParsedMaterial> {
     if (slides.length === 0) {
       throw new AppError("PPTX_NO_SLIDES", "The PPTX did not contain readable slide records.", 422);
     }
-    if (slides.length > MVP_LIMITS.maxTotalUnits) {
-      throw new AppError("UNIT_LIMIT_EXCEEDED", `This PPTX has ${slides.length} slides; the MVP limit is ${MVP_LIMITS.maxTotalUnits} combined pages/slides.`, 413);
+    if (slides.length > MAX_PARSE_UNITS) {
+      throw new AppError("UNIT_LIMIT_EXCEEDED", `This PPTX has ${slides.length} slides; the parser limit is ${MAX_PARSE_UNITS} combined pages/slides.`, 413);
     }
 
     const allWarnings: SourceWarning[] = (ast.warnings ?? []).map((warning) => ({
@@ -279,7 +283,7 @@ async function parseOfficeDocument(buffer: Buffer, kind: "docx" | "xlsx"): Promi
     });
     const parsed = structuralOfficeUnits(ast, kind);
     if (parsed.units.length === 0) throw new AppError("OFFICE_NO_CONTENT", "The Office document did not contain readable structural records.", 422);
-    if (parsed.units.length > MVP_LIMITS.maxTotalUnits) throw new AppError("UNIT_LIMIT_EXCEEDED", `This ${kind.toUpperCase()} has too many structural records; the limit is ${MVP_LIMITS.maxTotalUnits}.`, 413);
+    if (parsed.units.length > MAX_PARSE_UNITS) throw new AppError("UNIT_LIMIT_EXCEEDED", `This ${kind.toUpperCase()} has too many structural records; the parser limit is ${MAX_PARSE_UNITS}.`, 413);
     return parsed;
   } catch (error) {
     if (error instanceof AppError) throw error;
@@ -334,7 +338,7 @@ async function parseLegacyPpt(buffer: Buffer): Promise<ParsedMaterial> {
     const parser = pptTextModule.default as LegacyPptParser;
     const slides = parser.utils.to_text(parser.readBuffer(buffer));
     if (slides.length === 0) throw new AppError("PPT_NO_SLIDES", "The PPT did not contain readable slide records.", 422);
-    if (slides.length > MVP_LIMITS.maxTotalUnits) throw new AppError("UNIT_LIMIT_EXCEEDED", `This PPT has ${slides.length} slides; the limit is ${MVP_LIMITS.maxTotalUnits}.`, 413);
+    if (slides.length > MAX_PARSE_UNITS) throw new AppError("UNIT_LIMIT_EXCEEDED", `This PPT has ${slides.length} slides; the parser limit is ${MAX_PARSE_UNITS}.`, 413);
     const allWarnings: SourceWarning[] = [];
     const units = slides.map((slide, index): ParsedUnit => {
       const slideNumber = index + 1;
@@ -362,7 +366,7 @@ async function parseLegacyPpt(buffer: Buffer): Promise<ParsedMaterial> {
 }
 
 async function parseLegacyOffice(buffer: Buffer, kind: "doc" | "xls"): Promise<ParsedMaterial> {
-  const fileSchema = z.object({ text: z.string().max(300_000) }).strict();
+  const fileSchema = z.object({ text: z.string().max(MAX_PARSE_CHARACTERS) }).strict();
   const mime = kind === "doc" ? "application/msword" : "application/vnd.ms-excel";
   const result = await new ModelGateway().generateStructured({
     task: "file_extract",

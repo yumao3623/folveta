@@ -20,6 +20,8 @@
     "e2e:product-3c:cleanup": "node --env-file=.env.local scripts/product-3c-e2e.mjs cleanup"
   },
   "dependencies": {
+    "@paddle/paddle-js": "^1.6.5",
+    "@paddle/paddle-node-sdk": "^3.10.0",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.112.3",
     "file-type": "^22.0.2",

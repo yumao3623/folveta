@@ -29,6 +29,13 @@ const serverEnvSchema = z.object({
     (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
     z.string().min(32).optional(),
   ),
+  PADDLE_ENV: z.enum(["sandbox", "live"]),
+  NEXT_PUBLIC_PADDLE_ENV: z.enum(["sandbox", "production"]).default("sandbox"),
+  NEXT_PUBLIC_PADDLE_CLIENT_TOKEN: z.string().min(1).optional(),
+  PADDLE_API_KEY: z.string().min(1).optional(),
+  PADDLE_NOTIFICATION_WEBHOOK_SECRET: z.string().min(1).optional(),
+  PADDLE_PRODUCT_ID: z.string().regex(/^pro_[a-z0-9]{26}$/).optional(),
+  PADDLE_PRICE_ID: z.string().regex(/^pri_[a-z0-9]{26}$/).optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -38,6 +45,10 @@ export function getServerEnv(): ServerEnv {
   if (!parsed.success) {
     const keys = parsed.error.issues.map((issue) => issue.path.join(".")).join(", ");
     throw new Error(`Missing or invalid server environment variables: ${keys}`);
+  }
+  const expectedPublicPaddleEnvironment = parsed.data.PADDLE_ENV === "sandbox" ? "sandbox" : "production";
+  if (parsed.data.NEXT_PUBLIC_PADDLE_ENV !== expectedPublicPaddleEnvironment) {
+    throw new Error("PADDLE_ENV and NEXT_PUBLIC_PADDLE_ENV must describe the same Paddle environment.");
   }
   return parsed.data;
 }

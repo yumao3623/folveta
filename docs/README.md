@@ -25,6 +25,7 @@ If current code contradicts a document's claim that something is implemented, th
 | `product-context.md` | Current product, market, UI, commercial, SEO, and implementation context |
 | `v5-master-roadmap.md` | Current master delivery roadmap |
 | `technical-architecture.md` | Current code/data/API/security architecture and approved target boundaries |
+| `payment-billing-architecture.md` | Draft Payment/Billing v1 product rules, provider research, entitlement, usage, webhook, deletion, and implementation handoff; owner confirmation required |
 | `auth-and-persistence.md` | Product-3A identity, anonymous claim, RLS, persistence, and retention architecture |
 | `guide-management.md` | Product-3B My Guides, Recent Guides, management API, lifecycle, pagination, and privacy architecture |
 | `library-search-profile.md` | Product-3C Library, PostgreSQL search, Profile, navigation, authorization, migration, and verification architecture |

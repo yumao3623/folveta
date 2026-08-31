@@ -48,6 +48,25 @@ type QuickCheckAttemptRow = {
   selected_answers: Json; result_json: Json; correct_count: number; scored_count: number;
   submitted_at: string;
 };
+type BillingCustomerRow = {
+  id: string; billing_environment: "sandbox" | "live" | null; user_id: string; paddle_customer_id: string; email: string | null; created_at: string; updated_at: string;
+};
+type BillingSubscriptionRow = {
+  id: string; billing_environment: "sandbox" | "live" | null; paddle_subscription_id: string; user_id: string | null; paddle_customer_id: string; product_id: string; price_id: string;
+  status: string; current_period_start: string | null; current_period_end: string | null; scheduled_change: Json | null;
+  cancel_at_period_end: boolean; next_billed_at: string | null; last_event_occurred_at: string | null; raw_data: Json;
+  created_at: string; updated_at: string;
+};
+type BillingUsagePeriodRow = {
+  id: string; billing_environment: "sandbox" | "live" | null; user_id: string; period_start: string; period_end: string; plan: "free" | "pro"; quota: number; consumed: number; reserved: number;
+  created_at: string; updated_at: string;
+};
+type BillingGenerationReservationRow = {
+  generation_run_id: string; billing_environment: "sandbox" | "live" | null; user_id: string; period_start: string; status: "reserved" | "consumed" | "released"; created_at: string; updated_at: string;
+};
+type BillingWebhookEventRow = {
+  id: string; billing_environment: "sandbox" | "live" | null; event_id: string; event_type: string; occurred_at: string | null; received_at: string; processed_at: string | null; status: "processed" | "ignored" | "failed";
+};
 
 type Table<Row, Insert, Update = Partial<Insert>> = {
   Row: Row;
@@ -94,9 +113,11 @@ export type Database = {
       generation_executions: Table<{
         id: string; session_id: string; status: string; public_stage: string; source_snapshot_hash: string;
         execution_contract_hash: string; dispatch_state: string; dispatch_token: string | null; support_id: string;
+        billing_environment: "sandbox" | "live" | null;
       }, {
         id?: string; session_id: string; status?: string; public_stage?: string; source_snapshot_hash: string;
         execution_contract_hash: string; dispatch_state?: string; dispatch_token?: string | null; support_id?: string;
+        billing_environment?: "sandbox" | "live" | null;
       }>;
       generation_operations: Table<{
         id: string; generation_run_id: string; operation_key: string; operation_kind: string;
@@ -125,6 +146,25 @@ export type Database = {
         selected_answers: Json; result_json: Json; correct_count: number; scored_count: number;
         submitted_at?: string;
       }>;
+      billing_customers: Table<BillingCustomerRow, {
+        id?: string; billing_environment?: "sandbox" | "live" | null; user_id: string; paddle_customer_id: string; email?: string | null; created_at?: string; updated_at?: string;
+      }>;
+      billing_subscriptions: Table<BillingSubscriptionRow, {
+        id?: string; billing_environment?: "sandbox" | "live" | null; paddle_subscription_id: string; user_id?: string | null; paddle_customer_id: string; product_id: string; price_id: string;
+        status: string; current_period_start?: string | null; current_period_end?: string | null; scheduled_change?: Json | null;
+        cancel_at_period_end?: boolean; next_billed_at?: string | null; last_event_occurred_at?: string | null; raw_data?: Json;
+        created_at?: string; updated_at?: string;
+      }>;
+      billing_usage_periods: Table<BillingUsagePeriodRow, {
+        id?: string; billing_environment?: "sandbox" | "live" | null; user_id: string; period_start: string; period_end: string; plan: "free" | "pro"; quota: number; consumed?: number; reserved?: number;
+        created_at?: string; updated_at?: string;
+      }>;
+      billing_generation_reservations: Table<BillingGenerationReservationRow, {
+        generation_run_id: string; billing_environment?: "sandbox" | "live" | null; user_id: string; period_start: string; status: "reserved" | "consumed" | "released"; created_at?: string; updated_at?: string;
+      }>;
+      billing_webhook_events: Table<BillingWebhookEventRow, {
+        id?: string; billing_environment?: "sandbox" | "live" | null; event_id: string; event_type: string; occurred_at?: string | null; received_at?: string; processed_at?: string | null; status?: "processed" | "ignored" | "failed";
+      }>;
     };
     Views: Record<never, never>;
     Functions: {
@@ -150,6 +190,7 @@ export type Database = {
       finalize_generation_execution: { Args: Record<string, unknown>; Returns: Json };
       get_generation_execution_status: { Args: { p_generation_run_id: string }; Returns: Json };
       get_generation_operation_context: { Args: { p_generation_run_id: string; p_operation_key: string }; Returns: Json };
+      billing_usage_summary: { Args: { p_user_id: string; p_billing_environment: "sandbox" | "live" }; Returns: Json };
       search_owned_knowledge: {
         Args: { search_query: string; result_limit?: number; result_offset?: number };
         Returns: Array<{
