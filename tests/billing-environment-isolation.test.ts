@@ -11,6 +11,7 @@ const webhookSync = read("lib/server/paddle-webhook.ts");
 const billing = read("lib/server/billing.ts");
 const billingPanel = read("components/billing-panel.tsx");
 const dispatch = read("lib/ai/generation-dispatch.ts");
+const billingEnvironment = read("lib/server/billing-environment.ts");
 
 describe("billing environment isolation", () => {
   it("records every Paddle-specific resource in an explicit provider namespace", () => {
@@ -39,7 +40,10 @@ describe("billing environment isolation", () => {
     expect(migration).toContain("and billing_environment = p_billing_environment");
     expect(migration).toContain("where p_billing_environment in ('sandbox', 'live');");
     expect(migration).toContain("v_existing.billing_environment is distinct from p_billing_environment");
-    expect(billing).toContain('.eq("billing_environment", getBillingEnvironment())');
+    expect(billing).toContain('.eq("billing_environment", billingEnvironment)');
+    expect(billingEnvironment).toContain("return getServerEnv().PADDLE_ENV ?? null");
+    expect(billing).toContain("if (!billingEnvironment)");
+    expect(billing).toContain("if (!billingEnvironment) return \"free\"");
   });
 
   it("keeps the deployed 13-argument generation path Free-only during the transition", () => {
@@ -55,7 +59,7 @@ describe("billing environment isolation", () => {
     expect(webhookRoute).toContain("billing_environment: billingEnvironment");
     expect(webhookRoute).toContain('.eq("billing_environment", billingEnvironment)');
     expect(webhookRoute).toContain("processPaddleEvent(billingEnvironment, event)");
-    expect(dispatch).toContain("p_billing_environment: getBillingEnvironment()");
+    expect(dispatch).toContain("if (billingEnvironment) claimArgs.p_billing_environment = billingEnvironment");
     expect(migration).toContain("where billing_environment is not distinct from v_reservation.billing_environment");
   });
 

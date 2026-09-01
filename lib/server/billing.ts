@@ -25,6 +25,21 @@ function billingRpc(name: string, args: Record<string, unknown>) {
 
 export async function getBillingSummary(userId: string): Promise<BillingSummary> {
   const billingEnvironment = getBillingEnvironment();
+  if (!billingEnvironment) {
+    const periodStart = new Date().toISOString().slice(0, 10);
+    const periodEnd = new Date(Date.now() + 31 * 86400000).toISOString().slice(0, 10);
+    return {
+      plan: "free",
+      quota: BILLING_PLANS.free.monthlyStudyGuides,
+      consumed: 0,
+      reserved: 0,
+      remaining: BILLING_PLANS.free.monthlyStudyGuides,
+      periodStart,
+      periodEnd,
+      subscriptionStatus: null,
+      scheduledCancellationAt: null,
+    };
+  }
   const admin = getSupabaseAdmin();
   const [{ data, error }, { data: subscription, error: subscriptionError }] = await Promise.all([
     billingRpc("billing_usage_summary", {
@@ -58,11 +73,13 @@ export async function getBillingSummary(userId: string): Promise<BillingSummary>
 
 export async function getBillingPlanForUser(userId: string | null): Promise<BillingPlanId> {
   if (!userId) return "free";
+  const billingEnvironment = getBillingEnvironment();
+  if (!billingEnvironment) return "free";
   const { data, error } = await getSupabaseAdmin()
     .from("billing_subscriptions")
     .select("status")
     .eq("user_id", userId)
-    .eq("billing_environment", getBillingEnvironment())
+    .eq("billing_environment", billingEnvironment)
     .in("status", ["active", "trialing"])
     .limit(1);
   if (error) throw error;

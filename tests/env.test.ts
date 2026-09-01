@@ -58,4 +58,15 @@ describe("server environment", () => {
 
     expect(() => getServerEnv()).toThrow("PADDLE_ENV and NEXT_PUBLIC_PADDLE_ENV");
   });
+
+  it("allows the formal app to run Free-only before Paddle is configured", () => {
+    const freeOnlyEnvironment = { ...requiredEnvironment };
+    delete (freeOnlyEnvironment as { PADDLE_ENV?: string }).PADDLE_ENV;
+    Object.entries(freeOnlyEnvironment).forEach(([key, value]) => vi.stubEnv(key, value));
+    vi.stubEnv("PADDLE_ENV", "");
+    vi.stubEnv("NEXT_PUBLIC_PADDLE_ENV", "");
+
+    expect(getServerEnv().PADDLE_ENV).toBeUndefined();
+    expect(getServerEnv().NEXT_PUBLIC_PADDLE_ENV).toBe("sandbox");
+  });
 });

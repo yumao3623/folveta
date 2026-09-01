@@ -76,7 +76,7 @@ export async function claimLogicalGeneration(sessionId: string) {
     approximateInputTokens: budget.approximateInputTokens,
     safeInputTokens: budget.safeLimit,
   } as Json;
-  return rpc("claim_generation_execution", {
+  const claimArgs: Record<string, unknown> = {
     p_session_id: sessionId,
     p_source_snapshot_hash: snapshotHash(spans.map((span) => span.content_hash)),
     p_execution_contract_hash: contract.hash,
@@ -90,8 +90,10 @@ export async function claimLogicalGeneration(sessionId: string) {
     p_plan_operation_kind: budget.singleCall ? "plan_topics" : "extract_topics",
     p_plan_operation_input_hash: createHash("sha256").update(JSON.stringify(privateInput), "utf8").digest("hex"),
     p_plan_input_json: privateInput,
-    p_billing_environment: getBillingEnvironment(),
-  });
+  };
+  const billingEnvironment = getBillingEnvironment();
+  if (billingEnvironment) claimArgs.p_billing_environment = billingEnvironment;
+  return rpc("claim_generation_execution", claimArgs);
 }
 
 export async function dispatchGeneration(generationRunId: string) {

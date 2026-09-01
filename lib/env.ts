@@ -29,8 +29,14 @@ const serverEnvSchema = z.object({
     (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
     z.string().min(32).optional(),
   ),
-  PADDLE_ENV: z.enum(["sandbox", "live"]),
-  NEXT_PUBLIC_PADDLE_ENV: z.enum(["sandbox", "production"]).default("sandbox"),
+  PADDLE_ENV: z.preprocess(
+    (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
+    z.enum(["sandbox", "live"]).optional(),
+  ),
+  NEXT_PUBLIC_PADDLE_ENV: z.preprocess(
+    (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
+    z.enum(["sandbox", "production"]).default("sandbox"),
+  ),
   NEXT_PUBLIC_PADDLE_CLIENT_TOKEN: z.string().min(1).optional(),
   PADDLE_API_KEY: z.string().min(1).optional(),
   PADDLE_NOTIFICATION_WEBHOOK_SECRET: z.string().min(1).optional(),
@@ -47,7 +53,8 @@ export function getServerEnv(): ServerEnv {
     throw new Error(`Missing or invalid server environment variables: ${keys}`);
   }
   const expectedPublicPaddleEnvironment = parsed.data.PADDLE_ENV === "sandbox" ? "sandbox" : "production";
-  if (parsed.data.NEXT_PUBLIC_PADDLE_ENV !== expectedPublicPaddleEnvironment) {
+  if ((!parsed.data.PADDLE_ENV && parsed.data.NEXT_PUBLIC_PADDLE_ENV === "production")
+    || (parsed.data.PADDLE_ENV && parsed.data.NEXT_PUBLIC_PADDLE_ENV !== expectedPublicPaddleEnvironment)) {
     throw new Error("PADDLE_ENV and NEXT_PUBLIC_PADDLE_ENV must describe the same Paddle environment.");
   }
   return parsed.data;

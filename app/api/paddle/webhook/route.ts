@@ -10,8 +10,9 @@ export async function POST(request: Request) {
   const rawBody = await request.text();
   if (!signature || !rawBody) return Response.json({ error: "Missing signature or body" }, { status: 400 });
   try {
-    const event = await getPaddleInstance().webhooks.unmarshal(rawBody, getPaddleWebhookSecret(), signature) as unknown as PaddleEvent;
     const billingEnvironment = getBillingEnvironment();
+    if (!billingEnvironment) return Response.json({ error: "Paddle billing is not enabled." }, { status: 503 });
+    const event = await getPaddleInstance().webhooks.unmarshal(rawBody, getPaddleWebhookSecret(), signature) as unknown as PaddleEvent;
     const admin = getSupabaseAdmin();
     const { error: ledgerError } = await admin.from("billing_webhook_events").insert({
       billing_environment: billingEnvironment,
