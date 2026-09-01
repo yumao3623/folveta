@@ -10,12 +10,12 @@ Scope: Paddle Live merchant, KYC, website review, payout, and manual approval on
 | Stage | Status | Evidence / next condition |
 | --- | --- | --- |
 | Account eligibility | Complete | Paddle Live onboarding selected China and the existing `individual` path. |
-| Business / individual details | Partial | Product description saved. Owner entered annual-revenue information directly in Paddle. |
-| Identity verification | Not started | No identity, date of birth, home address, or document information has been entered. |
-| Website review | Ready to submit | Local implementation adds public `/pricing`, `/refunds`, and `/contact` pages, linked from the site footer. Production deployment and URL verification are next. |
-| Product / compliance review | Pending | Paddle still requires an owner confirmation of its Acceptable Use Policy. |
+| Business / individual details | Complete | Product description, trading name, business start date, and owner-entered business details are saved in Paddle. |
+| Identity verification | Submitted | Owner completed Paddle's individual identity and address details, including optional passport information. Paddle is reviewing it. |
+| Website review | Submitted | `https://folveta.com/pricing`, `/terms`, `/privacy`, and `/refunds` were entered in Paddle after production URL checks. |
+| Product / compliance review | Submitted | Owner completed Paddle's required final legal declarations. Paddle is reviewing the complete onboarding submission. |
 | Payout setup | Complete | Saved in Paddle: China, Individual / Sole Proprietorship, Wire transfer, USD, and USD 100 minimum threshold. No payout history exists yet. |
-| Merchant approval | Not submitted | Verification is incomplete, so Paddle manual review has not started. |
+| Merchant approval | Under review | Paddle confirmed it will review the submission for its terms and acceptable-use requirements and email if further action is required. |
 
 ## Confirmed Commercial Offer
 
@@ -51,4 +51,4 @@ The policy is implemented for publication at `https://folveta.com/refunds`; it i
 - Refund policy: `https://folveta.com/refunds` reflects the confirmed cancellation and refund policy.
 - Support: `https://folveta.com/contact` and the public footer link to `yumao3623@gmail.com`.
 
-These URLs must be rechecked after production deployment, then entered into Paddle's website-verification form.
+The URLs returned production HTTP 200 and were entered into Paddle's website-verification form.
