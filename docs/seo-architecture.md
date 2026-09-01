@@ -71,7 +71,7 @@ Open/corrective:
 - No real support/privacy request channel.
 - Privacy states that automatic deletion is missing; cleanup must be implemented.
 - No real product screenshots/image SEO beyond generated social images and code-drawn UI.
-- No Search Console, analytics decision, field CWV, or crawler log monitoring. Production DNS, TLS, redirects, canonical origin, and pre-launch index behavior are verified; no sitemap was submitted and no indexing was requested.
+- Google Search Console ownership for the canonical URL-prefix property `https://folveta.com/` is verified. Analytics decision, field CWV, and crawler-log monitoring remain open. Production DNS, TLS, redirects, canonical origin, and pre-launch index behavior are verified; no sitemap was submitted and no indexing was requested.
 
 ## 5. On-page v2 requirements
 

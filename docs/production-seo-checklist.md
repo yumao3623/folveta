@@ -128,7 +128,7 @@ AI Workflow rollout update (2026-08-31): Production `main@613dbeb` is `READY`; t
 
 ## K. Search Console and post-launch monitoring
 
-- [ ] Verify the canonical domain property in Google Search Console.
+- [x] Verify the canonical URL-prefix property `https://folveta.com/` in Google Search Console using the deployed HTML verification file (2026-09-01). The property is verified; Google is still initializing data.
 - [ ] Submit the production sitemap only after live cutover verification.
 - [ ] Inspect/request indexing for approved public pages only.
 - [ ] Monitor index coverage, crawl errors, impressions, clicks, CTR, queries, average position, and canonical selection.
