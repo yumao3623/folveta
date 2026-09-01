@@ -5,6 +5,7 @@ import { guideSchema, quickCheckSchema, toTakingQuickCheck } from "@/lib/schemas
 import { requireOwnedSession } from "@/lib/server/auth";
 import { AppError, errorResponse } from "@/lib/server/http";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
+import { enforceRateLimit, sessionRateLimitKey } from "@/lib/server/rate-limit";
 
 export const maxDuration = 300;
 
@@ -21,6 +22,7 @@ export async function POST(
     const { sessionId } = await context.params;
     const session = await requireOwnedSession(sessionId);
     if (!session) throw new AppError("SESSION_NOT_FOUND", "This study session is missing or expired.", 404);
+    await enforceRateLimit({ scope: "quick_check.generate", key: sessionRateLimitKey(sessionId), limit: 5, windowSeconds: 3600 });
     const input = inputSchema.parse(await request.json().catch(() => ({})));
     const admin = getSupabaseAdmin();
     const { data: guideRow, error: guideError } = await admin

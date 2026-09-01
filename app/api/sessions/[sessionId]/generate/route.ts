@@ -5,6 +5,7 @@ import { AppError, errorResponse } from "@/lib/server/http";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 import { getServerEnv } from "@/lib/env";
 import { claimLogicalGeneration, dispatchGeneration, generationSnapshot } from "@/lib/ai/generation-dispatch";
+import { enforceRateLimit, requestRateLimitKey, sessionRateLimitKey } from "@/lib/server/rate-limit";
 
 export const maxDuration = 300;
 
@@ -22,7 +23,7 @@ export function isGenerationClaimable(state: string) {
   return continuableGenerationStates.includes(state);
 }
 
-export async function POST(_request: Request, context: RouteContext<"/api/sessions/[sessionId]/generate">) {
+export async function POST(request: Request, context: RouteContext<"/api/sessions/[sessionId]/generate">) {
   const { sessionId } = await context.params;
   let leaseId: string | null = null;
   let authorized = false;
@@ -31,6 +32,8 @@ export async function POST(_request: Request, context: RouteContext<"/api/sessio
     const session = await requireOwnedSession(sessionId);
     if (!session) throw new AppError("SESSION_NOT_FOUND", "This study session is missing or expired.", 404);
     authorized = true;
+    await enforceRateLimit({ scope: "generate.ip", key: requestRateLimitKey(request), limit: 8, windowSeconds: 3600 });
+    await enforceRateLimit({ scope: "generate.session", key: sessionRateLimitKey(sessionId), limit: 3, windowSeconds: 600 });
     if (!isGenerationClaimable(session.state)) throw new AppError("GENERATION_NOT_AVAILABLE", "Guide generation is not available for this session.", 409);
 
     if (getServerEnv().AI_GENERATION_WORKFLOW_ENABLED) {

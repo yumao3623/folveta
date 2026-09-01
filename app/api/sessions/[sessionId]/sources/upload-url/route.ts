@@ -5,6 +5,7 @@ import { requireOwnedSession } from "@/lib/server/auth";
 import { AppError, errorResponse } from "@/lib/server/http";
 import { getBillingLimitsForUser } from "@/lib/server/billing";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
+import { enforceRateLimit, requestRateLimitKey } from "@/lib/server/rate-limit";
 
 const inputSchema = z.object({
   filename: z.string().trim().min(1).max(240),
@@ -27,6 +28,7 @@ export async function POST(request: Request, context: RouteContext<"/api/session
     const { sessionId } = await context.params;
     const session = await requireOwnedSession(sessionId);
     if (!session) throw new AppError("SESSION_NOT_FOUND", "This study session is missing or expired.", 404);
+    await enforceRateLimit({ scope: "upload.create", key: requestRateLimitKey(request), limit: 12, windowSeconds: 3600 });
     const input = inputSchema.parse(await request.json());
     const kind = fileKind(input.filename);
     if (!isSupportedSourceMimeType(kind, input.mimeType)) {

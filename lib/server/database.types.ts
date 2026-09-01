@@ -67,6 +67,9 @@ type BillingGenerationReservationRow = {
 type BillingWebhookEventRow = {
   id: string; billing_environment: "sandbox" | "live" | null; event_id: string; event_type: string; occurred_at: string | null; received_at: string; processed_at: string | null; status: "processed" | "ignored" | "failed";
 };
+type RateLimitWindowRow = {
+  scope: string; key_hash: string; window_started_at: string; attempt_count: number;
+};
 
 type Table<Row, Insert, Update = Partial<Insert>> = {
   Row: Row;
@@ -165,6 +168,9 @@ export type Database = {
       billing_webhook_events: Table<BillingWebhookEventRow, {
         id?: string; billing_environment?: "sandbox" | "live" | null; event_id: string; event_type: string; occurred_at?: string | null; received_at?: string; processed_at?: string | null; status?: "processed" | "ignored" | "failed";
       }>;
+      rate_limit_windows: Table<RateLimitWindowRow, {
+        scope: string; key_hash: string; window_started_at: string; attempt_count?: number;
+      }>;
     };
     Views: Record<never, never>;
     Functions: {
@@ -191,6 +197,10 @@ export type Database = {
       get_generation_execution_status: { Args: { p_generation_run_id: string }; Returns: Json };
       get_generation_operation_context: { Args: { p_generation_run_id: string; p_operation_key: string }; Returns: Json };
       billing_usage_summary: { Args: { p_user_id: string; p_billing_environment: "sandbox" | "live" }; Returns: Json };
+      consume_rate_limit: {
+        Args: { p_scope: string; p_key_hash: string; p_window_seconds: number; p_limit: number };
+        Returns: Array<{ allowed: boolean; retry_after_seconds: number }>;
+      };
       search_owned_knowledge: {
         Args: { search_query: string; result_limit?: number; result_offset?: number };
         Returns: Array<{

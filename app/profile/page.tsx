@@ -5,6 +5,7 @@ import { BookOpen, CalendarDays, Files, LogOut, Mail } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { BillingPanel } from "@/components/billing-panel";
+import { AccountDeletion } from "@/components/account-deletion";
 import { buttonClassName } from "@/components/ui/styles";
 import { getCurrentUser } from "@/lib/server/auth";
 import { getOwnedProfileSummary } from "@/lib/server/profile";
@@ -41,6 +42,7 @@ export default async function ProfilePage() {
         </section>
         <BillingPanel summary={billing} />
         <section className="mt-7 border-t border-[var(--border-soft)] pt-6"><form action={signOut}><button type="submit" className={buttonClassName({ variant: "secondary" })}><LogOut className="h-4 w-4" /> Sign out</button></form></section>
+        <AccountDeletion />
       </div>
     </WorkspaceShell>
   );

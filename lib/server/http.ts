@@ -13,10 +13,15 @@ export class AppError extends Error {
 
 export function errorResponse(error: unknown) {
   if (error instanceof AppError) {
-    return Response.json(
+    const response = Response.json(
       { error: { code: error.code, message: error.message, details: error.details } },
       { status: error.status },
     );
+    if (error.status === 429 && typeof error.details === "object" && error.details && "retryAfterSeconds" in error.details) {
+      const seconds = (error.details as { retryAfterSeconds?: unknown }).retryAfterSeconds;
+      if (typeof seconds === "number") response.headers.set("Retry-After", String(seconds));
+    }
+    return response;
   }
   if (error instanceof ZodError) {
     return Response.json(

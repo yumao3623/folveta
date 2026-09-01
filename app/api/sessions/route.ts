@@ -6,6 +6,7 @@ import { createSessionToken, hashValue } from "@/lib/server/crypto";
 import { errorResponse } from "@/lib/server/http";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 import { getCurrentUser } from "@/lib/server/auth";
+import { enforceRateLimit, requestRateLimitKey } from "@/lib/server/rate-limit";
 
 const createSessionSchema = z.object({
   title: z.string().trim().min(1).max(140).default("Untitled Study Guide"),
@@ -13,6 +14,7 @@ const createSessionSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    await enforceRateLimit({ scope: "session.create", key: requestRateLimitKey(request), limit: 8, windowSeconds: 3600 });
     const input = createSessionSchema.parse(await request.json().catch(() => ({})));
     const user = await getCurrentUser();
     const token = user ? null : createSessionToken();

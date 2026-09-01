@@ -5,6 +5,7 @@ import { AppError, errorResponse } from "@/lib/server/http";
 import { createSpanRows, parseMaterial } from "@/lib/server/parser";
 import { getBillingLimitsForUser } from "@/lib/server/billing";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
+import { enforceRateLimit, requestRateLimitKey } from "@/lib/server/rate-limit";
 
 export const maxDuration = 300;
 
@@ -29,13 +30,14 @@ async function failSource(sourceId: string, error: unknown) {
   }
 }
 
-export async function POST(_request: Request, context: RouteContext<"/api/sources/[sourceId]/parse">) {
+export async function POST(request: Request, context: RouteContext<"/api/sources/[sourceId]/parse">) {
   const { sourceId } = await context.params;
   let authorized = false;
   try {
     const source = await requireOwnedSource(sourceId);
     if (!source) throw new AppError("SOURCE_NOT_FOUND", "This source is missing or expired.", 404);
     authorized = true;
+    await enforceRateLimit({ scope: "source.parse", key: requestRateLimitKey(request), limit: 12, windowSeconds: 3600 });
     const admin = getSupabaseAdmin();
     const { data: sessionOwner, error: sessionOwnerError } = await admin
       .from("preparation_sessions")
