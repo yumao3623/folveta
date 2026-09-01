@@ -3,6 +3,9 @@ import { metadata as homeMetadata } from "@/app/page";
 import { metadata as aboutMetadata } from "@/app/about/page";
 import { metadata as privacyMetadata } from "@/app/privacy/page";
 import { metadata as termsMetadata } from "@/app/terms/page";
+import { metadata as pricingMetadata } from "@/app/pricing/page";
+import { metadata as refundsMetadata } from "@/app/refunds/page";
+import { metadata as contactMetadata } from "@/app/contact/page";
 import robots, { buildRobots } from "@/app/robots";
 import sitemap, { buildSitemap } from "@/app/sitemap";
 import { metadata as privateSessionMetadata } from "@/app/study/[sessionId]/layout";
@@ -63,6 +66,9 @@ describe("Public SEO routes", () => {
     expect(aboutMetadata.alternates).toEqual(expect.objectContaining({ canonical: "/about" }));
     expect(privacyMetadata.alternates).toEqual(expect.objectContaining({ canonical: "/privacy" }));
     expect(termsMetadata.alternates).toEqual(expect.objectContaining({ canonical: "/terms" }));
+    expect(pricingMetadata.alternates).toEqual(expect.objectContaining({ canonical: "/pricing" }));
+    expect(refundsMetadata.alternates).toEqual(expect.objectContaining({ canonical: "/refunds" }));
+    expect(contactMetadata.alternates).toEqual(expect.objectContaining({ canonical: "/contact" }));
   });
 
   it("keeps private and API routes out of crawler access", () => {
@@ -85,7 +91,7 @@ describe("Public SEO routes", () => {
   it("lists only public, indexable pages after launch", () => {
     const paths = buildSitemap({ PRELAUNCH: "false", VERCEL_ENV: "production" })
       .map((entry) => new URL(entry.url).pathname);
-    expect(paths).toEqual(["/", "/about", "/privacy", "/terms"]);
+    expect(paths).toEqual(["/", "/about", "/privacy", "/terms", "/pricing", "/refunds", "/contact"]);
     expect(paths.some((path) => path.startsWith("/study/") || path.startsWith("/api/"))).toBe(false);
   });
 });

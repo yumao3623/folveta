@@ -24,6 +24,9 @@ export function SiteFooter() {
           >
             About
           </Link>
+          <Link className="rounded px-1 py-1 transition-colors hover:text-[var(--accent)] active:text-[var(--accent-bright)]" href="/pricing">Pricing</Link>
+          <Link className="rounded px-1 py-1 transition-colors hover:text-[var(--accent)] active:text-[var(--accent-bright)]" href="/refunds">Refunds</Link>
+          <Link className="rounded px-1 py-1 transition-colors hover:text-[var(--accent)] active:text-[var(--accent-bright)]" href="/contact">Contact</Link>
           <Link
             className="rounded px-1 py-1 transition-colors hover:text-[var(--accent)] active:text-[var(--accent-bright)]"
             href="/privacy"

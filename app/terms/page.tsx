@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
   title: "Terms",
-  description: "Current pre-launch terms for using Study Guide Maker with course PDFs, PowerPoint slides, Study Guides, and Quick Checks.",
+  description: "Terms for using Folveta Study Guide Maker with course files, Study Guides, Quick Checks, and subscriptions.",
   alternates: { canonical: "/terms" },
 };
 
@@ -15,8 +15,8 @@ export default function TermsPage() {
         <div className="mx-auto max-w-3xl px-5 py-12 sm:px-8 sm:py-20">
           <Link className="font-display text-2xl font-extrabold tracking-tight text-[var(--accent)]" href="/">Folveta</Link>
           <p className="mt-12 text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">Terms</p>
-          <h1 className="mt-3 text-4xl font-semibold text-stone-950 sm:text-5xl">Current pre-launch terms of use</h1>
-          <p className="mt-4 text-sm text-stone-500">Last updated: August 25, 2026</p>
+          <h1 className="mt-3 text-4xl font-semibold text-stone-950 sm:text-5xl">Terms of use</h1>
+          <p className="mt-4 text-sm text-stone-500">Last updated: September 1, 2026</p>
 
           <div className="mt-10 space-y-10 text-stone-700">
             <section>
@@ -37,7 +37,15 @@ export default function TermsPage() {
             </section>
             <section>
               <h2 className="text-2xl font-semibold text-stone-950">Availability</h2>
-              <p className="mt-4 leading-7">This repository represents a pre-launch MVP. No paid plan, service-level guarantee, refund policy, company size, or continuous availability promise is stated.</p>
+              <p className="mt-4 leading-7">Folveta is provided as an online service and may be updated, paused, or unavailable from time to time. We do not offer a service-level guarantee or promise continuous availability.</p>
+            </section>
+            <section>
+              <h2 className="text-2xl font-semibold text-stone-950">Subscriptions and cancellation</h2>
+              <p className="mt-4 leading-7">Folveta Pro is a monthly subscription with the quota shown on our <Link className="font-medium text-[var(--accent)] underline underline-offset-4" href="/pricing">Pricing</Link> page. You can cancel at any time. Access continues through the end of the paid billing period, and cancellations do not receive a prorated refund. See our <Link className="font-medium text-[var(--accent)] underline underline-offset-4" href="/refunds">Refund Policy</Link> for details.</p>
+            </section>
+            <section>
+              <h2 className="text-2xl font-semibold text-stone-950">Contact</h2>
+              <p className="mt-4 leading-7">For support, subscription, or privacy requests, contact us at <a className="font-medium text-[var(--accent)] underline underline-offset-4" href="mailto:yumao3623@gmail.com">yumao3623@gmail.com</a>.</p>
             </section>
           </div>
         </div>

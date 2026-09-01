@@ -27,6 +27,21 @@ export function buildSitemap(
       changeFrequency: "monthly",
       priority: 0.4,
     },
+    {
+      url: absoluteUrl("/pricing"),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: absoluteUrl("/refunds"),
+      changeFrequency: "monthly",
+      priority: 0.4,
+    },
+    {
+      url: absoluteUrl("/contact"),
+      changeFrequency: "monthly",
+      priority: 0.3,
+    },
   ];
 }
 

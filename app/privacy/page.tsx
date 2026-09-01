@@ -16,7 +16,7 @@ export default function PrivacyPage() {
           <Link className="font-display text-2xl font-extrabold tracking-tight text-[var(--accent)]" href="/">Folveta</Link>
           <p className="mt-12 text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">Privacy</p>
           <h1 className="mt-3 text-4xl font-semibold text-stone-950 sm:text-5xl">How the current MVP handles study materials</h1>
-          <p className="mt-4 text-sm text-stone-500">Last updated: August 26, 2026</p>
+          <p className="mt-4 text-sm text-stone-500">Last updated: September 1, 2026</p>
 
           <div className="mt-10 space-y-10 text-stone-700">
             <section>
@@ -43,7 +43,7 @@ export default function PrivacyPage() {
             </section>
             <section>
               <h2 className="text-2xl font-semibold text-stone-950">Support and data requests</h2>
-              <p className="mt-4 leading-7">A production support and privacy-request channel has not yet been configured. It must be published before production deployment; no placeholder email address is presented as a real contact method.</p>
+              <p className="mt-4 leading-7">For support and privacy requests, email <a className="font-medium text-[var(--accent)] underline underline-offset-4" href="mailto:yumao3623@gmail.com">yumao3623@gmail.com</a>. Do not send sensitive course materials or payment-card details by email.</p>
             </section>
           </div>
         </div>
