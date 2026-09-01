@@ -8,7 +8,7 @@ Do not mark local assumptions as production verification. Protected deployment i
 
 ## Scoped Production pre-launch Gate (2026-08-27)
 
-The scoped pre-launch infrastructure gate first passed on GitHub `main@2dcc4d9`, deployed Ready in Vercel Production. Live evidence covers `folveta.com` domain/TLS/redirects, anonymous session persistence and cookie behavior, same-browser Auth email confirmation/PKCE (`/signup 200`, `/verify 303`, `/token 200`, `/user 200`), anonymous claim, sign-in/refresh/sign-out/relogin, My Guides, Recent Guides, Library, Search, Profile, Guide reopen, Quick Check, persisted Results, and public/private noindex safety. The empty pre-launch sitemap and robots behavior remain intentional. The AI reliability blocker that was open in that original record is closed by the later Workflow rollout update below; public launch, billing, deletion, retention, monitoring, rate-limit, support, SEO v2, and indexing cutover gates remain separate.
+The scoped pre-launch infrastructure gate first passed on GitHub `main@2dcc4d9`, deployed Ready in Vercel Production. Live evidence covers `folveta.com` domain/TLS/redirects, anonymous session persistence and cookie behavior, same-browser Auth email confirmation/PKCE (`/signup 200`, `/verify 303`, `/token 200`, `/user 200`), anonymous claim, sign-in/refresh/sign-out/relogin, My Guides, Recent Guides, Library, Search, Profile, Guide reopen, Quick Check, persisted Results, and public/private noindex safety. The empty pre-launch sitemap and robots behavior remain intentional. The AI reliability blocker that was open in that original record is closed by the later Workflow rollout update below; public launch, Live billing, deletion, retention, monitoring, rate-limit, privacy operations, SEO v2, and indexing cutover gates remain separate.
 
 AI Workflow rollout update (2026-08-31): Production `main@613dbeb` is `READY`; the provider boundary probe, Workflow smoke, real PDF x3, legacy PPT x2, Supabase minute reconciler, Auth/claim, and Product-3 regression passed. `AI_GENERATION_WORKFLOW_ENABLED=true`, `PRELAUNCH=true`, and the temporary provider probe is absent. This closes the AI Workflow blocker only; it does not close Payment, retention/account deletion, monitoring, rate limiting, support/privacy, SEO v2, or public indexing.
 
@@ -28,17 +28,17 @@ AI Workflow rollout update (2026-08-31): Production `main@613dbeb` is `READY`; t
 
 - [x] Product-3 Auth/account ownership and multi-guide management pass their exit criteria.
 - [x] My Guides, Recent Guides, Library, Search, Profile, reopen, rename, archive/restore, and delete are real or removed from launch UI.
-- [ ] Pricing model, free/paid entitlements, and usage units/limits are approved and visible before generation.
+- [ ] Production Live billing: the public offer is visible (Free: 2 successful Study Guides/month; Folveta Pro: US$12/month for 10), but Live merchant approval, catalog, checkout, webhook, and entitlement enforcement are not enabled.
 - [ ] Checkout, verified billing events, subscription/payment status, billing management, success/cancel/failure, and server-side entitlement enforcement work.
 - [ ] Duplicate/out-of-order billing events are idempotent and cannot grant incorrect access.
-- [ ] A public Pricing page exists only if the real product requires and supports it.
+- [x] Public `/pricing`, `/refunds`, and `/contact` pages exist and are reachable; the paid offer must not be treated as purchasable until Live billing is enabled.
 - [ ] No hidden result-stage paywall or undisclosed quota remains.
 
 ## C. Privacy, security, and operations gates
 
 - [ ] Implement and verify scheduled deletion of expired session/account/Guide data and private Storage objects.
 - [ ] Verify user Guide deletion and account deletion semantics, including restore/purge behavior.
-- [ ] Publish a real support and privacy-request contact channel.
+- [x] Publish the real support and privacy-request contact channel: `yumao3623@gmail.com`.
 - [ ] Review Privacy and Terms against actual hosting, Auth, model, storage, retention, analytics, billing, support, refunds/cancellation, and operating-entity facts.
 - [ ] Verify service-role/provider secrets are server-only and environment-scoped.
 - [ ] Complete IDOR/owner-isolation, CSRF/origin, rate-limit/abuse, session/token, webhook-signature, and sensitive-log reviews.
@@ -65,7 +65,7 @@ AI Workflow rollout update (2026-08-31): Production `main@613dbeb` is `READY`; t
 - [x] `www` permanently redirects to non-`www` without a chain.
 - [ ] Trailing-slash/case policy is consistent.
 - [x] No canonical loops, cross-host canonicals, or preview/localhost canonicals.
-- [x] `/`, `/about`, `/privacy`, and `/terms` return `200 text/html`; no Pricing route is approved yet.
+- [x] `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/refunds`, and `/contact` return `200 text/html` with self-canonicals in pre-launch Production.
 - [ ] Unknown URLs return real 404 behavior.
 - [x] Private missing/expired/unauthorized records fail closed and do not leak existence.
 
@@ -101,7 +101,7 @@ AI Workflow rollout update (2026-08-31): Production `main@613dbeb` is `READY`; t
 
 - [ ] `https://folveta.com/robots.txt` returns `200 text/plain` and references the production sitemap.
 - [ ] `https://folveta.com/sitemap.xml` returns `200 application/xml`.
-- [ ] Sitemap contains only approved canonical/indexable/200 pages: initially `/`, `/about`, `/privacy`, `/terms`, plus `/pricing` only if approved.
+- [ ] Sitemap contains only approved canonical/indexable/200 pages: `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/refunds`, and `/contact` after final commercial approval.
 - [ ] No demo, session ID, Guide, Quick Check, result, account, search, checkout, status, billing portal, API, preview, or localhost URL appears.
 - [x] `/study/demo` and its Quick Check remain permanently `noindex,nofollow`.
 - [ ] Valid private routes remain `noindex, nofollow` and access-controlled.

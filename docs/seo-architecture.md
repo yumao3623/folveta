@@ -1,7 +1,7 @@
 # Folveta SEO v2 Architecture
 
 Status: **Current project-specific SEO architecture**  
-Last updated: 2026-08-27
+Last updated: 2026-09-01
 Reusable standard: `docs/SEO_GUIDE.md`  
 Canonical production origin: `https://folveta.com`
 
@@ -55,7 +55,7 @@ No current justification exists for a Blog, Use Case hub, Tools hub, comparison/
 Implemented:
 
 - Static/server-rendered homepage and trust pages.
-- Unique canonical paths for `/`, `/about`, `/privacy`, `/terms`.
+- Unique canonical paths for `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/refunds`, and `/contact`.
 - `metadataBase` derived from `NEXT_PUBLIC_SITE_URL` with localhost fallback.
 - Open Graph/Twitter metadata and generated 1200x630 images.
 - Homepage `WebApplication` and visible-content-backed `FAQPage` JSON-LD.
@@ -67,8 +67,7 @@ Implemented:
 Open/corrective:
 
 - Production origin and `PRELAUNCH=true` are live-verified on `https://folveta.com`: discovery pages emit `noindex,nofollow`, robots does not advertise a sitemap, and the sitemap contains no URLs.
-- No public Pricing route or billing facts; do not invent them.
-- No real support/privacy request channel.
+- Public `/pricing`, `/refunds`, and `/contact` pages are deployed with the approved draft offer and support channel. Live billing is not enabled, so Folveta Pro is not yet purchasable on `folveta.com`.
 - Privacy states that automatic deletion is missing; cleanup must be implemented.
 - No real product screenshots/image SEO beyond generated social images and code-drawn UI.
 - Google Search Console ownership for the canonical URL-prefix property `https://folveta.com/` is verified. Analytics decision, field CWV, and crawler-log monitoring remain open. Production DNS, TLS, redirects, canonical origin, and pre-launch index behavior are verified; no sitemap was submitted and no indexing was requested.

@@ -33,7 +33,7 @@ export default function TermsPage() {
             </section>
             <section>
               <h2 className="text-2xl font-semibold text-stone-950">Service limits</h2>
-              <p className="mt-4 leading-7">The pre-launch MVP accepts bounded PDF, Word, Excel, PowerPoint, legacy Office, and common image inputs. It may reject malformed, locked, duplicate, oversized, or unreadable files. Scanned pages, handwriting, or visual-only content can remain a grounding gap when reliable text cannot be extracted.</p>
+              <p className="mt-4 leading-7">The service accepts bounded PDF, Word, Excel, PowerPoint, legacy Office, and common image inputs. It may reject malformed, locked, duplicate, oversized, or unreadable files. Scanned pages, handwriting, or visual-only content can remain a grounding gap when reliable text cannot be extracted.</p>
             </section>
             <section>
               <h2 className="text-2xl font-semibold text-stone-950">Availability</h2>
