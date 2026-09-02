@@ -33,6 +33,11 @@ export function buildSitemap(
       priority: 0.5,
     },
     {
+      url: absoluteUrl("/study-guide-maker-from-pdf"),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
       url: absoluteUrl("/refunds"),
       changeFrequency: "monthly",
       priority: 0.4,

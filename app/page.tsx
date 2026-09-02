@@ -489,6 +489,14 @@ export default function HomePage() {
                         />
                         PDF files
                       </p>
+                      <p className="pl-8 text-[13px] leading-5 text-[var(--text-muted)]">
+                        <Link
+                          className="font-medium text-[var(--accent)] underline underline-offset-4"
+                          href="/study-guide-maker-from-pdf"
+                        >
+                          See the PDF study guide workflow
+                        </Link>
+                      </p>
                       <p className="flex items-center gap-3 text-[14px]">
                         <Presentation
                           className="h-5 w-5 text-[var(--tertiary)]"

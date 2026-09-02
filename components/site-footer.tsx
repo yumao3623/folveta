@@ -20,6 +20,12 @@ export function SiteFooter() {
           </Link>
           <Link
             className="rounded px-1 py-1 transition-colors hover:text-[var(--accent)] active:text-[var(--accent-bright)]"
+            href="/study-guide-maker-from-pdf"
+          >
+            PDF study guide
+          </Link>
+          <Link
+            className="rounded px-1 py-1 transition-colors hover:text-[var(--accent)] active:text-[var(--accent-bright)]"
             href="/about"
           >
             About

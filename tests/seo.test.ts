@@ -6,6 +6,7 @@ import { metadata as termsMetadata } from "@/app/terms/page";
 import { metadata as pricingMetadata } from "@/app/pricing/page";
 import { metadata as refundsMetadata } from "@/app/refunds/page";
 import { metadata as contactMetadata } from "@/app/contact/page";
+import { metadata as pdfStudyGuideMetadata } from "@/app/study-guide-maker-from-pdf/page";
 import robots, { buildRobots } from "@/app/robots";
 import sitemap, { buildSitemap } from "@/app/sitemap";
 import { metadata as privateSessionMetadata } from "@/app/study/[sessionId]/layout";
@@ -69,6 +70,7 @@ describe("Public SEO routes", () => {
     expect(pricingMetadata.alternates).toEqual(expect.objectContaining({ canonical: "/pricing" }));
     expect(refundsMetadata.alternates).toEqual(expect.objectContaining({ canonical: "/refunds" }));
     expect(contactMetadata.alternates).toEqual(expect.objectContaining({ canonical: "/contact" }));
+    expect(pdfStudyGuideMetadata.alternates).toEqual(expect.objectContaining({ canonical: "/study-guide-maker-from-pdf" }));
   });
 
   it("keeps private and API routes out of crawler access", () => {
@@ -91,7 +93,7 @@ describe("Public SEO routes", () => {
   it("lists only public, indexable pages after launch", () => {
     const paths = buildSitemap({ PRELAUNCH: "false", VERCEL_ENV: "production" })
       .map((entry) => new URL(entry.url).pathname);
-    expect(paths).toEqual(["/", "/about", "/privacy", "/terms", "/pricing", "/refunds", "/contact"]);
+    expect(paths).toEqual(["/", "/about", "/privacy", "/terms", "/pricing", "/study-guide-maker-from-pdf", "/refunds", "/contact"]);
     expect(paths.some((path) => path.startsWith("/study/") || path.startsWith("/api/"))).toBe(false);
   });
 });

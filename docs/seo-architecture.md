@@ -7,7 +7,7 @@ Canonical production origin: `https://folveta.com`
 
 ## 0. Public launch cutover record (2026-09-02)
 
-Production `PRELAUNCH=false` is confirmed operationally by the live `index,follow` response on approved discovery pages. `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/refunds`, and `/contact` return 200 responses with self-canonicals on `https://folveta.com`; these seven URLs are the complete production sitemap. Private, account, study, search, checkout, and billing workflow routes remain `noindex,nofollow` and are absent from the sitemap. `robots.txt` advertises the production sitemap. Search Console ownership and sitemap submission passed; indexing requests were submitted for `/`, `/pricing`, and `/about`.
+Production `PRELAUNCH=false` is confirmed operationally by the live `index,follow` response on approved discovery pages. `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/refunds`, and `/contact` returned 200 responses with self-canonicals on `https://folveta.com` at launch. SEO Growth v1 adds the distinct task page `/study-guide-maker-from-pdf`; after its deployment the production sitemap contains eight intended-indexable URLs. Private, account, study, search, checkout, and billing workflow routes remain `noindex,nofollow` and are absent from the sitemap. `robots.txt` advertises the production sitemap. Search Console ownership and sitemap submission passed; indexing requests were submitted for `/`, `/pricing`, and `/about`.
 
 ## 1. Ownership decision
 
@@ -21,7 +21,7 @@ The homepage owns the primary transactional/mixed product intent **`Study Guide 
 
 `AI Study Guide Maker` may appear naturally as a supporting variation or capability explanation, but it must not replace the category owner in the title, H1, navigation label, product name, or architecture.
 
-The current homepage title and first-viewport positioning now use `Study Guide Maker`. Final SEO v2 copy, schema, and production validation remain later work.
+The current homepage title and first-viewport positioning now use `Study Guide Maker`. SEO Growth v1 additionally assigns `/study-guide-maker-from-pdf` to the narrower PDF task without changing homepage ownership. The current ownership map and measurement record live in `docs/seo-growth-v1.md`.
 
 ## 2. Search intent
 
