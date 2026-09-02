@@ -9,8 +9,9 @@ import { Button } from "@/components/ui/button";
 
 export function PaddlePricing({ userId, userEmail }: { userId: string | null; userEmail?: string | null }) {
   const router = useRouter();
+  const isLive = process.env.NEXT_PUBLIC_PADDLE_ENV === "production";
   const [paddle, setPaddle] = useState<Paddle | null>(null);
-  const [error, setError] = useState<string | null>(() => process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN ? null : "Sandbox checkout is not configured yet.");
+  const [error, setError] = useState<string | null>(() => process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN ? null : `${isLive ? "Live" : "Sandbox"} checkout is not configured yet.`);
 
   useEffect(() => {
     const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
@@ -18,8 +19,8 @@ export function PaddlePricing({ userId, userEmail }: { userId: string | null; us
     initializePaddle({
       token,
       environment: process.env.NEXT_PUBLIC_PADDLE_ENV === "production" ? "production" : "sandbox",
-    }).then((instance) => setPaddle(instance ?? null)).catch(() => setError("Sandbox checkout could not load."));
-  }, []);
+    }).then((instance) => setPaddle(instance ?? null)).catch(() => setError(`${isLive ? "Live" : "Sandbox"} checkout could not load.`));
+  }, [isLive]);
 
   function subscribe() {
     if (!userId) {
@@ -54,9 +55,9 @@ export function PaddlePricing({ userId, userEmail }: { userId: string | null; us
         <ul className="mt-6 space-y-3 text-sm text-[var(--muted)]">
           {["10 successful Study Guides per month", "Up to 10 files and 300 source units", "Up to 600k extracted characters", "Quick Check included"].map((item) => <li key={item} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />{item}</li>)}
         </ul>
-        <Button onClick={subscribe} disabled={Boolean(userId) && !paddle} className="mt-7 w-full"><LockKeyhole className="h-4 w-4" />{userId ? "Subscribe in Sandbox" : "Sign in to subscribe"}</Button>
+        <Button onClick={subscribe} disabled={Boolean(userId) && !paddle} className="mt-7 w-full"><LockKeyhole className="h-4 w-4" />{userId ? `Subscribe in ${isLive ? "Folveta Pro" : "Sandbox"}` : "Sign in to subscribe"}</Button>
         {error && <p className="mt-3 text-xs text-[var(--danger)]">{error}</p>}
-        <p className="mt-3 text-center text-xs text-[var(--muted)]">Sandbox only. No real charge is created.</p>
+        <p className="mt-3 text-center text-xs text-[var(--muted)]">{isLive ? "Secure checkout powered by Paddle." : "Sandbox only. No real charge is created."}</p>
       </article>
     </div>
   </section>;
