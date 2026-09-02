@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PaddlePricing } from "@/components/paddle-pricing";
 import { SiteFooter } from "@/components/site-footer";
 import { getCurrentUser } from "@/lib/server/auth";
+import { getPaddlePriceId } from "@/lib/billing/config";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -20,7 +21,7 @@ export default async function PricingPage() {
         <h1 className="mt-3 max-w-2xl font-display text-4xl font-extrabold leading-tight text-[var(--foreground)] sm:text-5xl">Simple limits for focused study.</h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--text-secondary)]">Each successful Study Guide generation uses one monthly quota. Quick Check is included with your guide and does not use a separate quota.</p>
         <div className="mt-12">
-          <PaddlePricing userId={user?.id ?? null} userEmail={user?.email} />
+          <PaddlePricing userId={user?.id ?? null} userEmail={user?.email} priceId={getPaddlePriceId()} />
         </div>
         <section className="mt-10 border-t border-[var(--line)] pt-8 text-[15px] leading-7 text-[var(--text-secondary)]">
           <h2 className="font-headline-md text-xl font-semibold text-[var(--foreground)]">Subscription and refunds</h2>

@@ -4,10 +4,9 @@ import { initializePaddle, type Paddle } from "@paddle/paddle-js";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, LockKeyhole, Sparkles } from "lucide-react";
-import { getPaddlePriceId } from "@/lib/billing/config";
 import { Button } from "@/components/ui/button";
 
-export function PaddlePricing({ userId, userEmail }: { userId: string | null; userEmail?: string | null }) {
+export function PaddlePricing({ userId, userEmail, priceId }: { userId: string | null; userEmail?: string | null; priceId: string }) {
   const router = useRouter();
   const isLive = process.env.NEXT_PUBLIC_PADDLE_ENV === "production";
   const [paddle, setPaddle] = useState<Paddle | null>(null);
@@ -29,7 +28,7 @@ export function PaddlePricing({ userId, userEmail }: { userId: string | null; us
     }
     if (!paddle) return;
     paddle.Checkout.open({
-      items: [{ priceId: getPaddlePriceId(), quantity: 1 }],
+      items: [{ priceId, quantity: 1 }],
       customer: userEmail ? { email: userEmail } : undefined,
       customData: { user_id: userId },
       settings: { variant: "one-page", successUrl: `${window.location.origin}/billing/success` },
