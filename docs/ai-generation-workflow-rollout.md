@@ -1,14 +1,14 @@
 # AI Generation Workflow Production Rollout
 
-Status: **AI Workflow Rollout Gate passed; public launch remains blocked**  
+Status: **AI Workflow Rollout Gate passed; public launch cutover recorded separately**
 Verified: 2026-08-31  
-Production commit: `613dbeb007d6af6652c1019494e62e279d70631b`  
-Production deployment: `dpl_F9X9ZYcRK1bBjeFyvVzZmBarHoj9` (`READY`)
+Production commit: `6107dac49cae2eec559c19056b9abefe88ca3312`
+Production deployment: `dpl_8BeB3kMaagkXLT4WKJ13hiCfQqSy` (`READY`)
 
 ## Production state
 
 - `AI_GENERATION_WORKFLOW_ENABLED=true` in Vercel Production.
-- `PRELAUNCH=true`; public discovery pages remain `noindex,nofollow`.
+- At the time of this rollout record, `PRELAUNCH=true`; the later 2026-09-02 public-launch task changed only the approved indexing configuration to `false`.
 - The legacy generation path remains in code as the feature-flag OFF fallback.
 - Supabase migration history is traceable through `20260830080742_register_generation_reconciler_cron`.
 - Supabase Cron is the only reconciler scheduler. `generation-reconcile` is active at `* * * * *`; Vercel Cron is absent.

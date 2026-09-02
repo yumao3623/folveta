@@ -1,12 +1,14 @@
 # Folveta Payment / Billing v1 Architecture Decision
 
-Status: **Current; draft awaiting owner confirmation**
-Decision date: 2026-08-31
-Scope: architecture and product rules only. No payment SDK, Checkout, live Product/Price, webhook endpoint, production billing setting, or payment migration is approved by this document.
+Status: **Current architecture and Live implementation record**
+Decision date: 2026-09-02
+Scope: architecture, product rules, and the completed Paddle Sandbox/Live implementation boundary.
 
-This document is based on the repository at `main@c894dab`, the active v5 documents, and official provider documentation checked on 2026-08-31. It is a decision proposal, not a final commercial approval. Values marked **[CONFIRM]** require the operator's explicit confirmation before implementation.
+This document began as a proposal based on `main@c894dab` and provider documentation checked on 2026-08-31. Sections describing the proposal and Sandbox closeout are retained as history; the superseding Production state is recorded in section 29 below. No secret values are recorded.
 
 ## 1. Current facts and cost audit
+
+> Historical proposal sections below describe the design review before Live approval. The implemented Live offer and production verification supersede any earlier statement that Live billing, Checkout, or public launch remained unapproved.
 
 The durable owner is already `auth.users.id`. Anonymous sessions may generate and later be atomically claimed by a verified account; a payment flow must require sign-in before checkout. The current AI Workflow remains the baseline and is not redesigned here.
 
@@ -546,3 +548,9 @@ The completed Sandbox implementation follows the approved draft boundary without
 Sandbox Checkout, transaction/subscription sync, entitlement persistence after refresh, Sandbox/Live isolation, quota display, Customer Portal access, cancel-at-period-end synchronization, scheduled-cancellation Profile UI, and duplicate/idempotency checks passed. The retained Sandbox notification destination is active and recent relevant deliveries are successful.
 
 `PRELAUNCH=true` remains unchanged. Formal `folveta.com` has no Live Paddle configuration, no Live Product/Price, no Live webhook, and no authority to charge users. Live merchant/KYC/payout approval, final provider and commercial policy, refund/cancellation terms, tax/MoR terms, billing-record retention, legal review, and an explicit owner Live-rollout approval remain required.
+
+## 29. Production Live implementation and launch cutover (2026-09-02)
+
+The prior Sandbox closeout above is historical. The inherited `paddle-live-onboarding` task completed Paddle Live merchant/KYC, website approval, payout setup, Live Product/Price/Checkout/webhook configuration, payment acceptance, subscription cancellation, and the submitted US$12 full refund. Production `folveta.com` uses the Live provider boundary (`PADDLE_ENV=live`, Paddle.js production mode) with server-verified, environment-scoped entitlements and usage.
+
+The public offer is Free with 2 successful Study Guides/month and Folveta Pro with 10 at US$12/month; Quick Check is included. Live billing remained functional after the public indexing cutover. Secrets and provider credentials are intentionally omitted.

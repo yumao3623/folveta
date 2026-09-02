@@ -1,9 +1,9 @@
 # Paddle Live Onboarding
 
-Status: In progress  
-Last updated: 2026-09-01
+Status: **Complete**
+Last updated: 2026-09-02
 
-Scope: Paddle Live merchant, KYC, website review, payout, and manual approval only. No Live product, price, checkout, webhook, client token, runtime change, or charge has been created.
+Scope: Paddle Live merchant, KYC, website review, payout, catalog/runtime configuration, payment acceptance, and closeout evidence.
 
 ## Checkpoints
 
@@ -11,11 +11,15 @@ Scope: Paddle Live merchant, KYC, website review, payout, and manual approval on
 | --- | --- | --- |
 | Account eligibility | Complete | Paddle Live onboarding selected China and the existing `individual` path. |
 | Business / individual details | Complete | Product description, trading name, business start date, and owner-entered business details are saved in Paddle. |
-| Identity verification | Submitted | Owner completed Paddle's individual identity and address details, including optional passport information. Paddle is reviewing it. |
-| Website review | Submitted | `https://folveta.com/pricing`, `/terms`, `/privacy`, and `/refunds` were entered in Paddle after production URL checks. |
-| Product / compliance review | Submitted | Owner completed Paddle's required final legal declarations. Paddle is reviewing the complete onboarding submission. |
+| Identity verification | Complete | Paddle Live individual identity/KYC review passed. |
+| Website review | Complete | `https://folveta.com/pricing`, `/terms`, `/privacy`, and `/refunds` were approved after production URL checks. |
+| Product / compliance review | Complete | Paddle's required final legal declarations and merchant review passed. |
 | Payout setup | Complete | Saved in Paddle: China, Individual / Sole Proprietorship, Wire transfer, USD, and USD 100 minimum threshold. No payout history exists yet. |
-| Merchant approval | Under review | Paddle confirmed it will review the submission for its terms and acceptable-use requirements and email if further action is required. |
+| Merchant approval | Complete | Paddle Live merchant approval is complete. |
+
+## Live production closeout
+
+The Live Product, Price, client token, Checkout, webhook destination, and runtime environment were configured and validated. Production payment acceptance passed; the resulting subscription was canceled and the US$12 charge was submitted for a full refund. Sandbox and Live billing records remain isolated by the server-derived environment boundary. No secrets are recorded in this document.
 
 ## Confirmed Commercial Offer
 
@@ -25,7 +29,7 @@ The owner confirmed the proposed Live public offer on 2026-09-01:
 - Folveta Pro: 10 successful Study Guide generations per month at USD 12 per month.
 - Quick Check is included in the Study Guide quota.
 
-This is an offer decision only. It does not authorize or create Live Paddle catalog resources, checkout, webhooks, runtime configuration, or charges.
+The offer is active in the approved Live production configuration.
 
 ## Confirmed Refund And Cancellation Policy
 
@@ -35,7 +39,7 @@ The owner confirmed the recommended policy on 2026-09-01:
 - Cancellation does not receive a prorated refund.
 - Duplicate or accidental charges and material service failures are reviewed case by case for a refund.
 
-The policy is implemented for publication at `https://folveta.com/refunds`; it is awaiting production deployment before submission to Paddle.
+The policy is published at `https://folveta.com/refunds` and was included in the completed website review.
 
 ## Payout Details Confirmed In Dashboard
 

@@ -1,9 +1,13 @@
 # Folveta SEO v2 Architecture
 
 Status: **Current project-specific SEO architecture**  
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 Reusable standard: `docs/SEO_GUIDE.md`  
 Canonical production origin: `https://folveta.com`
+
+## 0. Public launch cutover record (2026-09-02)
+
+Production `PRELAUNCH=false` is confirmed operationally by the live `index,follow` response on approved discovery pages. `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/refunds`, and `/contact` return 200 responses with self-canonicals on `https://folveta.com`; these seven URLs are the complete production sitemap. Private, account, study, search, checkout, and billing workflow routes remain `noindex,nofollow` and are absent from the sitemap. `robots.txt` advertises the production sitemap. Search Console ownership and sitemap submission passed; indexing requests were submitted for `/`, `/pricing`, and `/about`.
 
 ## 1. Ownership decision
 
@@ -64,13 +68,13 @@ Implemented:
 - Fail-closed `PRELAUNCH` handling for public metadata, robots, sitemap, and every Vercel Preview.
 - Automated tests for metadata, canonicals, both index modes, robots, sitemap, and study-route noindex.
 
-Open/corrective:
+Production cutover record:
 
-- Production origin and `PRELAUNCH=true` are live-verified on `https://folveta.com`: discovery pages emit `noindex,nofollow`, robots does not advertise a sitemap, and the sitemap contains no URLs.
-- Public `/pricing`, `/refunds`, and `/contact` pages are deployed with the approved draft offer and support channel. Live billing is not enabled, so Folveta Pro is not yet purchasable on `folveta.com`.
+- Production origin and `PRELAUNCH=false` are live-verified on `https://folveta.com`: approved discovery pages emit `index,follow`, robots advertises the sitemap, and the sitemap contains seven approved URLs.
+- Public `/pricing`, `/refunds`, and `/contact` pages are deployed with the approved Live offer, refund policy, and support channel. Live billing is enabled and payment acceptance was validated in the inherited onboarding task.
 - Privacy states that automatic deletion is missing; cleanup must be implemented.
 - No real product screenshots/image SEO beyond generated social images and code-drawn UI.
-- Google Search Console ownership for the canonical URL-prefix property `https://folveta.com/` is verified. Analytics decision, field CWV, and crawler-log monitoring remain open. Production DNS, TLS, redirects, canonical origin, and pre-launch index behavior are verified; no sitemap was submitted and no indexing was requested.
+- Google Search Console ownership for the canonical URL-prefix property `https://folveta.com/` is verified, the sitemap is submitted and reports seven discovered URLs, and indexing was requested for `/`, `/pricing`, and `/about`. Analytics, field CWV, crawler-log monitoring, and post-launch review remain separate operational work.
 
 ## 5. On-page v2 requirements
 
@@ -133,7 +137,7 @@ Pre-launch reachable site:
 
 Launch site:
 
-- Sitemap initially contains `/`, `/about`, `/privacy`, `/terms`, plus `/pricing` only after a real approved page exists.
+- Sitemap initially contains the approved seven public URLs: `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/refunds`, and `/contact`.
 - Exclude demo, user Guide IDs, Quick Checks, results, account, search, checkout, success/cancel/failure, portal, APIs, previews, and noindex URLs.
 - Do not emit fake `lastmod`; use a real material-update timestamp or omit it.
 

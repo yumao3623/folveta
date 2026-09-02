@@ -15,8 +15,18 @@ Decision date: 2026-08-26
 - `study_guides` remains the independent, stable-ID persistent artifact and receives normalized title/access/lifecycle metadata.
 - Anonymous conversion requires both a verified Supabase user and possession of the current anonymous cookie. The database claim is atomic, uses `auth.uid()`, accepts no Guide ID, clears anonymous credentials, and cannot claim expired, deleted, or already-owned data.
 - Authenticated RLS is owner-scoped; anonymous roles retain no direct table access. Server service-role queries remain behind explicit DAL authorization.
-- Paddle Billing is implemented and verified in the isolated Sandbox deployment only. Provider-independent customer, entitlement, plan, and usage records attach to the durable user owner; formal Live billing remains disabled pending merchant and payout approval.
+- Paddle Billing is implemented and verified in the isolated Sandbox deployment and the approved Production Live deployment. Provider-independent customer, entitlement, plan, and usage records attach to the durable user owner; Live billing is server-verified and environment-scoped.
 - The full rationale, lifecycle, retention, repair, and privacy contract is in `docs/auth-and-persistence.md`.
+
+### Public Launch Cutover decision
+
+Decision date: 2026-09-02
+
+- Phase 6 Public Launch / Indexing Cutover is **PASS** on Production `main@6107dac49cae2eec559c19056b9abefe88ca3312`.
+- Production `PRELAUNCH=false` is confirmed by live behavior: approved discovery pages return `index,follow`; private routes remain `noindex,nofollow`.
+- `https://folveta.com/robots.txt` returns 200 and advertises `https://folveta.com/sitemap.xml`. The sitemap returns 200 XML and contains exactly `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/refunds`, and `/contact`.
+- Search Console ownership and sitemap submission passed; Google reported seven discovered URLs, and indexing requests were submitted for `/`, `/pricing`, and `/about`. Actual inclusion remains subject to Google's processing.
+- Paddle Live billing remains operational after cutover. Backup/PITR is an accepted owner risk, not a Phase 6 blocker. No 24-hour/7-day monitoring task is started by this decision.
 
 ### Product-3B Guide management decision
 

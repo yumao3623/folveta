@@ -1,7 +1,7 @@
 # Folveta Current Product Context
 
 Status: **Current v5 context**  
-Last updated: 2026-08-31
+Last updated: 2026-09-02
 Decision authority: `docs/decisions.md`  
 Delivery roadmap: `docs/v5-master-roadmap.md`
 
@@ -27,7 +27,7 @@ The Guide is the primary artifact. Quick Check is optional and subordinate. Folv
 
 ## Actual implemented baseline
 
-The following exists in the current repository and passed build/typecheck/lint/tests during the 2026-08-27 Production pre-launch closeout:
+The following exists in the current repository and passed build/typecheck/lint/tests during the Production release validation and 2026-09-02 public-launch cutover:
 
 - Next.js 16.3.2 App Router, React 19, TypeScript, Tailwind CSS 4.
 - Folveta landing/upload experience with real PDF, Office, and image input.
@@ -55,17 +55,16 @@ Implemented UI milestones are UI-1 Study Guide Workspace, UI-2 Landing / Upload,
 - The official Supabase CLI channel is linked to the Production project. Remote migration history is traceable through `20260830080742`, including the AI reliability, source-format, durable Workflow, remote-validation, Supabase reconciler, and Cron registration migrations.
 - Product-3C passed a real dev two-account/RLS/browser Gate covering Library, Search, Profile, workspace navigation, cross-owner page/API/direct-client denial, signed-out isolation, relogin persistence, query behavior, and regression paths. All temporary aggregates and Auth users were cleaned.
 - A single `sgm_session` cookie represents one anonymous session token; creating another session replaces browser access to the prior session.
-- Account deletion is deliberately unavailable rather than partially implemented. The required Storage-first, child-record/Auth cleanup, retry, retention, request-channel, and future billing-cancellation orchestration is deferred as a mandatory Payment/Production prerequisite; deleting only `auth.users` is not accepted.
-- Live Payment, final pricing, SEO v2, and public indexing remain unimplemented. The AI Workflow rollout is live on `main@613dbeb` with `AI_GENERATION_WORKFLOW_ENABLED=true` and `PRELAUNCH=true`.
-- Paddle Billing v1 is implemented and validated in the isolated Sandbox deployment: Free + Folveta Pro monthly, Sandbox test price USD 12/month, environment-scoped entitlement/usage, Checkout, signed and idempotent webhooks, Customer Portal, cancellation scheduling, and server-side usage enforcement. Formal Live billing remains absent.
-- A protected Storage-first retention endpoint exists, but no deployment scheduler has been configured or verified yet.
-- No application rate limiting, abuse controls, analytics decision, real support/privacy-request channel, or production monitoring.
+- Account deletion is READY through the Storage-first, child-record/Auth cleanup, retry, retention, request-channel, and billing-cancellation orchestration; deleting only `auth.users` remains disallowed.
+- Live Payment and the approved public offer are implemented and validated in Production: Free (2 successful Study Guides/month) and Folveta Pro (10 successful Study Guides/month at US$12/month), with server-enforced usage, Checkout, signed/idempotent webhooks, Customer Portal, cancellation scheduling, and refund handling. Sandbox and Live state remain environment-scoped.
+- Public indexing cutover is complete for the approved discovery pages. Production `PRELAUNCH` is explicitly false; public pages return `index,follow`, while private routes remain `noindex,nofollow`.
+- Protected Storage-first retention cleanup is READY. Distributed rate limiting and production monitoring are READY; analytics consent and any broader support/privacy operations remain separate policy work.
 - No pasted-text input, handwriting interpretation, audio/video/URL ingestion, or open-web research. Common image files use constrained visual-text extraction; scanned PDF pages and image/chart/diagram-heavy units may remain visible grounding gaps.
 - Production Guide generation is server-owned and durable. The rollout gate passed one Workflow smoke, three complete real-PDF runs, two complete legacy-PPT runs, Guide rendering/reload, Cron/reconciler, provider boundary, and Product-3 regression checks. See `docs/ai-generation-workflow-rollout.md`.
 - The five real-material samples all completed below five minutes, but the sample is too small to establish p95. Provider variability and the bounded at-least-once duplicate-call window remain operational risks.
 - `PRELAUNCH` now fails closed: a missing value, `PRELAUNCH=true`, or any Vercel non-production environment makes discovery pages `noindex,nofollow`; the sitemap is empty and robots does not advertise it. Only an explicit production `PRELAUNCH=false` restores the approved public index mode.
-- Full SEO v2 intent/page-ownership implementation remains pending, although the homepage title, visible capability label, and first-viewport positioning now use `Study Guide Maker` rather than `AI Study Guide Maker`.
-- Vercel/GitHub integration, Production environment variables, Supabase Auth URLs, DNS, TLS, redirects, PRELAUNCH metadata, and the core live browser workflow are deployed and verified. A fresh same-browser sign-up produced `/signup 200`, `/verify 303`, `/token 200`, `/user 200`, returned to `https://folveta.com/profile`, and passed Auth/session/claim validation. The cross-device confirmation attempt remains historical evidence only and is not used as the passing path.
+- Additional SEO v2 content expansion remains pending, although the homepage title, visible capability label, and first-viewport positioning use `Study Guide Maker` rather than `AI Study Guide Maker`.
+- Vercel/GitHub integration, Production environment variables, Supabase Auth URLs, DNS, TLS, redirects, launch metadata, and the core live browser workflow are deployed and verified on `main@6107dac`. A fresh same-browser sign-up produced `/signup 200`, `/verify 303`, `/token 200`, `/user 200`, returned to `https://folveta.com/profile`, and passed Auth/session/claim validation. The cross-device confirmation attempt remains historical evidence only and is not used as the passing path.
 
 ## Current UI context
 
@@ -132,11 +131,11 @@ Product-3A repository implementation uses Supabase Auth email/password, preserve
 
 ## Commercial target
 
-Paddle Billing v1 is validated in Sandbox only. The implemented Sandbox shape is Free + Folveta Pro monthly at a USD 12/month test price. The user-facing unit is one successful Study Guide generation; Quick Check is included, and failed generation, Workflow retry/replay, and duplicate requests do not consume an extra unit. Sandbox Free is `2` successful Guides/month and Sandbox Pro is `10`.
+Paddle Billing v1 is validated in both the isolated Sandbox deployment and the Production Live deployment. The public offer is Free + Folveta Pro monthly at US$12/month. The user-facing unit is one successful Study Guide generation; Quick Check is included, and failed generation, Workflow retry/replay, and duplicate requests do not consume an extra unit. Free is `2` successful Guides/month and Pro is `10`.
 
 Billing ownership is `auth.users.id`; Checkout, webhooks, subscriptions, entitlements, usage, and generation reservations are scoped by a server-derived `billing_environment`. Raw-card handling remains Paddle-hosted. Signature-verified, idempotent webhooks, rather than a checkout redirect, grant access. The Customer Portal manages the subscription. A scheduled end-of-period cancellation preserves Pro and its quota until the effective date.
 
-This is not a Live commercial authorization. Paddle Live merchant approval, Mainland-China operator/entity and payout eligibility, final quotas/price, refund/cancellation policy, tax/MoR wording, billing-record retention, and all Live Paddle configuration remain owner gates. `PRELAUNCH=true` remains mandatory and formal `folveta.com` does not receive a Live billing configuration.
+Paddle Live merchant/KYC, website approval, payout setup, Live catalog, checkout, webhook, payment acceptance, subscription cancellation, and the US$12 refund flow were completed in the inherited onboarding task. Production `PRELAUNCH=false` is the explicit launch state; future commercial or policy changes require a new reviewed decision.
 
 ## SEO and launch context
 
@@ -144,9 +143,9 @@ This is not a Live commercial authorization. Paddle Live merchant approval, Main
 - `docs/seo-architecture.md` is the Folveta-specific page ownership and indexing architecture.
 - Do not create thin Blog, Use Case, Tools, comparison, or pSEO inventories.
 - A public Pricing page exists only if the real billing product needs it.
-- Production deployment for testing may precede launch, under deployment protection and/or fail-safe pre-launch noindex.
+- Production deployment may precede launch, under deployment protection and/or fail-safe pre-launch noindex; the 2026-09-02 cutover moved the approved discovery pages into public index mode.
 - The current pre-launch configuration reuses the verified `study-guide-maker` Supabase project for localhost and Production while withholding its credentials from Vercel Preview. This is an explicit temporary testing constraint, not proof of full production/preview data isolation.
-- Public canonical pages become indexable only after Product-3, billing, legal/privacy, quality, performance, security, and production gates pass.
+- Public canonical pages became indexable after Product-3, billing, legal/privacy, quality, performance, security, and production gates passed. Google inclusion remains asynchronous and is not guaranteed by metadata alone.
 - Private workspace, account, search, and billing workflow routes remain noindex after launch.
 
 ## Evidence and open questions

@@ -1,7 +1,7 @@
 # Folveta Production Deployment
 
-Status: **AI Workflow rollout passed in Production pre-launch; not a public launch record**
-Last updated: 2026-08-31
+Status: **Production public launch and indexing cutover recorded**
+Last updated: 2026-09-02
 Canonical target: `https://folveta.com`
 
 ## Deployment identity
@@ -9,7 +9,7 @@ Canonical target: `https://folveta.com`
 | Item | Configuration | Current state |
 | --- | --- | --- |
 | GitHub repository | `https://github.com/yumao3623/folveta` | Vercel GitHub App access confirmed |
-| Production branch | `main` | GitHub-triggered Production deployment at `613dbeb007d6af6652c1019494e62e279d70631b` (`READY`) |
+| Production branch | `main` | GitHub-triggered Production deployment at `6107dac49cae2eec559c19056b9abefe88ca3312` (`READY`) |
 | Vercel team/project | `creen ai` / `folveta` | Live and connected to `yumao3623/folveta` |
 | Framework | Next.js 16.3.2 App Router | Vercel native Next.js preset |
 | Root directory | `./` | Confirmed |
@@ -18,7 +18,7 @@ Canonical target: `https://folveta.com`
 | Production origin | `https://folveta.com` | Live with valid HTTPS |
 | Preferred hostname | `folveta.com` | `www.folveta.com` redirects `308` to apex |
 
-The pre-launch infrastructure and environment hotfix are on `main`. Later closeout changes still require an independent reviewed commit; do not perform a public indexing cutover from this task.
+The pre-launch infrastructure and environment hotfix were followed by the independent public-launch cutover recorded in this document. The current production deployment is the launch baseline.
 
 ## Paddle Sandbox boundary
 
@@ -26,13 +26,13 @@ Paddle Billing v1 is deployed only to the separate `folveta-paddle-sandbox` Verc
 
 The existing shared Supabase project is isolated at the billing-record level by the server-derived `billing_environment` (`sandbox` or `live`). All provider IDs, entitlement reads, usage/reservations, generation accounting, and webhook idempotency are scoped to that value; missing, unknown, or legacy environments fail closed. Therefore a Sandbox subscription cannot grant Pro on `folveta.com`.
 
-Formal `folveta.com` has not been changed for Paddle Live: no Live API key, Product/Price, webhook, or real-charge flow is configured. `PRELAUNCH=true` remains required. Paddle merchant/KYC/payout approval, final Live commercial policy, and explicit owner authorization are required before any Live rollout.
+Production `folveta.com` is configured for Paddle Live. Merchant/KYC, website approval, payout setup, Live Product/Price/Checkout/webhook, payment acceptance, cancellation, and the US$12 refund flow were completed in the inherited onboarding task. Secrets are intentionally not recorded here.
 
 ## Domain and DNS strategy
 
 Both `folveta.com` and `www.folveta.com` are attached to the single Vercel project. The apex is the production primary domain; `www` redirects directly to it. The verified public DNS values are `A folveta.com -> 216.198.79.1` and `CNAME www.folveta.com -> 83541033d72053fa.vercel-dns-017.com`. No unrelated DNS record was removed.
 
-DNS, certificate issuance, apex reachability, HTTP-to-HTTPS, and `www`-to-apex `308` behavior passed live verification on 2026-08-27. Do not submit a sitemap or request indexing during pre-launch.
+DNS, certificate issuance, apex reachability, HTTP-to-HTTPS, and `www`-to-apex `308` behavior passed live verification on 2026-08-27. The pre-launch empty-sitemap behavior was superseded by the 2026-09-02 launch cutover; the production sitemap is now submitted in Search Console.
 
 ## Environment contract
 
@@ -41,7 +41,7 @@ No secret value belongs in this document, source control, screenshots, or chat.
 | Variable | Exposure | Production requirement |
 | --- | --- | --- |
 | `NEXT_PUBLIC_SITE_URL` | Public | `https://folveta.com` |
-| `PRELAUNCH` | Server-only | `true` until explicit launch approval |
+| `PRELAUNCH` | Server-only | Exact `false` in Vercel Production; fail-closed elsewhere |
 | `NEXT_PUBLIC_SUPABASE_URL` | Public | Current Supabase project URL; Production scope only during this pre-launch |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public client credential | Current project anon/publishable key; Production scope only |
 | `NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET` | Public | `course-materials` |
@@ -75,7 +75,7 @@ Preview is always `noindex,nofollow` through `VERCEL_ENV`, regardless of `PRELAU
 - Exact `false` in Vercel Production: public `/`, `/about`, `/privacy`, and `/terms` may become `index,follow` and enter the sitemap.
 - Private, account, search, study, result, and future billing routes remain `noindex,nofollow` in every mode.
 
-Changing `PRELAUNCH` to `false` is a public-launch action. It requires Payment, SEO v2, Production Readiness, live QA, and explicit launch-owner approval. It is not part of this task.
+Changing `PRELAUNCH` to `false` was the explicit public-launch action for this task. Rollback is to restore the prior fail-closed value and re-verify live metadata, robots, and sitemap before resubmitting indexing.
 
 ## AI reliability status
 
@@ -83,13 +83,13 @@ The AI Workflow rollout gate passed on commit `613dbeb`. The Production provider
 
 ## Supabase Auth and environment boundary
 
-The current pre-launch reuses the existing Supabase project named `study-guide-maker`, whose traceable remote migration history includes every repository migration through `20260830080742`, including source-format expansion and durable AI Workflow/Cron changes. This is a pragmatic pre-launch choice, not a claim of full environment isolation:
+Production reuses the existing Supabase project named `study-guide-maker`, whose traceable remote migration history includes every repository migration through `20260830080742`, including source-format expansion and durable AI Workflow/Cron changes. This remains a documented environment-isolation constraint:
 
 - Supabase Site URL: `https://folveta.com`.
 - Exact redirect URLs: `https://folveta.com/auth/callback` and `http://localhost:3000/auth/callback`.
 - No broad wildcard redirect is configured.
 - Vercel Supabase credentials are Production-only; Preview cannot access this backend.
-- Localhost and Production temporarily share the Supabase project. Avoid destructive dev fixtures and revisit separate environments before public launch.
+- Localhost and Production temporarily share the Supabase project. Avoid destructive dev fixtures and revisit separate environments before broader scale.
 
 Email sign-up uses PKCE `emailRedirectTo` built from `NEXT_PUBLIC_SITE_URL`. Sign-in redirects only to validated same-origin paths. Sign-out clears the Supabase session and returns to `/`.
 
@@ -114,10 +114,10 @@ Verified locally and in Production:
 - Homepage emits `noindex,nofollow` in the default pre-launch state.
 - Automated index-mode tests cover fail-closed Production, Preview, robots, sitemap, and permanent private-route policy.
 - Supabase Auth Site URL and exact production/localhost callbacks were configured in the dashboard.
-- Vercel Production is `READY` from GitHub `main` commit `613dbeb007d6af6652c1019494e62e279d70631b`. The deployment is `folveta-7vi1z3l0u-creen-ai.vercel.app` (Vercel ID `dpl_F9X9ZYcRK1bBjeFyvVzZmBarHoj9`).
+- Vercel Production is `READY` from GitHub `main` commit `6107dac49cae2eec559c19056b9abefe88ca3312`. The latest deployment is linked to that commit (Vercel ID `dpl_8BeB3kMaagkXLT4WKJ13hiCfQqSy`).
 - `folveta.com` returns `200` over HTTPS; HTTP and `www` redirect `308` to the preferred HTTPS apex.
-- Public `/`, `/about`, `/privacy`, and `/terms` return `200`, self-canonicalize to the Production origin, and emit `noindex,nofollow` while `PRELAUNCH=true`.
-- `robots.txt` returns `200` without advertising a sitemap; `sitemap.xml` returns `200` with an empty URL set.
+- Public `/`, `/about`, `/privacy`, and `/terms` return `200`, self-canonicalize to the Production origin, and emit `index,follow` after the launch cutover.
+- `robots.txt` returns `200` and advertises the production sitemap; `sitemap.xml` returns `200` with the seven approved public URLs.
 - Favicon/app icon, fonts, CSS, desktop/mobile rendering, and public-page console checks passed.
 - Anonymous session create/persist, signed Storage upload, PDF parse, AI Guide generation/grounding, anonymous-to-account claim, Guide reopen, My Guides, Library, Search, Profile, Quick Check, persisted Results, Auth refresh, sign-out isolation, and relogin passed against Production test data.
 - AI Workflow smoke plus real PDF x3 and legacy PPT x2 passed from new Production sessions; reload/browser loss did not own or stop Workflow execution.
@@ -129,9 +129,9 @@ Open or not live-verified:
 
 - Raw Supabase Auth `Set-Cookie` attribute inspection; functional refresh, sign-out, isolation, and relogin passed without recording token values.
 - A reusable automated browser suite, full cross-browser/accessibility/performance audit, and comprehensive runtime-log/observability review.
-- Deployment protection, retention scheduling, monitoring, production deletion, account deletion, rate limits, Payment, SEO v2, and indexing cutover. Generation reconciliation is deployed; retention scheduling is a separate open item.
+- Full cross-browser/accessibility/performance audit and post-launch monitoring remain separate operational work. Backup/PITR remains an accepted owner risk; account deletion, retention cleanup, distributed rate limiting, and monitoring are READY per the inherited Production Readiness closeout.
 - Preview remains intentionally unable to build against Production-only Supabase credentials; no Production secret should be added to Preview to clear that expected isolation failure.
 
 ## Rollback
 
-If live metadata, Auth, domain, or core behavior is wrong, keep or restore `PRELAUNCH=true`, retain Preview isolation, and roll Vercel Production back to the last known-good deployment. DNS changes must be reversed only from recorded before/after values. Never use robots as a privacy or emergency access-control boundary.
+If live metadata, Auth, domain, billing, or core behavior is wrong, restore the prior fail-closed `PRELAUNCH` value and roll Vercel Production back to the last known-good deployment as appropriate. DNS changes must be reversed only from recorded before/after values. Never use robots as a privacy or emergency access-control boundary.

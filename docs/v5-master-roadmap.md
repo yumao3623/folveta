@@ -290,7 +290,7 @@ Current exit judgment: **PASS**. Product-3 feature scope, formal migrations, dev
 
 ## Phase 3 — Payment and Billing
 
-Current task status (2026-09-01): **Paddle Sandbox Billing v1 implementation and E2E gates passed; Live rollout remains blocked.** The Sandbox product is Free + Folveta Pro monthly at a USD 12/month test price, with `2` and `10` successful Study Guide generations/month respectively. Quick Check is included. Checkout, raw-body signed/idempotent webhooks, Customer Portal, cancel-at-period-end, refresh persistence, usage enforcement, and shared-Supabase Sandbox/Live isolation passed. All Paddle provider state is server-scoped by `billing_environment`; legacy/unknown environments fail closed. Formal `folveta.com` has no Live Paddle configuration, `PRELAUNCH=true` remains mandatory, and no real charges are authorized. Live merchant/payout approval, final commercial/legal policies, and explicit owner approval remain Phase 3 exit dependencies.
+Current task status (2026-09-02): **PASS.** Paddle Live merchant/KYC, website approval, payout setup, Live catalog/Checkout/webhook, payment acceptance, subscription cancellation, refund handling, and environment isolation passed. The public offer is Free (2 successful Study Guides/month) and Folveta Pro (10 at US$12/month). Production billing is active and server-verified.
 
 **Goal**
 
@@ -433,7 +433,7 @@ Make `https://folveta.com` the canonical, technically sound owner of the `Study 
 
 ## Phase 5 — Production Pre-launch Deployment, Full E2E, and Performance QA
 
-Infrastructure setup record (updated 2026-08-31): `yumao3623/folveta` is connected to the live Vercel project `creen ai / folveta`, and GitHub `main` commit `613dbeb007d6af6652c1019494e62e279d70631b` deployed `READY`. `https://folveta.com` is the HTTPS Production apex and remains fail-safe pre-launch with `PRELAUNCH=true`. The durable AI Workflow migration/runtime, Production provider boundary, Supabase minute reconciler, Workflow smoke, real PDF x3, legacy PPT x2, browser-independent continuation, Auth/claim, and Product-3 regression passed. `AI_GENERATION_WORKFLOW_ENABLED=true`; the legacy OFF path remains available, the temporary provider probe is removed, and five real-material samples are explicitly insufficient to establish p95. The AI Workflow blocker no longer prevents a separate Payment task. Deployment protection, retention/account deletion, monitoring, rate limits, Payment implementation, indexing cutover, Search Console, and final SEO v2 remain open or out of scope.
+Infrastructure setup and release record (updated 2026-09-02): `yumao3623/folveta` is connected to the live Vercel project `creen ai / folveta`, and GitHub `main` commit `6107dac49cae2eec559c19056b9abefe88ca3312` deployed `READY`. `https://folveta.com` is the HTTPS Production apex. The durable AI Workflow migration/runtime, Production provider boundary, Supabase minute reconciler, Workflow smoke, real PDF x3, legacy PPT x2, browser-independent continuation, Auth/claim, Product-3 regression, Live billing, and public index cutover passed. Production `PRELAUNCH=false`; approved discovery pages are indexable and private routes remain noindex. Backup/PITR remains a documented owner risk, not a Phase 6 blocker. Post-launch monitoring is intentionally a separate follow-up task.
 
 **Goal**
 
@@ -498,6 +498,8 @@ Run the complete release candidate on `https://folveta.com` under controlled acc
 - Yes. Recommended split: 5A protected deployment/config; 5B E2E and integration suite; 5C security/privacy/billing QA; 5D performance/accessibility/cross-browser; 5E launch readiness review.
 
 ## Phase 6 — Public Launch, Google Indexing, and Monitoring
+
+Current cutover status (2026-09-02): **Public Launch Cutover PASS.** Production `PRELAUNCH=false`; `/`, `/pricing`, `/about`, `/privacy`, `/terms`, `/refunds`, and `/contact` return `index,follow` with self-canonicals and are the only sitemap URLs. Private and user-data routes remain `noindex,nofollow`. Search Console ownership and sitemap submission passed; indexing was requested for `/`, `/pricing`, and `/about`. Google inclusion remains pending Google processing where not yet reported. The separate 24-hour/7-day monitoring task has not been started.
 
 **Goal**
 
