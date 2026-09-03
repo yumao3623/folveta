@@ -410,7 +410,7 @@ The first slice should be deliberately narrow:
 
 **Slice 2: persistence and assembly.** Add the three v2 structures, idempotent request/artifact claims, immediate assembly snapshots, and dual-read adapters for `study_guides`, search, and Quick Check.
 
-**Slice 3: one-call bounded path.** Route internal fixtures through the thin Workflow runner with billing adapter disabled or test-scoped, then fault-inject timeout, invalid output, duplicate Generate, refresh, and lost acknowledgement.
+**Slice 3: provider integration (development/test only).** Route internal fixtures through a thin provider adapter backed by `ModelGateway`; claim an artifact before its provider call, validate and canonicalize its structured result, then settle that same artifact. The adapter has no v1 DAG, route, Workflow, billing, or UI integration. It verifies live Responses Structured Output compatibility against English, Chinese, and mixed fixtures and uses controlled failures for recovery semantics.
 
 **Slice 4: long/multi-file path.** Add bounded section concurrency, optional non-gating synthesis, parser-gap display, and reuse tests.
 
@@ -429,7 +429,22 @@ The first slice should be deliberately narrow:
 | New v2 state tables | Reuse v1 operation DAG | Prevents v1 semantics from leaking into a simpler artifact model |
 | Partial Guide consumes one unit | Treat partial as invisible failure | A useful delivered artifact is the product result; no-Guide still releases |
 | Optional blocks | Require every rich topic block | Source absence is a coverage gap, not a generation failure |
+| Slice 3 provider adapter | Copy the v1 provider operation executor | `ModelGateway` already provides safe transport, envelope, identity, and error classification; v2 needs only artifact request construction, result canonicalization, and artifact-scoped retry |
+| Slice 3 retry | v1 shared retry credits or SDK retry | At most two attempts per v2 artifact, with the failed attempt settled before a retry claim; completed siblings are never called again |
+| Slice 3 timeout | Pre-emptively enlarge 180s gateway timeout | Retain 180s as a measurement baseline and decide later from private latency/timeout evidence |
+| Slice 3 structured schema | JSON text fallback for logically optional Guide blocks | Responses Structured Output requires every object property in its provider schema to be required; nullable provider fields preserve the v2 optional-block contract without weakening structured validation |
+| Slice 3 artifact lease | Keep the former 120s lease while allowing a 180s provider call | A 210s lease gives the executor time to classify and settle a 180s-boundary provider result without changing the 180s request timeout |
 
-## 19. Final recommendation
+## 19. Slice 3 provider-integration decision
+
+Slice 3 keeps `ModelGateway` as the only real-provider transport. The adapter supplies a minimal evidence-only request: opaque artifact context, language policy, a dynamically constrained structured schema whose `span_ids` enum is exactly the partition allowlist, and span ID/text evidence. It never sends source display names, locators, or excerpts as provenance authority. The server still validates every returned ID against the partition and reconstructs canonical source references from the snapshot.
+
+`ModelGateway` continues to own the OpenAI-compatible Responses request, 180-second initial timeout, disabled SDK retries, model-identity check, response-envelope check, provider-error classification, and privacy-safe diagnostics. Slice 3 owns exactly one retry policy: a first artifact failure is durably settled as `retry_wait`; a later claim may make one repair/transient retry. Timeouts, connection interruption, 408, 429, and allowlisted 5xx are retryable. A malformed structured response is eligible for its one constrained repair. Refusal, protocol/model mismatch, deterministic limits, and invalid source references become terminal gaps. No raw prompt, evidence, source content, or provider body appears in metrics or logs.
+
+The provider-facing schema represents logical optional blocks as required nullable fields because the verified Responses Structured Output boundary rejects omitted object properties. The adapter removes `null` optional blocks before applying the unchanged v2 artifact contract, so an omitted optional teaching block does not fail an otherwise deliverable Guide. Its span-ID enum remains exact for each partition.
+
+The executor is intentionally a development/test integration surface. It uses the Slice 2 request/artifact lease state to prove claim-before-call, immediate settlement, replay safety, stale-lease rejection, and `complete` / `complete_with_gaps` / `failed_no_guide` assembly. The lease is 210 seconds: it preserves time to record a result at the existing 180-second request boundary plus bounded settlement overhead. This followed a development gateway 524 observed after 125.2 seconds, which demonstrated that the old 120-second lease could expire before a retryable result was settled. The provider timeout remains 180 seconds pending a larger private latency sample. It does not authorize production generation, create a Vercel Workflow v2 runner, route HTTP traffic, or settle billing.
+
+## 20. Final recommendation
 
 Implement Generation v2 as a small, owner-scoped, artifact-persisting engine behind a feature flag. Preserve the proven ingestion, ownership, Guide storage, Quick Check, billing concepts, and thin Workflow shell. Remove the v1 assumption that every internal operation must succeed before a student can see anything. The first code should prove the contract and artifact boundaries offline; only then should persistence, Workflow routing, and controlled production migration begin.

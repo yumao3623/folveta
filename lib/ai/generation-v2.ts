@@ -138,6 +138,33 @@ export const v2GuideSchema = z.object({ schema_version: z.literal("2.0"), id: z.
 });
 export type V2Guide = z.infer<typeof v2GuideSchema>;
 
+/**
+ * The provider receives a schema limited to this artifact's evidence. Local
+ * validation remains authoritative because a provider response is untrusted.
+ */
+export function v2ArtifactSchemaForSpanIds(spanIds: readonly string[]) {
+  const unique = [...new Set(spanIds)];
+  if (!unique.length || unique.length !== spanIds.length) throw new Error("V2_ARTIFACT_SCHEMA_SPANS_INVALID");
+  const spanId = z.enum(unique as [string, ...string[]]);
+  // Responses Structured Output requires every object property to be present.
+  // A null optional block means "not supplied" after adapter normalization.
+  const claim = rawClaimSchema.extend({ span_ids: z.array(spanId) });
+  return z.object({
+    section_id: z.string().min(1),
+    title: z.string().min(1),
+    priority: z.enum(["study_first", "study_next", "review_if_time"]),
+    focus_reason: z.string().min(1),
+    explanation: z.array(claim).min(1),
+    review_targets: z.array(z.string().min(1)).min(1).nullable(),
+    gaps: z.array(z.object({ code: z.enum(["optional_missing", "source_coverage", "unreadable", "invalid_output", "provider_transient_exhausted", "not_requested", "synthesis_unavailable"]), message: z.string().min(1), span_ids: z.array(spanId) }).strict()),
+    key_concepts: z.array(z.string().min(1)).nullable(),
+    definitions: z.array(z.string().min(1)).nullable(),
+    processes_relationships: z.array(z.string().min(1)).nullable(),
+    common_confusions: z.array(z.string().min(1)).nullable(),
+    practice_prompts: z.array(z.string().min(1)).nullable(),
+  }).strict();
+}
+
 export type V2Provider = (input: { partition: V2Partition; spans: V2Span[]; output_language: "match_materials" | "en" | "zh" }) => Promise<unknown>;
 export type V2RunOptions = { output_language?: "match_materials" | "en" | "zh"; now?: Date };
 
@@ -166,6 +193,21 @@ function validateAndCanonicalizeArtifact(value: unknown, partition: V2Partition,
   return { ...rest, section_id: partition.id, explanation, source_refs: sourceRefs };
 }
 
+export function canonicalizeV2Artifact(value: unknown, partition: V2Partition, snapshot: V2SourceSnapshot): V2Guide["sections"][number] {
+  const artifact = validateAndCanonicalizeArtifact(value, partition, snapshot);
+  return v2SectionSchema.parse({
+    id: artifact.section_id,
+    title: artifact.title,
+    priority: artifact.priority,
+    focus_reason: artifact.focus_reason,
+    explanation: artifact.explanation,
+    source_refs: artifact.source_refs,
+    gaps: artifact.gaps.map(({ code, message }) => ({ code, message })),
+    ...(artifact.review_targets === undefined ? {} : { review_targets: artifact.review_targets }),
+    ...Object.fromEntries(Object.entries(optionalBlocksSchema.shape).flatMap(([key]) => artifact[key as keyof typeof artifact] === undefined ? [] : [[key, artifact[key as keyof typeof artifact]]])),
+  });
+}
+
 export async function runGenerationV2(snapshotInput: V2SourceSnapshot, provider: V2Provider, options: V2RunOptions = {}): Promise<V2Guide> {
   const snapshot = sourceSnapshotSchema.parse(snapshotInput);
   if (new Set(snapshot.spans.map((span) => span.id)).size !== snapshot.spans.length) throw new Error("DUPLICATE_SOURCE_SPAN_ID");
@@ -173,20 +215,20 @@ export async function runGenerationV2(snapshotInput: V2SourceSnapshot, provider:
   if (snapshot.spans.some((span) => !snapshot.sources.some((source) => source.id === span.source_id))) throw new Error("SPAN_SOURCE_MISMATCH");
   const partitions = partitionV2Snapshot(snapshot);
   const covered = new Set<string>();
-  const artifacts: Array<ReturnType<typeof validateAndCanonicalizeArtifact>> = [];
+  const artifacts: V2Guide["sections"] = [];
   const gaps: V2Guide["coverage"]["gaps"] = snapshot.warnings.map((warning) => ({ code: warning.code, message: warning.message, source_id: warning.source_id, locator: warning.locator === null ? null : { kind: "file" as const, number: warning.locator }, partition_id: null }));
   const language = options.output_language ?? "match_materials";
   const resolvedLanguage = language === "match_materials" ? detectV2Language(snapshot.spans.map((span) => span.text).join("\n")) : language;
   for (const partition of partitions) {
     try {
-      const result = validateAndCanonicalizeArtifact(await provider({ partition, spans: partition.span_ids.map((id) => snapshot.spans.find((span) => span.id === id)!), output_language: resolvedLanguage }), partition, snapshot);
+      const result = canonicalizeV2Artifact(await provider({ partition, spans: partition.span_ids.map((id) => snapshot.spans.find((span) => span.id === id)!), output_language: resolvedLanguage }), partition, snapshot);
       artifacts.push(result); partition.span_ids.forEach((id) => covered.add(id));
     } catch (error) {
       gaps.push({ code: error instanceof Error && error.message === "MODEL_INVALID_SOURCE_REFERENCE" ? "invalid_output" : "provider_transient_exhausted", message: error instanceof Error ? error.message : "Provider artifact failed.", source_id: partition.source_ids[0] ?? null, locator: null, partition_id: partition.id });
     }
   }
   if (!artifacts.length) throw new Error("failed_no_guide");
-  const sections = artifacts.map((artifact) => ({ id: artifact.section_id, title: artifact.title, priority: artifact.priority, focus_reason: artifact.focus_reason, explanation: artifact.explanation, source_refs: artifact.source_refs, gaps: artifact.gaps.map(({ code, message }) => ({ code, message })), ...(artifact.review_targets === undefined ? {} : { review_targets: artifact.review_targets }), ...Object.fromEntries(Object.entries(optionalBlocksSchema.shape).flatMap(([key]) => artifact[key as keyof typeof artifact] === undefined ? [] : [[key, artifact[key as keyof typeof artifact]]])) }));
+  const sections = artifacts;
   const studyMap = sections.map((section) => ({ section_id: section.id, priority: section.priority, why_this_matters: section.focus_reason, source_refs: section.source_refs }));
   const totalUnits = snapshot.sources.reduce((sum, source) => sum + source.unit_count, 0);
   const readableUnits = snapshot.sources.reduce((sum, source) => sum + source.readable_unit_count, 0);
