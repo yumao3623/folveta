@@ -159,6 +159,11 @@ describe("Generation v2 persistence semantics", () => {
     expect(migration).toContain("or (status = 'working' and lease_expires_at <= now())");
     expect(migration).toContain("and lease_expires_at > now()");
     expect(migration).toContain("grant execute on function public.settle_generation_v2_artifact");
+    const repository = readFileSync("lib/server/generation-v2-persistence.ts", "utf8");
+    expect(repository).toContain("create_or_join_generation_v2_request");
+    expect(repository).toContain("claim_generation_v2_artifact");
+    expect(repository).toContain("settle_generation_v2_artifact");
+    expect(repository).toContain("generation_v2_guides");
     expect(migration).toContain("create table public.generation_v2_guides");
     expect(migration).toContain("delivery_status in ('complete', 'complete_with_gaps')");
     expect(migration).not.toContain("add column if not exists generation_v2_request_id");
