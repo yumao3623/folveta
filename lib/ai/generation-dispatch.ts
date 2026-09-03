@@ -19,13 +19,20 @@ function safeError(code: string) {
   return error;
 }
 
+function sqlState(error: unknown) {
+  const code = (error as { code?: unknown } | null)?.code;
+  return typeof code === "string" && /^[0-9A-Z]{5}$/.test(code) ? code : null;
+}
+
 async function rpc(name: string, args: Record<string, unknown>) {
   const client = getSupabaseAdmin() as unknown as { rpc: (fn: string, params: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }> };
   const { data, error } = await client.rpc(name, args);
   if (error) {
     const details = error as { message?: string };
     if (details.message?.includes("billing_quota_exceeded")) throw safeError("BILLING_QUOTA_EXCEEDED");
-    throw safeError(`DB_${name.toUpperCase()}_FAILED`);
+    const code = sqlState(error);
+    console.error(JSON.stringify({ event: "generation_rpc_failed", rpc: name, sqlstate: code }));
+    throw safeError(code ? `DB_${name.toUpperCase()}_FAILED_${code}` : `DB_${name.toUpperCase()}_FAILED`);
   }
   return data as RpcResult;
 }
