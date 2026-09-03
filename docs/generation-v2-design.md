@@ -35,7 +35,7 @@ The key decisions are:
 - Small and medium bounded material use one call. Long and multi-file material use a bounded number of section artifacts. There is no topic-generation plus per-topic grounding graph.
 - Planning is a product output, not a mandatory standalone model stage. For bounded input it is included in the one Guide call. For long input section priorities are produced locally by each section call; one optional synthesis call can improve global ordering.
 - Grounding is enforced by allowed source-span IDs plus deterministic resolution of the canonical source name, locator, and excerpt. Runtime LLM verification is not a delivery gate.
-- Reuse is private and contract-bound: same owner scope, source snapshot, parsing contract, generation contract, artifact kind, partition, and output-language policy. There is no cross-user global content cache.
+- Reuse is private and contract-bound: the same stable preparation-session lineage, source snapshot, parsing contract, generation contract, artifact kind, partition, and output-language policy. The session's current owner controls authorization; anonymous-to-account claim does not alter content identity. There is no cross-user global content cache.
 - Vercel Workflow remains temporarily as one thin, at-least-once job runner. Supabase remains authoritative for request/artifact claims and persistence, but the v1 operation DAG, fencing graph, and per-topic workflow branches are not copied.
 - Existing sources, spans, ownership, `study_guides`, Quick Check, and billing read models are retained. Historical v1 Guides remain readable forever under their existing schema.
 
@@ -222,33 +222,31 @@ Retry is per user-visible artifact, not per workflow. Completed sections are nev
 
 ### Request identity
 
-An idempotency key is derived from:
+Keep four identities separate:
 
-```text
-owner scope (auth user ID, or anonymous session ID)
-+ source snapshot hash
-+ source-role/scope selection
-+ output-language policy
-+ v2 generation contract hash
-```
+- **Content identity:** `source_snapshot_hash` and the source role/order embedded in it. It contains no owner, session, or account value.
+- **Request content key:** source snapshot hash + immutable generation contract hash + output-language policy. It contains no owner and survives an anonymous claim.
+- **Authorization/reuse boundary:** the stable `preparation_sessions.id` lineage that owns the sources and spans. Its active authorization is the parent session's current anonymous token or authenticated user; claim changes only that parent authorization field.
+- **Request row identity:** `session_id + request_content_key`, enforced by a unique constraint.
 
-The first Generate for an active matching key returns the existing request. A browser refresh, second tab, lost response, or page leave only observes that request; it does not create a second reservation or provider call.
+The first Generate for an active or terminal matching key returns the existing request. A browser refresh, second tab, lost response, or page leave only observes that request; it does not create a second reservation or provider call. This initial persistence slice deliberately does not cache across different sessions, even when they later belong to the same account: source/span anchors are session-private and a session lineage is the smallest safe reuse boundary in the current data model.
 
 ### Artifact identity
 
 ```text
-artifact reuse key = SHA-256(
-  owner scope
-  + source snapshot hash
+artifact content key = SHA-256(
+  source snapshot hash
   + v2 contract hash
   + artifact kind
   + deterministic partition key
-  + exact span content hashes
+  + exact ordered span content hashes
   + output-language policy
 )
 ```
 
-The artifact payload is immutable after `complete`. Reuse is limited to the same owner scope (or same anonymous session), so an identical public hash cannot expose one student's derived content to another student. Cache rows are deleted with the source/Guide retention lifecycle; there is no global semantic cache or embedding index.
+The artifact payload is immutable after `complete`. Storage uniqueness is `session_id + artifact content key`; the session is intentionally not part of the content key, but it is the private storage and authorization boundary. This makes the content key stable through anonymous claim while preventing any cross-session or cross-user reuse. Cache rows are deleted with the source/Guide retention lifecycle; there is no global semantic cache or embedding index.
+
+The existing `study_guides` table remains the v1 one-row-per-session aggregate. V2 uses an immutable `generation_v2_guides` snapshot row per v2 request instead of mutating `study_guides`; this preserves v1/v2 coexistence and does not force the v2 delivery shape into the v1 schema.
 
 Reuse is allowed only for validated completed artifacts. A v1 operation result, a different schema version, a different model/prompt contract, a changed parser contract, or a changed source snapshot is not reusable. Reuse consumes no provider attempt and no additional billing unit.
 
@@ -266,9 +264,10 @@ Reuse is allowed only for validated completed artifacts. A v1 operation result, 
 
 The exact SQL names are implementation decisions, but the shape should remain this small:
 
-1. **`generation_v2_requests`**: one logical user request. Stores owner/session, source snapshot, contract hash, idempotency key, manifest/coverage metadata, request status, deadline, one workflow dispatch identity, billing reservation reference, and safe timestamps. It solves duplicate Generate, refresh/resume, partial status, and billing settlement at the user-artifact boundary.
-2. **`generation_v2_artifacts`**: one immutable reusable `guide`, `section`, or optional `synthesis` result. Stores reuse key, artifact kind/partition, allowed span IDs, status, validated result JSON/hash, gap reason, attempt count, bounded lease, and safe telemetry. It solves partial persistence, per-artifact retry, and cross-run reuse without a dependency graph.
-3. **`generation_v2_request_artifacts`**: a narrow join from a request to its manifest artifacts, including order and `required` flag. It solves many-to-many reuse and lets the assembler distinguish a failed required partition from an optional synthesis without copying payloads.
+1. **`generation_v2_requests`**: one logical user request. Stores owner/session lineage, source snapshot, contract hash, idempotency key, manifest/coverage metadata, request status, and safe timestamps. It solves duplicate Generate, refresh/resume, and partial status at the user-artifact boundary.
+2. **`generation_v2_artifacts`**: one immutable reusable `guide`, `section`, or optional `synthesis` result. Stores content key, artifact kind/partition, span identity, status, validated result JSON/hash, gap reason, attempt count, and bounded lease. It solves partial persistence, per-artifact retry, and reuse without a dependency graph.
+3. **`generation_v2_request_artifacts`**: a narrow join from a request to its manifest artifacts, including stable session lineage, order, and `required` flag. Composite session foreign keys prevent cross-session ownership leaks.
+4. **`generation_v2_guides`**: one immutable assembled v2 Guide snapshot per request, with delivery status and the full validated JSON. It is separate from v1 `study_guides` so both schemas coexist without a single-row-per-session conflict.
 
 No v2 queue service, vector store, per-claim verifier table, provider fallback pool, or generalized lease/fencing framework is added. Request/artifact leases are enough to protect at-least-once Workflow execution. Existing v1 tables remain for historical reads and old attempts; they are not used as the v2 state machine.
 

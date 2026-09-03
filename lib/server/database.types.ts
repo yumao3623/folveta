@@ -38,6 +38,27 @@ type GuideRow = {
   title: string; guide_json: Json; validation_warnings: Json; last_accessed_at: string;
   archived_at: string | null; deleted_at: string | null; created_at: string; updated_at: string;
 };
+type GenerationV2RequestRow = {
+  id: string; session_id: string; source_snapshot_hash: string; generation_contract_hash: string;
+  output_language: "match_materials" | "en" | "zh"; request_content_key: string; manifest_json: Json;
+  status: "queued" | "working" | "complete" | "complete_with_gaps" | "failed_no_guide";
+  last_progress_at: string; completed_at: string | null; created_at: string; updated_at: string;
+};
+type GenerationV2GuideRow = {
+  id: string; request_id: string; session_id: string; source_snapshot_hash: string; generation_contract_hash: string;
+  delivery_status: "complete" | "complete_with_gaps"; guide_json: Json; created_at: string; updated_at: string;
+};
+type GenerationV2ArtifactRow = {
+  id: string; session_id: string; source_snapshot_hash: string; generation_contract_hash: string;
+  output_language: "match_materials" | "en" | "zh"; artifact_kind: "guide" | "section" | "synthesis";
+  partition_key: string; artifact_content_key: string; span_identity_json: Json;
+  status: "pending" | "working" | "retry_wait" | "complete" | "gap"; result_json: Json | null; result_hash: string | null;
+  gap_code: string | null; gap_message: string | null; retryable: boolean; attempt_count: number;
+  lease_id: string | null; lease_expires_at: string | null; completed_at: string | null; created_at: string; updated_at: string;
+};
+type GenerationV2RequestArtifactRow = {
+  request_id: string; artifact_id: string; session_id: string; partition_key: string; partition_order: number; required: boolean; created_at: string;
+};
 type QuickCheckRow = {
   id: string; session_id: string; guide_id: string; guide_checksum: string; schema_version: string;
   prompt_version: string; requested_question_count: number; question_count: number;
@@ -139,6 +160,27 @@ export type Database = {
         title?: string; guide_json: Json; validation_warnings?: Json; last_accessed_at?: string;
         archived_at?: string | null; deleted_at?: string | null; created_at?: string; updated_at?: string;
       }>;
+      generation_v2_requests: Table<GenerationV2RequestRow, {
+        id?: string; session_id: string; source_snapshot_hash: string; generation_contract_hash: string;
+        output_language: "match_materials" | "en" | "zh"; request_content_key: string; manifest_json: Json;
+        status?: "queued" | "working" | "complete" | "complete_with_gaps" | "failed_no_guide";
+        last_progress_at?: string; completed_at?: string | null; created_at?: string; updated_at?: string;
+      }>;
+      generation_v2_guides: Table<GenerationV2GuideRow, {
+        id?: string; request_id: string; session_id: string; source_snapshot_hash: string; generation_contract_hash: string;
+        delivery_status: "complete" | "complete_with_gaps"; guide_json: Json; created_at?: string; updated_at?: string;
+      }>;
+      generation_v2_artifacts: Table<GenerationV2ArtifactRow, {
+        id?: string; session_id: string; source_snapshot_hash: string; generation_contract_hash: string;
+        output_language: "match_materials" | "en" | "zh"; artifact_kind: "guide" | "section" | "synthesis";
+        partition_key: string; artifact_content_key: string; span_identity_json: Json;
+        status?: "pending" | "working" | "retry_wait" | "complete" | "gap"; result_json?: Json | null; result_hash?: string | null;
+        gap_code?: string | null; gap_message?: string | null; retryable?: boolean; attempt_count?: number;
+        lease_id?: string | null; lease_expires_at?: string | null; completed_at?: string | null; created_at?: string; updated_at?: string;
+      }>;
+      generation_v2_request_artifacts: Table<GenerationV2RequestArtifactRow, {
+        request_id: string; artifact_id: string; session_id: string; partition_key: string; partition_order: number; required?: boolean; created_at?: string;
+      }>;
       quick_checks: Table<QuickCheckRow, {
         id: string; session_id: string; guide_id: string; guide_checksum: string; schema_version: string;
         prompt_version: string; requested_question_count: number; question_count: number;
@@ -194,6 +236,9 @@ export type Database = {
       settle_generation_operation_success: { Args: Record<string, unknown>; Returns: Json };
       settle_generation_operation_retry_or_fail: { Args: Record<string, unknown>; Returns: Json };
       finalize_generation_execution: { Args: Record<string, unknown>; Returns: Json };
+      create_or_join_generation_v2_request: { Args: { p_session_id: string; p_source_snapshot_hash: string; p_generation_contract_hash: string; p_output_language: "match_materials" | "en" | "zh"; p_request_content_key: string; p_manifest_json: Json }; Returns: GenerationV2RequestRow };
+      claim_generation_v2_artifact: { Args: { p_artifact_id: string; p_lease_id: string; p_lease_seconds?: number }; Returns: GenerationV2ArtifactRow };
+      settle_generation_v2_artifact: { Args: { p_artifact_id: string; p_lease_id: string; p_status: "complete" | "retry_wait" | "gap"; p_result_json?: Json | null; p_result_hash?: string | null; p_gap_code?: string | null; p_gap_message?: string | null; p_retryable?: boolean }; Returns: GenerationV2ArtifactRow };
       get_generation_execution_status: { Args: { p_generation_run_id: string }; Returns: Json };
       get_generation_operation_context: { Args: { p_generation_run_id: string; p_operation_key: string }; Returns: Json };
       billing_usage_summary: { Args: { p_user_id: string; p_billing_environment: "sandbox" | "live" }; Returns: Json };
