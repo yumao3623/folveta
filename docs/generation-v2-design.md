@@ -109,7 +109,7 @@ Section (required)
   explanation[]
   source_refs[]
   gaps[]
-  review_targets[]
+  review_targets[] (optional)
 
 Optional section blocks
   key_concepts[]
@@ -119,7 +119,7 @@ Optional section blocks
   practice_prompts[]
 ```
 
-Required content is identity, priority rationale, an understandable explanation, provenance, and a review target. Optional blocks are emitted only when the source supports them. Their absence is not a model failure. A definition, process, or confusion may instead be represented as an explicit gap such as "No definition was present in the supplied material."
+Required content is identity, priority rationale, an understandable explanation, and provenance. `review_targets` and the other optional blocks are emitted when supported, but their absence does not block delivery. A definition, process, confusion, or review target may instead be represented as an explicit optional gap such as "No definition was present in the supplied material."
 
 Claim IDs remain stable within a snapshot and section. The server, not the model, constructs `source_refs` from span IDs; model-supplied source names, locators, and excerpts are ignored. A claim marked `unsupported_gap` has no reference and cannot appear in the explanatory body.
 
