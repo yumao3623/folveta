@@ -45,6 +45,37 @@ export type StructuredResult<T> = {
   parseMode: "parsed" | "text_fallback";
 };
 
+export type ProviderErrorClass =
+  | "http"
+  | "sdk_timeout"
+  | "sdk_connection"
+  | "abort"
+  | "transport"
+  | "unknown_internal";
+
+export type ProviderErrorCode =
+  | "HTTP_408"
+  | "HTTP_429"
+  | "HTTP_5XX"
+  | "HTTP_4XX"
+  | "SDK_API_CONNECTION_TIMEOUT"
+  | "SDK_API_CONNECTION"
+  | "SDK_API_USER_ABORT"
+  | "TIMEOUT_ERROR"
+  | "ABORT_ERROR"
+  | "CONNECTION_ERROR"
+  | "ETIMEDOUT"
+  | "ECONNRESET"
+  | "ECONNREFUSED"
+  | "EAI_AGAIN"
+  | "ENETUNREACH"
+  | "EHOSTUNREACH"
+  | "ENOTFOUND"
+  | "UND_ERR_CONNECT_TIMEOUT"
+  | "UND_ERR_HEADERS_TIMEOUT"
+  | "UND_ERR_BODY_TIMEOUT"
+  | "UND_ERR_SOCKET";
+
 export type ModelResponseDiagnostics = {
   provider: "openai";
   model: string;
@@ -61,6 +92,8 @@ export type ModelResponseDiagnostics = {
   usage: Record<string, number> | null;
   parseResult: "parsed" | "text_fallback" | "empty" | "invalid_json" | "schema_invalid" | "refusal" | "incomplete";
   durationMs: number;
+  providerErrorClass: ProviderErrorClass | null;
+  providerErrorCode: ProviderErrorCode | null;
 };
 
 export const MODEL_TIMEOUT_MS = 180_000;
@@ -97,6 +130,8 @@ export class SafeProviderError extends Error {
     public readonly providerRequestId: string | null = null,
     public readonly retryReason: ProviderRetryReason | null = null,
     public readonly deadlineExceeded = false,
+    public readonly providerErrorClass: ProviderErrorClass | null = null,
+    public readonly providerErrorCode: ProviderErrorCode | null = null,
   ) {
     super(code);
     this.name = "SafeProviderError";
@@ -111,7 +146,14 @@ function numericUsage(usage: unknown) {
 
 export function responseDiagnostics(
   response: unknown,
-  input: { provider: "openai"; model: string; durationMs: number; parseResult: ModelResponseDiagnostics["parseResult"] },
+  input: {
+    provider: "openai";
+    model: string;
+    durationMs: number;
+    parseResult: ModelResponseDiagnostics["parseResult"];
+    providerErrorClass?: ProviderErrorClass | null;
+    providerErrorCode?: ProviderErrorCode | null;
+  },
 ): ModelResponseDiagnostics {
   const value = response && typeof response === "object" ? response as Record<string, unknown> : {};
   const output = Array.isArray(value.output) ? value.output : null;
@@ -140,6 +182,8 @@ export function responseDiagnostics(
     usage: numericUsage(value.usage),
     parseResult: input.parseResult,
     durationMs: input.durationMs,
+    providerErrorClass: input.providerErrorClass ?? null,
+    providerErrorCode: input.providerErrorCode ?? null,
   };
 }
 
@@ -152,6 +196,8 @@ export function privacySafeDiagnostics(diagnostics: ModelResponseDiagnostics) {
     providerStatus: diagnostics.httpStatus,
     requestId: diagnostics.requestId,
     duration: diagnostics.durationMs,
+    providerErrorClass: diagnostics.providerErrorClass,
+    providerErrorCode: diagnostics.providerErrorCode,
   };
 }
 
@@ -204,24 +250,122 @@ export function validateProviderEnvelope(input: {
   return response;
 }
 
-function safeProviderError(error: unknown): SafeProviderError {
+const transportCodes = new Set<ProviderErrorCode>([
+  "ETIMEDOUT",
+  "ECONNRESET",
+  "ECONNREFUSED",
+  "EAI_AGAIN",
+  "ENETUNREACH",
+  "EHOSTUNREACH",
+  "ENOTFOUND",
+  "UND_ERR_CONNECT_TIMEOUT",
+  "UND_ERR_HEADERS_TIMEOUT",
+  "UND_ERR_BODY_TIMEOUT",
+  "UND_ERR_SOCKET",
+]);
+
+const timeoutCodes = new Set<ProviderErrorCode>([
+  "ETIMEDOUT",
+  "UND_ERR_CONNECT_TIMEOUT",
+  "UND_ERR_HEADERS_TIMEOUT",
+  "UND_ERR_BODY_TIMEOUT",
+]);
+
+function providerErrorCode(error: unknown): ProviderErrorCode | null {
+  let current = error;
+  for (let depth = 0; depth < 4 && current && typeof current === "object"; depth += 1) {
+    const code = (current as { code?: unknown }).code;
+    if (typeof code === "string" && transportCodes.has(code as ProviderErrorCode)) {
+      return code as ProviderErrorCode;
+    }
+    current = (current as { cause?: unknown }).cause;
+  }
+  return null;
+}
+
+function makeSafeProviderError(
+  code: string,
+  category: ProviderFailureCategory,
+  retryable: boolean,
+  status: number | null,
+  requestId: string | null,
+  retryReason: ProviderRetryReason,
+  deadlineExceeded: boolean,
+  errorClass: ProviderErrorClass,
+  errorCode: ProviderErrorCode | null,
+) {
+  return new SafeProviderError(
+    code,
+    category,
+    retryable,
+    status,
+    requestId,
+    retryReason,
+    deadlineExceeded,
+    errorClass,
+    errorCode,
+  );
+}
+
+export function classifyProviderError(error: unknown): SafeProviderError {
+  if (error instanceof SafeProviderError) return error;
   const status = error && typeof error === "object" && typeof (error as { status?: unknown }).status === "number" ? (error as { status: number }).status : null;
   const requestId = error && typeof error === "object"
     ? boundedRequestId((error as { request_id?: unknown; requestID?: unknown }).request_id ?? (error as { requestID?: unknown }).requestID)
     : null;
   if (status === 408) {
-    return new SafeProviderError("MODEL_PROVIDER_TIMEOUT", "provider_transient", true, status, requestId, "timeout", true);
+    return makeSafeProviderError("MODEL_PROVIDER_TIMEOUT", "provider_transient", true, status, requestId, "timeout", true, "http", "HTTP_408");
   }
   if (status === 429) {
-    return new SafeProviderError("MODEL_PROVIDER_RATE_LIMITED", "provider_transient", true, status, requestId, "rate_limited");
+    return makeSafeProviderError("MODEL_PROVIDER_RATE_LIMITED", "provider_transient", true, status, requestId, "rate_limited", false, "http", "HTTP_429");
   }
-  if (status !== null && [500, 502, 503, 504].includes(status)) {
-    return new SafeProviderError("MODEL_PROVIDER_TRANSIENT", "provider_transient", true, status, requestId, "provider_unavailable");
+  if (status !== null && status >= 500 && status <= 599) {
+    return makeSafeProviderError("MODEL_PROVIDER_TRANSIENT", "provider_transient", true, status, requestId, "provider_unavailable", false, "http", "HTTP_5XX");
+  }
+  if (status !== null && status >= 400 && status <= 499) {
+    return makeSafeProviderError("MODEL_PROVIDER_FAILURE", "provider_unavailable", false, status, requestId, "non_retryable", false, "http", "HTTP_4XX");
+  }
+  if (error instanceof OpenAI.APIConnectionTimeoutError) {
+    return makeSafeProviderError("MODEL_PROVIDER_TIMEOUT", "provider_transient", true, status, requestId, "timeout", true, "sdk_timeout", "SDK_API_CONNECTION_TIMEOUT");
+  }
+  if (error instanceof OpenAI.APIConnectionError) {
+    const causeCode = providerErrorCode(error);
+    const timeout = causeCode !== null && timeoutCodes.has(causeCode);
+    return makeSafeProviderError(
+      timeout ? "MODEL_PROVIDER_TIMEOUT" : "MODEL_PROVIDER_CONNECTION",
+      "provider_transient",
+      true,
+      status,
+      requestId,
+      timeout ? "timeout" : "connection",
+      timeout,
+      "sdk_connection",
+      causeCode ?? "SDK_API_CONNECTION",
+    );
+  }
+  if (error instanceof OpenAI.APIUserAbortError) {
+    return makeSafeProviderError("MODEL_PROVIDER_ABORTED", "provider_unavailable", false, status, requestId, "non_retryable", false, "abort", "SDK_API_USER_ABORT");
+  }
+  const causeCode = providerErrorCode(error);
+  if (causeCode) {
+    const timeout = timeoutCodes.has(causeCode);
+    return makeSafeProviderError(
+      timeout ? "MODEL_PROVIDER_TIMEOUT" : "MODEL_PROVIDER_CONNECTION",
+      "provider_transient",
+      true,
+      status,
+      requestId,
+      timeout ? "timeout" : "connection",
+      timeout,
+      "transport",
+      causeCode,
+    );
   }
   const name = error && typeof error === "object" && typeof (error as { name?: unknown }).name === "string" ? (error as { name: string }).name : "";
-  if (/timeout/i.test(name)) return new SafeProviderError("MODEL_PROVIDER_TIMEOUT", "provider_transient", true, status, requestId, "timeout", true);
-  if (/connection|network|fetch/i.test(name)) return new SafeProviderError("MODEL_PROVIDER_CONNECTION", "provider_transient", true, status, requestId, "connection");
-  return new SafeProviderError("MODEL_PROVIDER_FAILURE", "provider_unavailable", false, status, requestId, "non_retryable");
+  if (/timeout/i.test(name)) return makeSafeProviderError("MODEL_PROVIDER_TIMEOUT", "provider_transient", true, status, requestId, "timeout", true, "transport", "TIMEOUT_ERROR");
+  if (name === "AbortError") return makeSafeProviderError("MODEL_PROVIDER_TIMEOUT", "provider_transient", true, status, requestId, "timeout", true, "abort", "ABORT_ERROR");
+  if (/connection|network|fetch/i.test(name)) return makeSafeProviderError("MODEL_PROVIDER_CONNECTION", "provider_transient", true, status, requestId, "connection", false, "transport", "CONNECTION_ERROR");
+  return makeSafeProviderError("MODEL_PROVIDER_FAILURE", "provider_unavailable", false, status, requestId, "non_retryable", false, "unknown_internal", null);
 }
 
 function incompleteProviderError(reason: string | null, status: number | null, requestId: string | null) {
@@ -335,10 +479,18 @@ export class ModelGateway {
         parsed.kind === "invalid_json" ? "protocol_error" : "schema_invalid",
       );
     } catch (error) {
+      const safe = classifyProviderError(error);
       if (!(error instanceof SafeProviderError)) {
-        logDiagnostics(responseDiagnostics(error, { provider: "openai", model: configuredModel, durationMs: Date.now() - startedAt, parseResult: "empty" }));
+        logDiagnostics(responseDiagnostics(error, {
+          provider: "openai",
+          model: configuredModel,
+          durationMs: Date.now() - startedAt,
+          parseResult: "empty",
+          providerErrorClass: safe.providerErrorClass,
+          providerErrorCode: safe.providerErrorCode,
+        }));
       }
-      throw error instanceof SafeProviderError ? error : safeProviderError(error);
+      throw safe;
     }
   }
 }

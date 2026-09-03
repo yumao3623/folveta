@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
+import OpenAI from "openai";
 import { AppError } from "@/lib/server/http";
-import { isRetryableModelError, parseStructuredText, privacySafeDiagnostics, responseDiagnostics, SafeProviderError, validateProviderEnvelope } from "@/lib/ai/gateway";
+import { classifyProviderError, isRetryableModelError, parseStructuredText, privacySafeDiagnostics, responseDiagnostics, SafeProviderError, validateProviderEnvelope } from "@/lib/ai/gateway";
 import { z } from "zod";
 
 const schema = z.object({ value: z.string().min(1) }).strict();
@@ -29,6 +30,40 @@ describe("AI gateway reliability contracts", () => {
     expect(error.message).toBe("MODEL_PROVIDER_TRANSIENT");
     expect(error).not.toHaveProperty("cause");
     expect(JSON.stringify(error)).not.toContain("private");
+  });
+
+  it("classifies OpenAI SDK and native transport failures without widening unknown errors", () => {
+    const connection = classifyProviderError(new OpenAI.APIConnectionError({
+      cause: Object.assign(new Error("private transport detail"), { code: "ECONNRESET" }),
+    }));
+    expect(connection).toMatchObject({
+      code: "MODEL_PROVIDER_CONNECTION",
+      retryable: true,
+      retryReason: "connection",
+      providerErrorClass: "sdk_connection",
+      providerErrorCode: "ECONNRESET",
+    });
+
+    const timeout = classifyProviderError(new OpenAI.APIConnectionTimeoutError());
+    expect(timeout).toMatchObject({
+      code: "MODEL_PROVIDER_TIMEOUT",
+      retryable: true,
+      retryReason: "timeout",
+      providerErrorClass: "sdk_timeout",
+      providerErrorCode: "SDK_API_CONNECTION_TIMEOUT",
+    });
+
+    const undiciTimeout = classifyProviderError(Object.assign(new Error("private timeout detail"), { cause: { code: "UND_ERR_HEADERS_TIMEOUT" } }));
+    expect(undiciTimeout).toMatchObject({ retryable: true, providerErrorClass: "transport", providerErrorCode: "UND_ERR_HEADERS_TIMEOUT" });
+    expect(classifyProviderError(new Error("private programming detail"))).toMatchObject({ retryable: false, providerErrorClass: "unknown_internal" });
+  });
+
+  it("keeps HTTP retry and client-error classifications bounded", () => {
+    for (const status of [408, 429, 500, 501, 503]) {
+      expect(classifyProviderError(Object.assign(new Error("private"), { status })).retryable).toBe(true);
+    }
+    expect(classifyProviderError(Object.assign(new Error("private"), { status: 400 })).retryable).toBe(false);
+    expect(classifyProviderError(Object.assign(new Error("private"), { status: 404 })).retryable).toBe(false);
   });
 
   it("rejects invalid content types, response shapes, and model identities without retrying", () => {
@@ -69,6 +104,30 @@ describe("AI gateway reliability contracts", () => {
       providerStatus: 503,
       requestId: "gateway-request-id",
       duration: 850,
+      providerErrorClass: null,
+      providerErrorCode: null,
     });
+  });
+
+  it("adds only allowlisted provider classification to diagnostics", () => {
+    const error = classifyProviderError(new OpenAI.APIConnectionError({
+      cause: Object.assign(new Error("private source and endpoint"), { code: "EAI_AGAIN" }),
+    }));
+    const diagnostics = responseDiagnostics({ name: "private source and endpoint" }, {
+      provider: "openai",
+      model: "gpt-5.6-sol",
+      durationMs: 55_000,
+      parseResult: "empty",
+      providerErrorClass: error.providerErrorClass,
+      providerErrorCode: error.providerErrorCode,
+    });
+    expect(privacySafeDiagnostics(diagnostics)).toEqual({
+      providerStatus: null,
+      requestId: null,
+      duration: 55_000,
+      providerErrorClass: "sdk_connection",
+      providerErrorCode: "EAI_AGAIN",
+    });
+    expect(JSON.stringify(privacySafeDiagnostics(diagnostics))).not.toContain("private source");
   });
 });

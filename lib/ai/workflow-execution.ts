@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 import { getServerEnv } from "@/lib/env";
 import { executionContract, PROVIDER_DEADLINES_MS } from "@/lib/ai/generation-contract";
-import { ModelGateway, SafeProviderError } from "@/lib/ai/gateway";
+import { classifyProviderError, ModelGateway, SafeProviderError } from "@/lib/ai/gateway";
 import {
   groundingVerdictsSchema,
   mergedTopicsSchema,
@@ -290,7 +290,7 @@ export async function executeProviderOperation(generationRunId: string, operatio
     });
     return settled.status === "succeeded" ? { status: "completed", resultHash: String(settled.resultHash) } : { status: "terminal" };
   } catch (error) {
-    const safe = error instanceof SafeProviderError ? error : new SafeProviderError("MODEL_PROVIDER_FAILURE", "provider_unavailable", false);
+    const safe = classifyProviderError(error);
     const category = safe.category === "provider_refusal" ? "model_refusal" : safe.category === "execution_contract" ? "invalid_output" : safe.category;
     const settled = await rpc("settle_generation_operation_retry_or_fail", {
       p_generation_run_id: generationRunId,
