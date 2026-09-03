@@ -54,7 +54,7 @@ type GenerationV2ArtifactRow = {
   partition_key: string; artifact_content_key: string; span_identity_json: Json;
   status: "pending" | "working" | "retry_wait" | "complete" | "gap"; result_json: Json | null; result_hash: string | null;
   gap_code: string | null; gap_message: string | null; retryable: boolean; attempt_count: number;
-  lease_id: string | null; lease_expires_at: string | null; completed_at: string | null; created_at: string; updated_at: string;
+  retry_at: string | null; lease_id: string | null; lease_expires_at: string | null; completed_at: string | null; created_at: string; updated_at: string;
 };
 type GenerationV2RequestArtifactRow = {
   request_id: string; artifact_id: string; session_id: string; partition_key: string; partition_order: number; required: boolean; created_at: string;
@@ -176,7 +176,7 @@ export type Database = {
         partition_key: string; artifact_content_key: string; span_identity_json: Json;
         status?: "pending" | "working" | "retry_wait" | "complete" | "gap"; result_json?: Json | null; result_hash?: string | null;
         gap_code?: string | null; gap_message?: string | null; retryable?: boolean; attempt_count?: number;
-        lease_id?: string | null; lease_expires_at?: string | null; completed_at?: string | null; created_at?: string; updated_at?: string;
+        retry_at?: string | null; lease_id?: string | null; lease_expires_at?: string | null; completed_at?: string | null; created_at?: string; updated_at?: string;
       }>;
       generation_v2_request_artifacts: Table<GenerationV2RequestArtifactRow, {
         request_id: string; artifact_id: string; session_id: string; partition_key: string; partition_order: number; required?: boolean; created_at?: string;
@@ -238,7 +238,8 @@ export type Database = {
       finalize_generation_execution: { Args: Record<string, unknown>; Returns: Json };
       create_or_join_generation_v2_request: { Args: { p_session_id: string; p_source_snapshot_hash: string; p_generation_contract_hash: string; p_output_language: "match_materials" | "en" | "zh"; p_request_content_key: string; p_manifest_json: Json }; Returns: GenerationV2RequestRow };
       claim_generation_v2_artifact: { Args: { p_artifact_id: string; p_lease_id: string; p_lease_seconds?: number }; Returns: GenerationV2ArtifactRow };
-      settle_generation_v2_artifact: { Args: { p_artifact_id: string; p_lease_id: string; p_status: "complete" | "retry_wait" | "gap"; p_result_json?: Json | null; p_result_hash?: string | null; p_gap_code?: string | null; p_gap_message?: string | null; p_retryable?: boolean }; Returns: GenerationV2ArtifactRow };
+      settle_generation_v2_artifact: { Args: { p_artifact_id: string; p_lease_id: string; p_status: "complete" | "retry_wait" | "gap"; p_result_json?: Json | null; p_result_hash?: string | null; p_gap_code?: string | null; p_gap_message?: string | null; p_retryable?: boolean; p_retry_after_seconds?: number }; Returns: GenerationV2ArtifactRow };
+      assemble_generation_v2_request: { Args: { p_request_id: string; p_delivery_status: "complete" | "complete_with_gaps" | "failed_no_guide"; p_guide_json?: Json | null }; Returns: GenerationV2RequestRow };
       get_generation_execution_status: { Args: { p_generation_run_id: string }; Returns: Json };
       get_generation_operation_context: { Args: { p_generation_run_id: string; p_operation_key: string }; Returns: Json };
       billing_usage_summary: { Args: { p_user_id: string; p_billing_environment: "sandbox" | "live" }; Returns: Json };

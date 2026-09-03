@@ -1,6 +1,6 @@
 # Folveta Generation v2 Design
 
-**Status: design only.** This document authorizes no production, database, UI, provider, or workflow change. It is the implementation contract for a later, separately approved task.
+**Status: Slice 1-4 implementation contract and record.** Generation v2 remains internal/development-only; this document authorizes no production routing, UI rollout, or billing change.
 
 ## 1. Decision summary
 
@@ -412,7 +412,7 @@ The first slice should be deliberately narrow:
 
 **Slice 3: provider integration (development/test only).** Route internal fixtures through a thin provider adapter backed by `ModelGateway`; claim an artifact before its provider call, validate and canonicalize its structured result, then settle that same artifact. The adapter has no v1 DAG, route, Workflow, billing, or UI integration. It verifies live Responses Structured Output compatibility against English, Chinese, and mixed fixtures and uses controlled failures for recovery semantics.
 
-**Slice 4: long/multi-file path.** Add bounded section concurrency, optional non-gating synthesis, parser-gap display, and reuse tests.
+**Slice 4: runtime integration.** Add an internal-only entry, a thin server-owned request runner, artifact retry wakeup, terminal snapshot assembly, and runtime/read-model validation. It does not route production traffic or change the formal user UI.
 
 **Slice 5: controlled production cohort.** Enable allowlisted sessions, verify the gates and telemetry, then increase rollout only through an explicit release decision.
 
@@ -445,6 +445,16 @@ The provider-facing schema represents logical optional blocks as required nullab
 
 The executor is intentionally a development/test integration surface. It uses the Slice 2 request/artifact lease state to prove claim-before-call, immediate settlement, replay safety, stale-lease rejection, and `complete` / `complete_with_gaps` / `failed_no_guide` assembly. The lease is 210 seconds: it preserves time to record a result at the existing 180-second request boundary plus bounded settlement overhead. This followed a development gateway 524 observed after 125.2 seconds, which demonstrated that the old 120-second lease could expire before a retryable result was settled. The provider timeout remains 180 seconds pending a larger private latency sample. It does not authorize production generation, create a Vercel Workflow v2 runner, route HTTP traffic, or settle billing.
 
-## 20. Final recommendation
+## 20. Slice 4 runtime integration decision
+
+Slice 4 retains Vercel Workflow only as a thin, at-least-once wakeup shell. The internal `generation-v2` entry is gated by `GENERATION_V2_RUNTIME_ENABLED` (default false), requires an owned session, and creates or joins the canonical request before starting the Workflow. It does not alter `/generate`, `/status`, the v1 Workflow, formal UI, or Paddle.
+
+Each Workflow turn runs one server-side request-runner step. The step reads the request and artifact rows from Supabase, claims at most one eligible artifact with the existing 210-second lease, invokes the Slice 3 provider, and durably settles that artifact. A retryable settlement records `retry_at`; the Workflow sleeps until the persisted retry or active-lease expiry, then re-enters. No Workflow-local business state, DAG, dispatch epoch, shared retry credit, or acknowledgement layer is introduced.
+
+The assembly RPC locks the request, verifies every required artifact is terminal, derives `complete`, `complete_with_gaps`, or `failed_no_guide` from durable artifact facts, and inserts at most one immutable Guide snapshot. `complete_with_gaps` is therefore a delivery result, while `failed_no_guide` writes no Guide. The internal status projection exposes only `preparing`, `generating`, `ready`, `ready_with_gaps`, or `unable_to_generate`, together with completed/total/gap counts; it does not project leases or retry mechanics as user-facing states.
+
+Runtime logs contain only request ID, artifact status counts, persisted/provider attempt counts, duration, runner outcome, and final status. The first terminal transition to `complete` or `complete_with_gaps` remains the future idempotent billing-success candidate boundary; Slice 4 emits no Paddle event or billing mutation.
+
+## 21. Final recommendation
 
 Implement Generation v2 as a small, owner-scoped, artifact-persisting engine behind a feature flag. Preserve the proven ingestion, ownership, Guide storage, Quick Check, billing concepts, and thin Workflow shell. Remove the v1 assumption that every internal operation must succeed before a student can see anything. The first code should prove the contract and artifact boundaries offline; only then should persistence, Workflow routing, and controlled production migration begin.

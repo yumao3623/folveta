@@ -17,6 +17,7 @@ const serverEnvSchema = z.object({
   MODEL_CONTEXT_WINDOW_TOKENS: z.coerce.number().int().positive().default(128_000),
   GATEWAY_MAX_INPUT_TOKENS: z.coerce.number().int().positive().default(80_000),
   AI_GENERATION_WORKFLOW_ENABLED: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
+  GENERATION_V2_RUNTIME_ENABLED: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
   CRON_SECRET: z.preprocess(
     (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
     z.string().min(32).optional(),

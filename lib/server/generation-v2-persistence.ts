@@ -50,7 +50,7 @@ export async function claimGenerationV2Artifact(artifactId: string, leaseId: str
   return data;
 }
 
-export async function settleGenerationV2Artifact(input: { artifactId: string; leaseId: string; status: "complete" | "retry_wait" | "gap"; result?: V2ArtifactResult; resultHash?: string; gapCode?: string; gapMessage?: string; retryable?: boolean }) {
+export async function settleGenerationV2Artifact(input: { artifactId: string; leaseId: string; status: "complete" | "retry_wait" | "gap"; result?: V2ArtifactResult; resultHash?: string; gapCode?: string; gapMessage?: string; retryable?: boolean; retryAfterSeconds?: number }) {
   const { data, error } = await getSupabaseAdmin().rpc("settle_generation_v2_artifact", {
     p_artifact_id: input.artifactId,
     p_lease_id: input.leaseId,
@@ -60,6 +60,45 @@ export async function settleGenerationV2Artifact(input: { artifactId: string; le
     p_gap_code: input.gapCode ?? null,
     p_gap_message: input.gapMessage ?? null,
     p_retryable: input.retryable ?? false,
+    p_retry_after_seconds: input.retryAfterSeconds ?? 1,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function readGenerationV2Request(requestId: string) {
+  const { data, error } = await getSupabaseAdmin().from("generation_v2_requests").select("*").eq("id", requestId).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function markGenerationV2RequestWorking(requestId: string) {
+  const { data, error } = await getSupabaseAdmin()
+    .from("generation_v2_requests")
+    .update({ status: "working", last_progress_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq("id", requestId)
+    .eq("status", "queued")
+    .select()
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function readGenerationV2Artifacts(requestId: string) {
+  const { data, error } = await getSupabaseAdmin()
+    .from("generation_v2_request_artifacts")
+    .select("request_id, artifact_id, session_id, partition_key, partition_order, required, generation_v2_artifacts(*)")
+    .eq("request_id", requestId)
+    .order("partition_order");
+  if (error) throw error;
+  return (data ?? []).map((row) => ({ ...row, artifact: Array.isArray(row.generation_v2_artifacts) ? row.generation_v2_artifacts[0] : row.generation_v2_artifacts }));
+}
+
+export async function assembleGenerationV2Request(input: { requestId: string; deliveryStatus: "complete" | "complete_with_gaps" | "failed_no_guide"; guide?: Json | null }) {
+  const { data, error } = await getSupabaseAdmin().rpc("assemble_generation_v2_request", {
+    p_request_id: input.requestId,
+    p_delivery_status: input.deliveryStatus,
+    p_guide_json: input.guide ?? null,
   });
   if (error) throw error;
   return data;

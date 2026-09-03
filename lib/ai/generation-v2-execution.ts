@@ -22,6 +22,7 @@ export function v2ManifestForSnapshot(snapshot: V2SourceSnapshot) {
     partitionKey: partitions.length === 1 ? "guide" : partition.id,
     partitionOrder: index,
     required: true,
+    spanIds: partition.span_ids,
     spanContentHashes: partition.span_ids.map((id) => snapshot.spans.find((span) => span.id === id)!.content_hash),
   }));
 }

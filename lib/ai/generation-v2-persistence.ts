@@ -13,7 +13,7 @@ export type V2RequestInput = {
   sourceSnapshotHash: string;
   generationContractHash: string;
   outputLanguage: V2OutputLanguage;
-  manifest: Array<{ partitionKey: string; partitionOrder: number; required: boolean; spanContentHashes: string[] }>;
+  manifest: Array<{ partitionKey: string; partitionOrder: number; required: boolean; spanContentHashes: string[]; spanIds?: string[] }>;
 };
 
 export type V2PersistedRequest = V2RequestInput & {
