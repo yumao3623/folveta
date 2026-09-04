@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, FileCheck2, FileText, Presentation } from "lucide-react";
 import { GenerationPanel } from "@/components/generation-panel";
 import { GuideWorkspace } from "@/components/guide-workspace";
+import { V2GuideWorkspace } from "@/components/v2-guide-workspace";
 import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/feedback";
 import { IconFrame } from "@/components/ui/icon-frame";
@@ -10,6 +11,8 @@ import { buttonClassName } from "@/components/ui/styles";
 import { guideSchema } from "@/lib/schemas";
 import { requireOwnedSession } from "@/lib/server/auth";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
+import { getServerEnv } from "@/lib/env";
+import { v2GuideSchema } from "@/lib/ai/generation-v2";
 
 const statusLabels: Record<string, string> = {
   uploading: "Uploading",
@@ -27,6 +30,28 @@ export default async function StudyWorkspacePage({ params, searchParams }: PageP
   const session = await requireOwnedSession(sessionId);
   if (!session) notFound();
   const admin = getSupabaseAdmin();
+  const env = getServerEnv();
+  if (env.GENERATION_V2_RUNTIME_ENABLED && env.GENERATION_V2_PRODUCT_ENABLED) {
+    const { data: request, error: requestError } = await admin
+      .from("generation_v2_requests")
+      .select("id, status")
+      .eq("session_id", sessionId)
+      .in("status", ["complete", "complete_with_gaps"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (requestError) throw requestError;
+    if (request) {
+      const { data: guideRow, error: guideError } = await admin
+        .from("generation_v2_guides")
+        .select("guide_json")
+        .eq("session_id", sessionId)
+        .eq("request_id", request.id)
+        .maybeSingle();
+      if (guideError) throw guideError;
+      if (guideRow) return <V2GuideWorkspace guide={v2GuideSchema.parse(guideRow.guide_json)} displayTitle={session.title} />;
+    }
+  }
   const [{ data: sources, error: sourcesError }, { data: guideRow, error: guideError }] = await Promise.all([
     admin.from("sources").select("id, display_name, kind, status, unit_count, readable_unit_count, warnings, error_code, error_message").eq("session_id", sessionId).order("created_at"),
     admin.from("study_guides").select("guide_json, title").eq("session_id", sessionId).is("deleted_at", null).maybeSingle(),

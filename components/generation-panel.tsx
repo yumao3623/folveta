@@ -17,7 +17,7 @@ const stageLabels: Record<string, string> = {
   finalizing: "Finishing your Study Guide",
 };
 
-const activeStatuses = new Set(["queued", "running", "retrying"]);
+const activeStatuses = new Set(["queued", "running", "retrying", "preparing", "generating"]);
 
 export type GenerationSnapshot = {
   run_id: string | null;
@@ -177,7 +177,7 @@ export function GenerationPanel({
     }
   }, [poll, sessionId]);
 
-  const failed = generation?.status === "failed" || ["failed_retryable", "failed_terminal"].includes(state);
+  const failed = generation?.status === "failed" || generation?.status === "unable_to_generate" || ["failed_retryable", "failed_terminal"].includes(state);
   const retryAllowed = generation?.retry_allowed ?? state === "failed_retryable";
   const buttonDisabled = !canGenerate || generating || (failed && !retryAllowed);
 

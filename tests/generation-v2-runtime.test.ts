@@ -17,12 +17,14 @@ describe("Generation v2 runtime contract", () => {
     expect(v2ReadModelStatus("failed_no_guide", [])).toBe("unable_to_generate");
   });
 
-  it("keeps the v2 runtime isolated from the production entry and v1 DAG", () => {
+  it("keeps v2 workflow execution separate from the v1 DAG", () => {
     const route = readFileSync("app/api/internal/generation-v2/route.ts", "utf8");
     expect(route).toContain("GENERATION_V2_RUNTIME_ENABLED");
     expect(route).toContain("generateStudyGuideV2Workflow");
     expect(route).not.toContain("/api/sessions/");
-    expect(readFileSync("app/api/sessions/[sessionId]/generate/route.ts", "utf8")).not.toContain("generation-v2");
+    const productRoute = readFileSync("app/api/sessions/[sessionId]/generate/route.ts", "utf8");
+    expect(productRoute).toContain("GENERATION_V2_PRODUCT_ENABLED");
+    expect(productRoute).toContain("generateStudyGuideV2Workflow");
     expect(readFileSync("app/workflows/generation.ts", "utf8")).not.toContain("generation-v2");
   });
 

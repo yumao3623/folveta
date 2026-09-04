@@ -6,6 +6,9 @@ import { getSupabaseAdmin } from "@/lib/server/supabase";
 import { getServerEnv } from "@/lib/env";
 import { claimLogicalGeneration, dispatchGeneration, generationSnapshot } from "@/lib/ai/generation-dispatch";
 import { enforceRateLimit, requestRateLimitKey, sessionRateLimitKey } from "@/lib/server/rate-limit";
+import { start } from "workflow/api";
+import { generateStudyGuideV2Workflow } from "@/app/workflows/generation-v2";
+import { createOrJoinV2RuntimeRequest } from "@/lib/ai/generation-v2-runtime";
 
 export const maxDuration = 300;
 
@@ -36,7 +39,18 @@ export async function POST(request: Request, context: RouteContext<"/api/session
     await enforceRateLimit({ scope: "generate.session", key: sessionRateLimitKey(sessionId), limit: 3, windowSeconds: 600 });
     if (!isGenerationClaimable(session.state)) throw new AppError("GENERATION_NOT_AVAILABLE", "Guide generation is not available for this session.", 409);
 
-    if (getServerEnv().AI_GENERATION_WORKFLOW_ENABLED) {
+    const env = getServerEnv();
+    if (env.GENERATION_V2_RUNTIME_ENABLED && env.GENERATION_V2_PRODUCT_ENABLED) {
+      const { request: runtimeRequest } = await createOrJoinV2RuntimeRequest(sessionId);
+      let workflowRunId: string | null = null;
+      if (!["complete", "complete_with_gaps", "failed_no_guide"].includes(runtimeRequest.status)) {
+        const run = await start(generateStudyGuideV2Workflow, [runtimeRequest.id]);
+        workflowRunId = run.runId;
+      }
+      return Response.json({ accepted: true, engine: "v2", requestId: runtimeRequest.id, workflowRunId }, { status: 202 });
+    }
+
+    if (env.AI_GENERATION_WORKFLOW_ENABLED) {
       const claimed = await claimLogicalGeneration(sessionId);
       const generationRunId = String(claimed.generationRunId);
       await dispatchGeneration(generationRunId);
