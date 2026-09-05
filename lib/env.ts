@@ -19,6 +19,7 @@ const serverEnvSchema = z.object({
   AI_GENERATION_WORKFLOW_ENABLED: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
   GENERATION_V2_RUNTIME_ENABLED: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
   GENERATION_V2_PRODUCT_ENABLED: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
+  GENERATION_V2_ROLLOUT_ALLOWLIST: z.string().default(""),
   CRON_SECRET: z.preprocess(
     (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
     z.string().min(32).optional(),

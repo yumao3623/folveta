@@ -40,11 +40,12 @@ describe("Guide list ownership and performance", () => {
     expect(id).toBeGreaterThan(updated);
   });
 
-  it("bounds pagination and fetches only one look-ahead row", () => {
+  it("bounds pagination after merging v1 and v2 rows", () => {
     expect(guideListOptionsSchema.parse({ view: "active", page: "2", limit: "24" })).toEqual({ view: "active", page: 2, limit: 24 });
     expect(() => guideListOptionsSchema.parse({ view: "active", page: "1", limit: "25" })).toThrow();
-    expect(dal).toContain(".range(offset, offset + options.limit)");
-    expect(dal).toContain("rows.slice(0, options.limit)");
+    expect(dal).toContain(".range(0, (offset + options.limit) * 2)");
+    expect(dal).toContain("merged.slice(offset, offset + options.limit)");
+    expect(dal).toContain("summaries.slice(offset, offset + options.limit)");
   });
 
   it("gets source counts in the list query without N+1 reads", () => {

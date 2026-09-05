@@ -5,7 +5,7 @@ import { requireOwnedSession } from "@/lib/server/auth";
 import { AppError, errorResponse } from "@/lib/server/http";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 import { generationSnapshot } from "@/lib/ai/generation-dispatch";
-import { getServerEnv } from "@/lib/env";
+import { isGenerationV2SchemaUnavailable } from "@/lib/ai/generation-v2-rollout";
 import { readGenerationV2Artifacts, readOwnedGenerationV2Guide } from "@/lib/server/generation-v2-persistence";
 import { v2ReadModelStatus } from "@/lib/ai/generation-v2-runtime";
 
@@ -15,31 +15,28 @@ export async function GET(_request: Request, context: RouteContext<"/api/session
     let session = await requireOwnedSession(sessionId);
     if (!session) throw new AppError("SESSION_NOT_FOUND", "This study session is missing or expired.", 404);
     const admin = getSupabaseAdmin();
-    const env = getServerEnv();
-    if (env.GENERATION_V2_RUNTIME_ENABLED && env.GENERATION_V2_PRODUCT_ENABLED) {
-      const { data: request, error: requestError } = await admin
-        .from("generation_v2_requests")
-        .select("id, status, updated_at")
-        .eq("session_id", sessionId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (requestError) throw requestError;
-      if (request) {
-        const [artifacts, guide] = await Promise.all([
-          readGenerationV2Artifacts(request.id),
-          readOwnedGenerationV2Guide(sessionId, request.id),
-        ]);
-        const rows = artifacts.map((row) => row.artifact).filter(Boolean) as Array<{ status: string }>;
-        const status = v2ReadModelStatus(request.status, rows);
-        return Response.json({
-          session: { id: session.id, state: session.state, current_stage: null, failed_stage: null, error_message: null, updated_at: request.updated_at, generation_lease_active: false },
-          sources: [],
-          guide: guide?.guide_json ?? null,
-          guide_ready: Boolean(guide?.guide_json),
-          generation: { run_id: request.id, status, stage: status === "generating" ? "generating_guide" : null, progress_percent: rows.length ? Math.round((rows.filter((row) => row.status === "complete").length / rows.length) * 100) : 0, failure_category: status === "unable_to_generate" ? "temporary" : null, retry_allowed: false, support_id: null },
-        });
-      }
+    const { data: request, error: requestError } = await admin
+      .from("generation_v2_requests")
+      .select("id, status, updated_at")
+      .eq("session_id", sessionId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (requestError && !isGenerationV2SchemaUnavailable(requestError)) throw requestError;
+    if (request) {
+      const [artifacts, guide] = await Promise.all([
+        readGenerationV2Artifacts(request.id),
+        readOwnedGenerationV2Guide(sessionId, request.id),
+      ]);
+      const rows = artifacts.map((row) => row.artifact).filter(Boolean) as Array<{ status: string }>;
+      const status = v2ReadModelStatus(request.status, rows);
+      return Response.json({
+        session: { id: session.id, state: session.state, current_stage: null, failed_stage: null, error_message: null, updated_at: request.updated_at, generation_lease_active: false },
+        sources: [],
+        guide: guide?.guide_json ?? null,
+        guide_ready: Boolean(guide?.guide_json),
+        generation: { run_id: request.id, status, stage: status === "generating" ? "generating_guide" : null, progress_percent: rows.length ? Math.round((rows.filter((row) => row.status === "complete").length / rows.length) * 100) : 0, failure_category: status === "unable_to_generate" ? "temporary" : null, retry_allowed: false, support_id: null },
+      });
     }
     const nowMs = Date.now();
     const leaseActive = isGenerationLeaseActive(session.generation_lease_expires_at, nowMs);

@@ -9,6 +9,7 @@ import { enforceRateLimit, requestRateLimitKey, sessionRateLimitKey } from "@/li
 import { start } from "workflow/api";
 import { generateStudyGuideV2Workflow } from "@/app/workflows/generation-v2";
 import { createOrJoinV2RuntimeRequest } from "@/lib/ai/generation-v2-runtime";
+import { isGenerationV2WriteEnabled } from "@/lib/ai/generation-v2-rollout";
 
 export const maxDuration = 300;
 
@@ -40,7 +41,8 @@ export async function POST(request: Request, context: RouteContext<"/api/session
     if (!isGenerationClaimable(session.state)) throw new AppError("GENERATION_NOT_AVAILABLE", "Guide generation is not available for this session.", 409);
 
     const env = getServerEnv();
-    if (env.GENERATION_V2_RUNTIME_ENABLED && env.GENERATION_V2_PRODUCT_ENABLED) {
+    const v2RuntimeAndProductEnabled = env.GENERATION_V2_RUNTIME_ENABLED && env.GENERATION_V2_PRODUCT_ENABLED;
+    if (v2RuntimeAndProductEnabled && isGenerationV2WriteEnabled(session)) {
       const { request: runtimeRequest } = await createOrJoinV2RuntimeRequest(sessionId);
       let workflowRunId: string | null = null;
       if (!["complete", "complete_with_gaps", "failed_no_guide"].includes(runtimeRequest.status)) {

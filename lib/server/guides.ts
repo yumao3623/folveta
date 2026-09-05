@@ -1,7 +1,7 @@
 import { GUIDE_LIST_DEFAULT_LIMIT, type GuideListOptions } from "@/lib/schemas/guide-management";
 import type { Database } from "@/lib/server/database.types";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
-import { getServerEnv } from "@/lib/env";
+import { isGenerationV2SchemaUnavailable } from "@/lib/ai/generation-v2-rollout";
 
 const DELETE_RETENTION_DAYS = 30;
 
@@ -70,11 +70,6 @@ function toGuideSummary(row: GuideListQueryRow): GuideSummary {
     sourceCount: row.preparation_sessions.sources[0]?.count ?? 0,
     state: row.preparation_sessions.state,
   };
-}
-
-function v2ProductReadEnabled() {
-  const env = getServerEnv();
-  return env.GENERATION_V2_RUNTIME_ENABLED && env.GENERATION_V2_PRODUCT_ENABLED;
 }
 
 function toV2GuideSummary(row: V2GuideListQueryRow): GuideSummary {
@@ -146,50 +141,47 @@ export async function listOwnedGuides(
       .is("preparation_sessions.archived_at", null);
   }
 
-  const v2ReadEnabled = v2ProductReadEnabled();
   const orderedQuery = query
     .order("last_accessed_at", { ascending: false })
     .order("updated_at", { ascending: false })
     .order("id", { ascending: false });
   // Dual-read can suppress legacy rows and older v2 snapshots for the same session.
-  const { data, error } = await (v2ReadEnabled
-    ? orderedQuery.range(0, (offset + options.limit) * 2)
-    : orderedQuery.range(offset, offset + options.limit));
+  const { data, error } = await orderedQuery.range(0, (offset + options.limit) * 2);
   if (error) throw error;
 
   const summaries = ((data ?? []) as unknown as GuideListQueryRow[]).map(toGuideSummary);
-  if (v2ReadEnabled) {
-    let v2Query = getSupabaseAdmin()
-      .from("generation_v2_guides")
-      .select(`
+  let v2Query = getSupabaseAdmin()
+    .from("generation_v2_guides")
+    .select(`
+      id,
+      session_id,
+      created_at,
+      updated_at,
+      generation_v2_requests!inner(status),
+      preparation_sessions!inner(
         id,
-        session_id,
-        created_at,
+        title,
+        owner_user_id,
+        state,
         updated_at,
-        generation_v2_requests!inner(status),
-        preparation_sessions!inner(
-          id,
-          title,
-          owner_user_id,
-          state,
-          updated_at,
-          last_accessed_at,
-          archived_at,
-          deleted_at,
-          sources(count)
-        )
-      `)
-      .eq("preparation_sessions.owner_user_id", userId)
-      .is("preparation_sessions.deleted_at", null)
-      .in("generation_v2_requests.status", ["complete", "complete_with_gaps"]);
-    v2Query = options.view === "archived"
-      ? v2Query.not("preparation_sessions.archived_at", "is", null)
-      : v2Query.is("preparation_sessions.archived_at", null);
-    const { data: v2Data, error: v2Error } = await v2Query
-      .order("updated_at", { ascending: false })
-      .order("id", { ascending: false })
-      .range(0, (offset + options.limit) * 2);
-    if (v2Error) throw v2Error;
+        last_accessed_at,
+        archived_at,
+        deleted_at,
+        sources(count)
+      )
+    `)
+    .eq("preparation_sessions.owner_user_id", userId)
+    .is("preparation_sessions.deleted_at", null)
+    .in("generation_v2_requests.status", ["complete", "complete_with_gaps"]);
+  v2Query = options.view === "archived"
+    ? v2Query.not("preparation_sessions.archived_at", "is", null)
+    : v2Query.is("preparation_sessions.archived_at", null);
+  const { data: v2Data, error: v2Error } = await v2Query
+    .order("updated_at", { ascending: false })
+    .order("id", { ascending: false })
+    .range(0, (offset + options.limit) * 2);
+  if (v2Error && !isGenerationV2SchemaUnavailable(v2Error)) throw v2Error;
+  if (!v2Error) {
     const latestV2BySession = new Map<string, GuideSummary>();
     for (const row of (v2Data ?? []) as unknown as V2GuideListQueryRow[]) {
       if (latestV2BySession.has(row.session_id)) continue;
@@ -205,14 +197,12 @@ export async function listOwnedGuides(
       hasNextPage: merged.length > offset + options.limit,
     };
   }
-
-  const rows = summaries;
   return {
-    guides: rows.slice(0, options.limit),
+    guides: summaries.slice(offset, offset + options.limit),
     page: options.page,
     limit: options.limit,
     hasPreviousPage: options.page > 1,
-    hasNextPage: rows.length > options.limit,
+    hasNextPage: summaries.length > offset + options.limit,
   };
 }
 
@@ -241,13 +231,13 @@ export async function requireAuthenticatedOwnedGuide(userId: string, guideId: st
     return session ? { guide: toV1OwnedGuide(guide), session } : null;
   }
 
-  if (!v2ProductReadEnabled()) return null;
   const { data: v2Guide, error: v2GuideError } = await admin
     .from("generation_v2_guides")
     .select("*")
     .eq("id", guideId)
     .maybeSingle();
-  if (v2GuideError) throw v2GuideError;
+  if (v2GuideError && !isGenerationV2SchemaUnavailable(v2GuideError)) throw v2GuideError;
+  if (v2GuideError) return null;
   if (!v2Guide) return null;
 
   const { data: session, error: sessionError } = await admin

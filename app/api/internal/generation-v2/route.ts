@@ -2,6 +2,7 @@ import { start } from "workflow/api";
 import { generateStudyGuideV2Workflow } from "@/app/workflows/generation-v2";
 import { createOrJoinV2RuntimeRequest } from "@/lib/ai/generation-v2-runtime";
 import { getServerEnv } from "@/lib/env";
+import { isGenerationV2WriteEnabled } from "@/lib/ai/generation-v2-rollout";
 import { requireOwnedSession } from "@/lib/server/auth";
 import { AppError, errorResponse } from "@/lib/server/http";
 
@@ -12,7 +13,9 @@ export async function POST(request: Request) {
     if (!getServerEnv().GENERATION_V2_RUNTIME_ENABLED) throw new AppError("GENERATION_V2_DISABLED", "Generation v2 is not enabled in this environment.", 404);
     const body = await request.json().catch(() => ({})) as { sessionId?: unknown; outputLanguage?: unknown };
     if (typeof body.sessionId !== "string") throw new AppError("SESSION_NOT_FOUND", "A study session is required.", 400);
-    if (!(await requireOwnedSession(body.sessionId))) throw new AppError("SESSION_NOT_FOUND", "This study session is missing or unavailable.", 404);
+    const session = await requireOwnedSession(body.sessionId);
+    if (!session) throw new AppError("SESSION_NOT_FOUND", "This study session is missing or unavailable.", 404);
+    if (!isGenerationV2WriteEnabled(session)) throw new AppError("GENERATION_V2_DISABLED", "Generation v2 is not enabled for this rollout cohort.", 404);
     const outputLanguage = body.outputLanguage === "en" || body.outputLanguage === "zh" ? body.outputLanguage : "match_materials";
     const { request: runtimeRequest } = await createOrJoinV2RuntimeRequest(body.sessionId, outputLanguage);
     let workflowRunId: string | null = null;
