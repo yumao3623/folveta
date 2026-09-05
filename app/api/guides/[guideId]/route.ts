@@ -1,8 +1,8 @@
 import { guideMutationSchema } from "@/lib/schemas/guide-management";
-import { getCurrentUser } from "@/lib/server/auth";
-import { requireOwnedGuide } from "@/lib/server/auth";
+import { getCurrentUser, requireOwnedGuide } from "@/lib/server/auth";
 import {
   renameOwnedGuide,
+  requireAuthenticatedOwnedGuide,
   setOwnedGuideArchived,
   softDeleteOwnedGuide,
   touchOwnedGuide,
@@ -11,18 +11,21 @@ import { AppError, errorResponse, requireSameOrigin } from "@/lib/server/http";
 
 export async function GET(_request: Request, context: { params: Promise<{ guideId: string }> }) {
   try {
+    const user = await getCurrentUser();
     const { guideId } = await context.params;
-    const guide = await requireOwnedGuide(guideId);
-    if (!guide) throw new AppError("GUIDE_NOT_FOUND", "This Guide is unavailable.", 404);
-    const accessedAt = await touchOwnedGuide(guide);
+    const owned = user
+      ? await requireAuthenticatedOwnedGuide(user.id, guideId)
+      : await requireOwnedGuide(guideId).then((guide) => guide ? { guide: { ...guide, engine: "v1" as const } } : null);
+    if (!owned) throw new AppError("GUIDE_NOT_FOUND", "This Guide is unavailable.", 404);
+    const accessedAt = await touchOwnedGuide(owned.guide);
     return Response.json({
       guide: {
-        id: guide.id,
-        title: guide.title,
-        createdAt: guide.created_at,
-        updatedAt: guide.updated_at,
+        id: owned.guide.id,
+        title: owned.guide.title,
+        createdAt: owned.guide.created_at,
+        updatedAt: owned.guide.updated_at,
         lastAccessedAt: accessedAt,
-        reopenPath: `/study/${guide.session_id}`,
+        reopenPath: `/study/${owned.guide.session_id}`,
       },
     });
   } catch (error) {
