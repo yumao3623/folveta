@@ -3,7 +3,8 @@ import { canonicalizeV2Artifact, detectV2Language, sourceSnapshotSchema, v2Contr
 import { ModelGatewayV2Provider, v2ArtifactFailure, type V2ArtifactProvider } from "@/lib/ai/generation-v2-provider";
 import { v2ArtifactContentKey, v2RequestContentKey, type V2OutputLanguage } from "@/lib/ai/generation-v2-persistence";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
-import { createOrJoinGenerationV2Request, upsertGenerationV2Artifact, linkGenerationV2Artifact, claimGenerationV2Artifact, settleGenerationV2Artifact, assembleGenerationV2Request, readGenerationV2Request, readGenerationV2Artifacts, markGenerationV2RequestWorking } from "@/lib/server/generation-v2-persistence";
+import { createOrJoinGenerationV2Request, reserveGenerationV2Billing, settleGenerationV2Billing, upsertGenerationV2Artifact, linkGenerationV2Artifact, claimGenerationV2Artifact, settleGenerationV2Artifact, assembleGenerationV2Request, readGenerationV2Request, readGenerationV2Artifacts, markGenerationV2RequestWorking } from "@/lib/server/generation-v2-persistence";
+import { getBillingEnvironment } from "@/lib/server/billing-environment";
 import type { Json, Database } from "@/lib/server/database.types";
 import type { V2Partition } from "@/lib/ai/generation-v2";
 
@@ -54,6 +55,7 @@ export async function createOrJoinV2RuntimeRequest(sessionId: string, outputLang
   const contract = hash({ runtime: "slice-4", artifactContract: v2ContractHash(), provider: "model-gateway-responses-structured-v1" });
   const manifest = v2ManifestForSnapshot(snapshot);
   const request = await createOrJoinGenerationV2Request({ session_id: sessionId, source_snapshot_hash: snapshot.snapshot_hash, generation_contract_hash: contract, output_language: outputLanguage, request_content_key: v2RequestContentKey({ sourceSnapshotHash: snapshot.snapshot_hash, generationContractHash: contract, outputLanguage }), manifest_json: manifest as unknown as Json });
+  await reserveGenerationV2Billing(request.id, getBillingEnvironment());
   for (const entry of manifest) {
     const kind = entry.partitionKey === "guide" ? "guide" : "section";
     const artifact = await upsertGenerationV2Artifact({ session_id: sessionId, source_snapshot_hash: snapshot.snapshot_hash, generation_contract_hash: contract, output_language: outputLanguage, artifact_kind: kind, partition_key: entry.partitionKey, artifact_content_key: v2ArtifactContentKey({ sourceSnapshotHash: snapshot.snapshot_hash, generationContractHash: contract, outputLanguage, kind, partitionKey: entry.partitionKey, spanContentHashes: entry.spanContentHashes }), span_identity_json: { span_ids: entry.spanIds ?? partitionFromManifest(snapshot, entry.partitionKey, entry.partitionOrder, snapshot.spans.filter((span) => entry.spanContentHashes.includes(span.content_hash)).map((span) => span.id)).span_ids } });
@@ -139,6 +141,7 @@ export async function runV2Request(requestId: string, provider: V2ArtifactProvid
       guide = v2GuideSchema.parse({ schema_version: "2.0", id: `v2-guide-${requestId}`, session_id: request.session_id, title: snapshot.title, source_snapshot_hash: request.source_snapshot_hash, generation_status: status, coverage: { readable_units: snapshot.sources.reduce((sum, source) => sum + source.readable_unit_count, 0), covered_units: coveredUnits, total_units: snapshot.sources.reduce((sum, source) => sum + source.unit_count, 0), gaps }, study_map: sections.map((section) => ({ section_id: section.id, priority: section.priority, why_this_matters: section.focus_reason, source_refs: section.source_refs })), sections, generated_at: new Date().toISOString() });
     }
     await assembleGenerationV2Request({ requestId, deliveryStatus: status as "complete" | "complete_with_gaps" | "failed_no_guide", guide: guide as unknown as Json });
+    await settleGenerationV2Billing(requestId, status as "complete" | "complete_with_gaps" | "failed_no_guide");
   }
   logRuntime({ requestId, status, artifacts, providerAttempts: metrics.length, durationMs: Date.now() - startedAt, outcome: terminal ? "assembled" : metrics.length ? "artifact_settled" : "waiting" });
   return { requestId, status, guide, nextRetryAt, metrics };

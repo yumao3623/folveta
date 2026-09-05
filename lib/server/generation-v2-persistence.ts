@@ -19,6 +19,27 @@ export async function createOrJoinGenerationV2Request(input: RequestInsert) {
   return data;
 }
 
+export async function reserveGenerationV2Billing(requestId: string, billingEnvironment: "sandbox" | "live" | null) {
+  const { data, error } = await getSupabaseAdmin().rpc("billing_reserve_generation_v2", {
+    p_request_id: requestId,
+    p_billing_environment: billingEnvironment,
+  });
+  if (error) {
+    if (/billing_quota_exceeded/i.test(error.message ?? "")) throw new Error("BILLING_QUOTA_EXCEEDED");
+    throw error;
+  }
+  return data;
+}
+
+export async function settleGenerationV2Billing(requestId: string, deliveryStatus: "complete" | "complete_with_gaps" | "failed_no_guide") {
+  const { data, error } = await getSupabaseAdmin().rpc("billing_settle_generation_v2", {
+    p_request_id: requestId,
+    p_delivery_status: deliveryStatus,
+  });
+  if (error) throw error;
+  return data;
+}
+
 export async function upsertGenerationV2Artifact(input: ArtifactInsert) {
   const admin = getSupabaseAdmin();
   const { data, error } = await admin

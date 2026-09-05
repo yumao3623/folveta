@@ -85,6 +85,9 @@ type BillingUsagePeriodRow = {
 type BillingGenerationReservationRow = {
   generation_run_id: string; billing_environment: "sandbox" | "live" | null; user_id: string; period_start: string; status: "reserved" | "consumed" | "released"; created_at: string; updated_at: string;
 };
+type BillingGenerationV2ReservationRow = {
+  request_id: string; billing_environment: "sandbox" | "live" | null; user_id: string; period_start: string; status: "reserved" | "consumed" | "released"; created_at: string; updated_at: string;
+};
 type BillingWebhookEventRow = {
   id: string; billing_environment: "sandbox" | "live" | null; event_id: string; event_type: string; occurred_at: string | null; received_at: string; processed_at: string | null; status: "processed" | "ignored" | "failed";
 };
@@ -207,6 +210,9 @@ export type Database = {
       billing_generation_reservations: Table<BillingGenerationReservationRow, {
         generation_run_id: string; billing_environment?: "sandbox" | "live" | null; user_id: string; period_start: string; status: "reserved" | "consumed" | "released"; created_at?: string; updated_at?: string;
       }>;
+      billing_generation_v2_reservations: Table<BillingGenerationV2ReservationRow, {
+        request_id: string; billing_environment?: "sandbox" | "live" | null; user_id: string; period_start: string; status: "reserved" | "consumed" | "released"; created_at?: string; updated_at?: string;
+      }>;
       billing_webhook_events: Table<BillingWebhookEventRow, {
         id?: string; billing_environment?: "sandbox" | "live" | null; event_id: string; event_type: string; occurred_at?: string | null; received_at?: string; processed_at?: string | null; status?: "processed" | "ignored" | "failed";
       }>;
@@ -240,6 +246,8 @@ export type Database = {
       claim_generation_v2_artifact: { Args: { p_artifact_id: string; p_lease_id: string; p_lease_seconds?: number }; Returns: GenerationV2ArtifactRow };
       settle_generation_v2_artifact: { Args: { p_artifact_id: string; p_lease_id: string; p_status: "complete" | "retry_wait" | "gap"; p_result_json?: Json | null; p_result_hash?: string | null; p_gap_code?: string | null; p_gap_message?: string | null; p_retryable?: boolean; p_retry_after_seconds?: number }; Returns: GenerationV2ArtifactRow };
       assemble_generation_v2_request: { Args: { p_request_id: string; p_delivery_status: "complete" | "complete_with_gaps" | "failed_no_guide"; p_guide_json?: Json | null }; Returns: GenerationV2RequestRow };
+      billing_reserve_generation_v2: { Args: { p_request_id: string; p_billing_environment?: "sandbox" | "live" | null }; Returns: Json };
+      billing_settle_generation_v2: { Args: { p_request_id: string; p_delivery_status: "complete" | "complete_with_gaps" | "failed_no_guide" }; Returns: Json };
       get_generation_execution_status: { Args: { p_generation_run_id: string }; Returns: Json };
       get_generation_operation_context: { Args: { p_generation_run_id: string; p_operation_key: string }; Returns: Json };
       billing_usage_summary: { Args: { p_user_id: string; p_billing_environment: "sandbox" | "live" }; Returns: Json };
