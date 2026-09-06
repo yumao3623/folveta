@@ -168,5 +168,10 @@ describe("Generation v2 persistence semantics", () => {
     expect(migration).toContain("delivery_status in ('complete', 'complete_with_gaps')");
     expect(migration).not.toContain("add column if not exists generation_v2_request_id");
     expect(migration).not.toContain("grant execute on function public.create_or_join_generation_v2_request(uuid, text, text, text, text, jsonb) to anon");
+    const permissionFix = readFileSync("supabase/migrations/20260906035510_generation_v2_rpc_permission_fix.sql", "utf8");
+    expect(permissionFix).toContain("revoke all on function public.create_or_join_generation_v2_request(uuid, text, text, text, text, jsonb)");
+    expect(permissionFix).toContain("from public, anon, authenticated;");
+    expect(permissionFix).toContain("grant execute on function public.create_or_join_generation_v2_request(uuid, text, text, text, text, jsonb)");
+    expect(permissionFix).toContain("to service_role;");
   });
 });

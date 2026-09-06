@@ -122,7 +122,10 @@ describe.skipIf(process.env.RUN_LOCAL_V2_DB_TEST !== "1")("Generation v2 runtime
 
   it("exposes runner RPCs only to service_role", () => {
     const privileges = localSql(`
-      select has_function_privilege('anon', 'public.claim_generation_v2_artifact(uuid,uuid,integer)', 'execute')
+      select has_function_privilege('anon', 'public.create_or_join_generation_v2_request(uuid, text, text, text, text, jsonb)', 'execute')
+        || '|' || has_function_privilege('authenticated', 'public.create_or_join_generation_v2_request(uuid, text, text, text, text, jsonb)', 'execute')
+        || '|' || has_function_privilege('service_role', 'public.create_or_join_generation_v2_request(uuid, text, text, text, text, jsonb)', 'execute')
+        || '|' || has_function_privilege('anon', 'public.claim_generation_v2_artifact(uuid,uuid,integer)', 'execute')
         || '|' || has_function_privilege('authenticated', 'public.claim_generation_v2_artifact(uuid,uuid,integer)', 'execute')
         || '|' || has_function_privilege('service_role', 'public.claim_generation_v2_artifact(uuid,uuid,integer)', 'execute')
         || '|' || has_function_privilege('anon', 'public.settle_generation_v2_artifact(uuid,uuid,text,jsonb,text,text,text,boolean,integer)', 'execute')
@@ -132,6 +135,6 @@ describe.skipIf(process.env.RUN_LOCAL_V2_DB_TEST !== "1")("Generation v2 runtime
         || '|' || has_function_privilege('authenticated', 'public.assemble_generation_v2_request(uuid,text,jsonb)', 'execute')
         || '|' || has_function_privilege('service_role', 'public.assemble_generation_v2_request(uuid,text,jsonb)', 'execute');
     `);
-    expect(privileges).toBe("false|false|true|false|false|true|false|false|true");
+    expect(privileges).toBe("false|false|true|false|false|true|false|false|true|false|false|true");
   }, 30_000);
 });
