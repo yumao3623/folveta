@@ -62,6 +62,13 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
                 required
               />
             </label>
+            {mode === "sign-in" ? (
+              <div className="-mt-2 text-right">
+                <Link href="/auth/forgot-password" className="text-[13px] font-semibold text-[var(--primary)] hover:text-[var(--primary-hover)]">
+                  Forgot password?
+                </Link>
+              </div>
+            ) : null}
             <button type="submit" className={buttonClassName({ size: "lg", className: "w-full" })}>
               {mode === "sign-up" ? "Create account" : "Sign in"}
             </button>
