@@ -2,7 +2,7 @@
 
 Status: **Current project-specific SEO architecture**  
 Last updated: 2026-09-02
-Reusable standard: `docs/SEO_GUIDE.md`  
+Reusable standard: `docs/architecture/SEO_GUIDE.md`
 Canonical production origin: `https://folveta.com`
 
 ## 0. Public launch cutover record (2026-09-02)
@@ -21,7 +21,7 @@ The homepage owns the primary transactional/mixed product intent **`Study Guide 
 
 `AI Study Guide Maker` may appear naturally as a supporting variation or capability explanation, but it must not replace the category owner in the title, H1, navigation label, product name, or architecture.
 
-The current homepage title and first-viewport positioning now use `Study Guide Maker`. SEO Growth v1 additionally assigns `/study-guide-maker-from-pdf` to the narrower PDF task without changing homepage ownership. The current ownership map and measurement record live in `docs/seo-growth-v1.md`.
+The current homepage title and first-viewport positioning now use `Study Guide Maker`. SEO Growth v1 additionally assigns `/study-guide-maker-from-pdf` to the narrower PDF task without changing homepage ownership. The current ownership map and measurement record live in `docs/operations/seo-growth-v1.md`.
 
 ## 2. Search intent
 

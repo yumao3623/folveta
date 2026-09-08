@@ -2,7 +2,7 @@
 
 Status: **Current v5 architecture baseline and target boundaries**  
 Last repository verification: 2026-09-07 (`npm run check`; no new Production verification)
-Decision authority: `docs/decisions.md`
+Decision authority: `docs/product/decisions.md`
 
 ## 1. Architecture principle
 
@@ -165,7 +165,7 @@ Product-3A adds the durable path:
 - One unauthenticated browser cookie still represents only its current anonymous session. Product-3B provides durable multi-Guide listing only for authenticated owners.
 - Profile exposes confirmed account deletion. The server requires same-origin confirmation and rate-limits the request. An active Paddle Live subscription causes deletion to be rejected; the server does not automatically cancel it. Otherwise Storage, owned database sessions, and the Auth user are deleted synchronously. No persistent deletion request, retry, or audit state is written.
 
-The schema and threat model are detailed in `docs/auth-and-persistence.md`. The official Supabase channel is linked, and Production migration history is traceable through `20260830080742`. Product-3 ownership/RLS and Auth claim passed a fresh Production regression on 2026-08-31 after the Workflow rollout; temporary fixtures were cleaned.
+The schema and threat model are detailed in `docs/architecture/auth-and-persistence.md`. The official Supabase channel is linked, and Production migration history is traceable through `20260830080742`. Product-3 ownership/RLS and Auth claim passed a fresh Production regression on 2026-08-31 after the Workflow rollout; temporary fixtures were cleaned.
 
 ## 6. Generation and assessment contracts
 
@@ -182,7 +182,7 @@ Implemented generation path:
 9. Send the browser a taking payload without key, explanation, references, or verdicts.
 10. Score a complete submission deterministically and persist the result.
 
-Guide generation is now durable and browser-independent. `generation_run_id` is the business identity; a `workflow_run_id` never grants execution rights. At-least-once Workflow steps must acquire database ownership, fencing, a DB-time lease, capacity, and attempt authorization before a provider call. SDK/gateway retries are disabled; Workflow schedules only database-authorized retry state. Capacity is four calls per run and eight globally. Current evidence and remaining risks are recorded in `docs/ai-generation-workflow-rollout.md`.
+Guide generation is now durable and browser-independent. `generation_run_id` is the business identity; a `workflow_run_id` never grants execution rights. At-least-once Workflow steps must acquire database ownership, fencing, a DB-time lease, capacity, and attempt authorization before a provider call. SDK/gateway retries are disabled; Workflow schedules only database-authorized retry state. Capacity is four calls per run and eight globally. Current evidence and remaining risks are recorded in `docs/operations/ai-generation-workflow-rollout.md`.
 
 Generation V2 is implemented alongside V1 behind `GENERATION_V2_RUNTIME_ENABLED`, `GENERATION_V2_PRODUCT_ENABLED`, and `GENERATION_V2_ROLLOUT_ALLOWLIST`. The formal Generate route can create or join a V2 request and start its thin Workflow runner; the status route, Study page, Guide lists, reopen, and Guide management can read delivered V2 Guides. V2 persists requests, artifacts, request-artifact joins, terminal Guide snapshots, and dedicated billing reservations in separate tables. Search, Quick Check, and Library related-Guide reads remain V1-only, and Production V2 enablement has not been verified by this document.
 
@@ -246,7 +246,7 @@ Product-3A resolved identity/persistence, Product-3B implements Guide management
 
 ## 10. Payment architecture boundaries
 
-The current Payment/Billing v1 record is in `docs/payment-billing-architecture.md`. Paddle is implemented and validated in both the Sandbox deployment and the Production Live deployment. The application has billing tables, entitlement enforcement, Checkout, webhooks, Customer Portal, and environment-scoped subscription/usage enforcement for both Sandbox and Live.
+The current Payment/Billing v1 record is in `docs/architecture/payment-billing-architecture.md`. Paddle is implemented and validated in both the Sandbox deployment and the Production Live deployment. The application has billing tables, entitlement enforcement, Checkout, webhooks, Customer Portal, and environment-scoped subscription/usage enforcement for both Sandbox and Live.
 
 - Product code owns provider-independent plan, entitlement, usage, and account access decisions.
 - The provider owns sensitive payment method handling and the hosted payment/customer-management surface where practical.
@@ -269,7 +269,7 @@ Use layered controls:
 4. Private/account/search/billing workflow routes remain access-controlled and `noindex` in every environment.
 5. Launch cutover is one explicit configuration change followed by live verification and rollback readiness.
 
-The staged pre-launch currently reuses the verified Supabase `study-guide-maker` backend for localhost and Vercel Production. Supabase credentials are scoped to Production only and withheld from Preview. This prevents Preview from reaching private production data but does not yet provide fully separate localhost/production data stores; that remaining isolation decision is documented in `docs/production-deployment.md`.
+The staged pre-launch currently reuses the verified Supabase `study-guide-maker` backend for localhost and Vercel Production. Supabase credentials are scoped to Production only and withheld from Preview. This prevents Preview from reaching private production data but does not yet provide fully separate localhost/production data stores; that remaining isolation decision is documented in `docs/operations/production-deployment.md`.
 
 ## 12. Test architecture target
 

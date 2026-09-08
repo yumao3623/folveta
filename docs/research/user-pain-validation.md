@@ -1,6 +1,6 @@
 # Study Guide / Exam Prep 用户痛点验证
 
-> Status: **Research reference.** Evidence remains useful; product recommendations defer to the current v5 decision in `docs/decisions.md`.
+> Status: **Research reference.** Evidence remains useful; product recommendations defer to the current v5 decision in `docs/product/decisions.md`.
 
 > 研究日期：2026-08-24  
 > 研究对象：学生如何使用 lecture slides、syllabus、review sheet、past exams 和 AI 工具准备考试  

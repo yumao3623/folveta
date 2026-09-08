@@ -39,7 +39,7 @@ Titles are trimmed server-side, must be non-empty, and are limited to 140 charac
 
 Archive and restore synchronize the existing `archived_at` fields on `study_guides` and `preparation_sessions`. Archived Guides are excluded from default My Guides and Recent Guides. Product-3B provides one minimal Archived filter with restore and delete actions rather than a separate archive product surface.
 
-Library keeps Sources for archived Guides visible and labels their relationship as Archived rather than reopening an inaccessible Guide. Knowledge Search is limited to active Guides/aggregates. Deleted aggregates are excluded from both surfaces. See `docs/library-search-profile.md`.
+Library keeps Sources for archived Guides visible and labels their relationship as Archived rather than reopening an inaccessible Guide. Knowledge Search is limited to active Guides/aggregates. Deleted aggregates are excluded from both surfaces. See `docs/architecture/library-search-profile.md`.
 
 ## Delete and retention
 

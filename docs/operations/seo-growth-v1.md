@@ -99,4 +99,4 @@ All anchors describe a real task or destination. The footer supports discovery b
 
 ## 6. Next page and link priorities
 
-The next page candidate is **not approved yet**: a PowerPoint task page only after a separate SERP review plus early data from the PDF page. The next link effort is a small, relevant launch/discovery set documented in `docs/seo-growth-backlink-tracker.md`, followed by editorial resource-page discovery from student and study-productivity audiences.
+The next page candidate is **not approved yet**: a PowerPoint task page only after a separate SERP review plus early data from the PDF page. The next link effort is a small, relevant launch/discovery set documented in `docs/operations/seo-growth-backlink-tracker.md`, followed by editorial resource-page discovery from student and study-productivity audiences.

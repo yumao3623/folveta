@@ -1,6 +1,6 @@
 # Study Guide Maker 竞品分析
 
-> Status: **Dated research reference.** Competitor facts and hypotheses are retained, but its recommended positioning is superseded by the current v5 decision in `docs/decisions.md`.
+> Status: **Dated research reference.** Competitor facts and hypotheses are retained, but its recommended positioning is superseded by the current v5 decision in `docs/product/decisions.md`.
 
 > 研究日期：2026-08-24  
 > 目标市场：United States  

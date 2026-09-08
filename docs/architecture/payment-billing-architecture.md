@@ -347,7 +347,7 @@ Production launch still requires the existing Payment, deletion, retention, rate
 
 ## 20. Decision classification
 
-### A. Must enter `docs/decisions.md` only after owner confirmation
+### A. Must enter `docs/product/decisions.md` only after owner confirmation
 
 - Free + one Paid monthly subscription.
 - Final Free/Paid quotas and file/page/character limits.
@@ -358,7 +358,7 @@ Production launch still requires the existing Payment, deletion, retention, rate
 - Provider selection and legal/onboarding acceptance.
 - Grace, cancellation, refund, and deletion billing policies.
 
-Until those are confirmed, this document is the working proposal and `docs/decisions.md` must continue to say that no provider or paid state is approved.
+Until those are confirmed, this document is the working proposal and `docs/product/decisions.md` must continue to say that no provider or paid state is approved.
 
 ### B. Implementation detail
 

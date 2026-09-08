@@ -1,12 +1,12 @@
 # SEO Implementation Report
 
-> Status: **Historical v3 implementation snapshot from 2026-08-25.** It records what that pass changed and must not be treated as the current launch plan. Use `docs/seo-architecture.md`, `docs/v5-master-roadmap.md`, and `docs/production-seo-checklist.md` for v5.
+> Status: **Historical v3 implementation snapshot from 2026-08-25.** It records what that pass changed and must not be treated as the current launch plan. Use `docs/architecture/seo-architecture.md`, `docs/product/v5-master-roadmap.md`, and `docs/operations/production-seo-checklist.md` for v5.
 
 Implementation date: 2026-08-25
 
 Primary audit source: `docs/archive/seo-audit.md`
 
-Historical product direction source: v3 in `docs/decisions.md`
+Historical product direction source: v3 in `docs/product/decisions.md`
 
 ## Audit Drift Found
 
@@ -16,7 +16,7 @@ The audit was accurate for the code inspected on 2026-08-24, but its Index / Noi
 - `app/study/[sessionId]/layout.tsx` now already contained `noindex, nofollow`.
 - Demo Quick Check inherits the demo layout.
 - Private Quick Check and result routes inherit the private session layout.
-- `tests/seo.test.ts` already covered the two layout guardrails.
+- `tests/unit/seo.test.ts` already covered the two layout guardrails.
 
 Those controls were retained and verified instead of being reimplemented.
 
@@ -105,7 +105,7 @@ No demo, session, Quick Check, result, API, or user-generated URL is included.
 
 ## PRODUCTION-ONLY
 
-All domain, HTTPS, redirect, external crawling, search-console, real-user performance, analytics, Rich Results, indexing, and ranking checks are recorded in `docs/production-seo-checklist.md`.
+All domain, HTTPS, redirect, external crawling, search-console, real-user performance, analytics, Rich Results, indexing, and ranking checks are recorded in `docs/operations/production-seo-checklist.md`.
 
 The local fallback canonical and sitemap origin are `http://localhost:3000`. Production is not complete until `NEXT_PUBLIC_SITE_URL` is set to the final HTTPS origin and the production outputs are rechecked.
 
@@ -132,4 +132,4 @@ Blocking pre-deployment items:
 1. Configure the final production domain in `NEXT_PUBLIC_SITE_URL`.
 2. Implement and verify automatic deletion of expired session data and private files.
 3. Publish a real support/privacy contact channel and update the public pages.
-4. Complete the domain, HTTPS, canonical, robots, sitemap, structured-data, performance, and indexing checks in `docs/production-seo-checklist.md`.
+4. Complete the domain, HTTPS, canonical, robots, sitemap, structured-data, performance, and indexing checks in `docs/operations/production-seo-checklist.md`.

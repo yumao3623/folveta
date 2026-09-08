@@ -2,8 +2,8 @@
 
 Status: **Current v5 context**  
 Last updated: 2026-09-07
-Decision authority: `docs/decisions.md`  
-Delivery roadmap: `docs/v5-master-roadmap.md`
+Decision authority: `docs/product/decisions.md`
+Delivery roadmap: `docs/product/v5-master-roadmap.md`
 
 ## Product identity
 
@@ -61,7 +61,7 @@ Implemented UI milestones are UI-1 Study Guide Workspace, UI-2 Landing / Upload,
 - Public indexing cutover is complete for the approved discovery pages. Production `PRELAUNCH` is explicitly false; public pages return `index,follow`, while private routes remain `noindex,nofollow`.
 - Protected Storage-first retention cleanup is READY. Distributed rate limiting and production monitoring are READY; analytics consent and any broader support/privacy operations remain separate policy work.
 - No pasted-text input, handwriting interpretation, audio/video/URL ingestion, or open-web research. Common image files use constrained visual-text extraction; scanned PDF pages and image/chart/diagram-heavy units may remain visible grounding gaps.
-- Production Guide generation is server-owned and durable. The rollout gate passed one Workflow smoke, three complete real-PDF runs, two complete legacy-PPT runs, Guide rendering/reload, Cron/reconciler, provider boundary, and Product-3 regression checks. See `docs/ai-generation-workflow-rollout.md`.
+- Production Guide generation is server-owned and durable. The rollout gate passed one Workflow smoke, three complete real-PDF runs, two complete legacy-PPT runs, Guide rendering/reload, Cron/reconciler, provider boundary, and Product-3 regression checks. See `docs/operations/ai-generation-workflow-rollout.md`.
 - The five real-material samples all completed below five minutes, but the sample is too small to establish p95. Provider variability and the bounded at-least-once duplicate-call window remain operational risks.
 - `PRELAUNCH` now fails closed: a missing value, `PRELAUNCH=true`, or any Vercel non-production environment makes discovery pages `noindex,nofollow`; the sitemap is empty and robots does not advertise it. Only an explicit production `PRELAUNCH=false` restores the approved public index mode.
 - Additional SEO v2 content expansion remains pending, although the homepage title, visible capability label, and first-viewport positioning use `Study Guide Maker` rather than `AI Study Guide Maker`.
@@ -98,7 +98,7 @@ Remaining UI limitations:
 
 UI/UX Polish v2 must establish Folveta-owned tokens and reusable primitives before Product-3 pages multiply the current inconsistencies.
 
-The Foundation v2 task completed the shared prerequisite on the `ui-polish-v2-foundation` branch. The `ui-polish-v2-pages` task then applied it to Landing/Upload, Study Guide, Quick Check, Results, parsing/generation states, and shared navigation. No dependency, schema, API, generation, scoring, ownership, or route change was introduced. `docs/ui-design-system.md` remains the current implementation policy.
+The Foundation v2 task completed the shared prerequisite on the `ui-polish-v2-foundation` branch. The `ui-polish-v2-pages` task then applied it to Landing/Upload, Study Guide, Quick Check, Results, parsing/generation states, and shared navigation. No dependency, schema, API, generation, scoring, ownership, or route change was introduced. `docs/architecture/ui-design-system.md` remains the current implementation policy.
 
 ## UI reference resources
 
@@ -128,7 +128,7 @@ Product-3 adds persistent identity and a real multi-guide workspace:
 
 It does not turn Folveta into a general note-taking platform, social network, LMS, flashcard suite, or public content marketplace.
 
-Product-3A repository implementation uses Supabase Auth email/password, preserves anonymous access, atomically claims the current anonymous aggregate after authentication, derives child ownership through `preparation_sessions.owner_user_id`, keeps Guide IDs stable across regeneration, and adds lifecycle metadata plus owner RLS. Product-3B uses that foundation for My Guides, Recent Guides, reopen, rename, archive/restore, and soft delete. Product-3C adds Source Library, owner-RLS PostgreSQL Search, Profile, and the real Workspace navigation without adding a profile table, semantic search platform, or billing state. See `docs/auth-and-persistence.md`, `docs/guide-management.md`, and `docs/library-search-profile.md`.
+Product-3A repository implementation uses Supabase Auth email/password, preserves anonymous access, atomically claims the current anonymous aggregate after authentication, derives child ownership through `preparation_sessions.owner_user_id`, keeps Guide IDs stable across regeneration, and adds lifecycle metadata plus owner RLS. Product-3B uses that foundation for My Guides, Recent Guides, reopen, rename, archive/restore, and soft delete. Product-3C adds Source Library, owner-RLS PostgreSQL Search, Profile, and the real Workspace navigation without adding a profile table, semantic search platform, or billing state. See `docs/architecture/auth-and-persistence.md`, `docs/architecture/guide-management.md`, and `docs/architecture/library-search-profile.md`.
 
 ## Commercial target
 
@@ -140,8 +140,8 @@ Paddle Live merchant/KYC, website approval, payout setup, Live catalog, checkout
 
 ## SEO and launch context
 
-- `docs/SEO_GUIDE.md` is the reusable SEO standard.
-- `docs/seo-architecture.md` is the Folveta-specific page ownership and indexing architecture.
+- `docs/architecture/SEO_GUIDE.md` is the reusable SEO standard.
+- `docs/architecture/seo-architecture.md` is the Folveta-specific page ownership and indexing architecture.
 - Do not create thin Blog, Use Case, Tools, comparison, or pSEO inventories.
 - A public Pricing page exists only if the real billing product needs it.
 - Production deployment may precede launch, under deployment protection and/or fail-safe pre-launch noindex; the 2026-09-02 cutover moved the approved discovery pages into public index mode.
@@ -151,7 +151,7 @@ Paddle Live merchant/KYC, website approval, payout setup, Live catalog, checkout
 
 ## Evidence and open questions
 
-Research retained in `docs/user-pain-validation.md` and `docs/study-guide-maker-competitor-analysis.md` supports information overload, uncertain priority, costly material conversion, recall gaps, and distrust of opaque AI output. It does not prove willingness to pay, the best entitlement unit, or the value of every proposed workspace feature.
+Research retained in `docs/research/user-pain-validation.md` and `docs/research/study-guide-maker-competitor-analysis.md` supports information overload, uncertain priority, costly material conversion, recall gaps, and distrust of opaque AI output. It does not prove willingness to pay, the best entitlement unit, or the value of every proposed workspace feature.
 
 Open questions for staged validation:
 

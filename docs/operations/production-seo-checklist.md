@@ -2,7 +2,7 @@
 
 Status: **Active operational checklist; Public Launch Cutover PASS (2026-09-02)**
 Canonical target: `https://folveta.com`  
-Architecture: `docs/seo-architecture.md`
+Architecture: `docs/architecture/seo-architecture.md`
 
 Do not mark local assumptions as production verification. The checklist below preserves the pre-launch record and the completed launch evidence; ongoing 24-hour/7-day monitoring is intentionally tracked separately.
 
@@ -124,7 +124,7 @@ AI Workflow rollout update (2026-08-31): Production `main@613dbeb` is `READY`; t
 - [x] Change only the approved access/index configuration; no unrelated feature work was bundled.
 - [x] Immediately verified live `/`, trust pages, Pricing, robots, sitemap, canonical, and private noindex after cutover.
 - [x] Critical product/Auth/billing smoke evidence remains valid after cutover.
-- [x] Tested rollback path is documented in `docs/production-deployment.md`.
+- [x] Tested rollback path is documented in `docs/operations/production-deployment.md`.
 
 ## K. Search Console and post-launch monitoring
 

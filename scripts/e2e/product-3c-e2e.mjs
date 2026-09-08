@@ -502,4 +502,4 @@ async function verify() {
 if (command === "setup") await setup();
 else if (command === "verify") await verify();
 else if (command === "cleanup") await cleanup();
-else throw new Error("Use: node --env-file=.env.local scripts/product-3c-e2e.mjs setup|verify|cleanup");
+else throw new Error("Use: node --env-file=.env.local scripts/e2e/product-3c-e2e.mjs setup|verify|cleanup");

@@ -1,6 +1,6 @@
 # Paddle Live Onboarding
 
-Status: **Historical Paddle Live onboarding and closeout snapshot; completed 2026-09-02. Current billing rules live in `docs/payment-billing-architecture.md`.**
+Status: **Historical Paddle Live onboarding and closeout snapshot; completed 2026-09-02. Current billing rules live in `docs/architecture/payment-billing-architecture.md`.**
 Last updated: 2026-09-02
 
 Scope: Paddle Live merchant, KYC, website review, payout, catalog/runtime configuration, payment acceptance, and closeout evidence.

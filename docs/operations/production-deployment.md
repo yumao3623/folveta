@@ -89,7 +89,7 @@ Changing `PRELAUNCH` to `false` was the explicit public-launch action for this t
 
 ## AI reliability status
 
-The AI Workflow rollout gate passed on commit `613dbeb`. The Production provider boundary probe passed inside Vercel runtime and its temporary route was removed. A Workflow smoke, three fresh real-PDF generations, and two fresh legacy-PPT generations completed and rendered with no retry, deadline, or duplicate-settlement observation. Supabase Cron is the only reconciler scheduler and runs every minute. Detailed privacy-safe telemetry and remaining risks are in `docs/ai-generation-workflow-rollout.md`. The current five real-material samples do not establish p95.
+The AI Workflow rollout gate passed on commit `613dbeb`. The Production provider boundary probe passed inside Vercel runtime and its temporary route was removed. A Workflow smoke, three fresh real-PDF generations, and two fresh legacy-PPT generations completed and rendered with no retry, deadline, or duplicate-settlement observation. Supabase Cron is the only reconciler scheduler and runs every minute. Detailed privacy-safe telemetry and remaining risks are in `docs/operations/ai-generation-workflow-rollout.md`. The current five real-material samples do not establish p95.
 
 ## Supabase Auth and environment boundary
 

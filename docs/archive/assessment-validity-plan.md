@@ -1,6 +1,6 @@
 # Assessment Validity Validation Plan
 
-> Document status: **Archived historical v2 validation plan.** It is not a v5 launch gate. Current Quick Check boundaries remain governed by `docs/decisions.md`; current roadmap work is in `docs/v5-master-roadmap.md`.
+> Document status: **Archived historical v2 validation plan.** It is not a v5 launch gate. Current Quick Check boundaries remain governed by `docs/product/decisions.md`; current roadmap work is in `docs/product/v5-master-roadmap.md`.
 
 > **Historical v3 status note: Full Mock Exam validation was deferred.**  
 > The implemented baseline is a **Study Guide Maker with an optional lightweight Quick Check**, not a Mock Exam Simulator. The body of this document is retained as the historical v2 validation plan and as future reference if full exam simulation is reconsidered. Its long-form timing model, exam blueprint, mixed-format allocation, provisional score ranges, psychometric gates, short-answer response-bank program, weak-topic NDCG reprioritization, mock-realism pilot, and full assessment-dashboard implications are **not v5 launch gates**.

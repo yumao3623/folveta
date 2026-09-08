@@ -188,16 +188,16 @@ No new Blog, Pricing, Use Case, Tools, comparison, or pSEO pages are justified b
 
 ### B. Current tests/fixtures — keep
 
-- `tests/parser.test.ts`, `quick-check.test.ts`, `schemas.test.ts`, `seo.test.ts`.
+- `tests/unit/parser.test.ts`, `tests/unit/quick-check.test.ts`, `tests/unit/schemas.test.ts`, `tests/unit/seo.test.ts`.
 - `tests/fixtures/sample-course.pdf` and `.pptx`.
-- `scripts/generate-test-fixtures.mjs` and its `fixtures:generate` package script.
+- `scripts/fixtures/generate-test-fixtures.mjs` and its `fixtures:generate` package script.
 - Test-only `jszip` and `pdf-lib` dependencies.
 
 ### C. Historical documents/research — keep as history
 
-- Historical sections inside `docs/decisions.md`.
-- `docs/user-pain-validation.md`.
-- `docs/study-guide-maker-competitor-analysis.md`.
+- Historical sections inside `docs/product/decisions.md`.
+- `docs/research/user-pain-validation.md`.
+- `docs/research/study-guide-maker-competitor-analysis.md`.
 - `docs/archive/assessment-validity-plan.md` with explicit historical/archive status.
 - `docs/archive/seo-audit.md` and `docs/archive/seo-implementation-report.md` as dated snapshots.
 
@@ -209,9 +209,9 @@ The approved cleanup moved these historical files into `docs/archive/` and fixed
 - `docs/archive/mvp-technical-plan.md`: superseded proposed plan; `technical-architecture.md` replaces current status.
 - `docs/archive/seo-audit.md`: historical pre-SEO snapshot with now-fixed MISSING items.
 - `docs/archive/seo-implementation-report.md`: historical v3 implementation snapshot; current open work lives in v5 docs.
-- Original `docs/product-context.md` v4 and top `decisions.md` v4: updated to v5 while history remains.
+- Original `docs/product/product-context.md` v4 and top `product/decisions.md` v4: updated to v5 while history remains.
 - Root `README.md`: Phase 2 label is outdated; update to a v5 baseline/index without pretending missing features exist.
-- `docs/production-seo-checklist.md`: retain as active checklist but merge in pre-launch protection/noindex and billing launch gates.
+- `docs/operations/production-seo-checklist.md`: retain as active checklist but merge in pre-launch protection/noindex and billing launch gates.
 
 ### E. Clearly unused files safe to delete
 
@@ -279,7 +279,7 @@ Moved into `docs/archive/`, retaining Git history and fixing links:
 4. `docs/archive/seo-audit.md`
 5. `docs/archive/seo-implementation-report.md`
 
-Research references remain at `docs/user-pain-validation.md` and `docs/study-guide-maker-competitor-analysis.md`; they were intentionally not archived or deleted.
+Research references remain at `docs/research/user-pain-validation.md` and `docs/research/study-guide-maker-competitor-analysis.md`; they were intentionally not archived or deleted.
 
 ### Merge/replace in active governance
 

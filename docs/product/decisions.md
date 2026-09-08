@@ -16,7 +16,7 @@ Decision date: 2026-08-26
 - Anonymous conversion requires both a verified Supabase user and possession of the current anonymous cookie. The database claim is atomic, uses `auth.uid()`, accepts no Guide ID, clears anonymous credentials, and cannot claim expired, deleted, or already-owned data.
 - Authenticated RLS is owner-scoped; anonymous roles retain no direct table access. Server service-role queries remain behind explicit DAL authorization.
 - Paddle Billing is implemented and verified in the isolated Sandbox deployment and the approved Production Live deployment. Provider-independent customer, entitlement, plan, and usage records attach to the durable user owner; Live billing is server-verified and environment-scoped.
-- The full rationale, lifecycle, retention, repair, and privacy contract is in `docs/auth-and-persistence.md`.
+- The full rationale, lifecycle, retention, repair, and privacy contract is in `docs/architecture/auth-and-persistence.md`.
 
 ### Public Launch Cutover decision
 
@@ -42,7 +42,7 @@ Decision date: 2026-08-26
 - Delete is a real soft delete. The aggregate is inaccessible immediately and is scheduled for the existing Storage-first retention flow after a 30-day window; Product-3B does not directly purge Storage or database children.
 - Browser mutations go through owner-authorized, same-origin Route Handlers. Direct authenticated table writes remain closed by RLS.
 - Library, Search, full Profile, Payment, SEO v2, deployment, and public indexing remain outside Product-3B.
-- The detailed contract is in `docs/guide-management.md`.
+- The detailed contract is in `docs/architecture/guide-management.md`.
 
 ### Product-3C Library, Search, and Profile decision
 
@@ -56,7 +56,7 @@ Decision date: 2026-08-26
 - `/account` remains a compatibility redirect to `/profile`. My Guides, Library, Search, and Profile share a real responsive Workspace navigation.
 - Account deletion is implemented synchronously through Profile and `/api/account`: after same-origin confirmation and rate limiting, the server removes private Storage, owned database sessions and dependent data, then the Auth user. A valid Paddle Live subscription is rejected rather than automatically cancelled; no persistent deletion request, retry, or audit state is written.
 - `202608260003_product_3c_library_search_profile.sql` is the formal Product-3C migration. It and the earlier Product-3B migration were applied to dev in order through the official Supabase CLI during the Product-3 Gate, followed by forward-only security and filename-search repairs `202608260004` and `202608260005`.
-- The detailed contract is in `docs/library-search-profile.md`.
+- The detailed contract is in `docs/architecture/library-search-profile.md`.
 
 ### Product-3 Phase 2 Gate decision
 
@@ -81,7 +81,7 @@ Decision date: 2026-08-31
 - Production commit `613dbeb` passed the provider boundary probe, Workflow smoke, real PDF x3, legacy PPT x2, Guide rendering/reload, Cron authorization, Auth/claim, and Product-3 regression. `AI_GENERATION_WORKFLOW_ENABLED=true`; `PRELAUNCH=true` remains mandatory.
 - Five real-material samples do not establish p95. Provider variability and the bounded duplicate-call window remain accepted pre-launch risks.
 - The AI Workflow Rollout Gate is PASS. Payment may resume only as its own explicitly scoped task; this decision does not start Payment, SEO v2, or public indexing.
-- Detailed evidence is in `docs/ai-generation-workflow-rollout.md`.
+- Detailed evidence is in `docs/operations/ai-generation-workflow-rollout.md`.
 
 ### Product identity and category ownership
 
@@ -117,20 +117,20 @@ The existing Academic Editorial direction, current Folveta screens, and prior St
 
 The accessible repository `https://github.com/nobruf/shadcn-landing-page` and the ZippyStarter shadcn theme generator are reference resources only. They do not authorize wholesale replacement of Folveta or automatic dependency adoption. Any reused code or new library must pass license, compatibility, accessibility, maintenance, bundle, and visual-consistency review.
 
-Folveta UI Foundation v2 is established in `docs/ui-design-system.md`. It keeps Bricolage Grotesque, Geist, and Lucide; adopts Folveta-owned semantic tokens and local shared primitives; introduces no new runtime dependency; removes visually misleading Product-3 shell controls until their real routes exist; and requires reduced-motion plus visible-focus behavior. Page-level polish remains a separate Phase 1 task.
+Folveta UI Foundation v2 is established in `docs/architecture/ui-design-system.md`. It keeps Bricolage Grotesque, Geist, and Lucide; adopts Folveta-owned semantic tokens and local shared primitives; introduces no new runtime dependency; removes visually misleading Product-3 shell controls until their real routes exist; and requires reduced-motion plus visible-focus behavior. Page-level polish remains a separate Phase 1 task.
 
 ### SEO decision
 
-SEO v2 follows `docs/SEO_GUIDE.md` and the Folveta-specific `docs/seo-architecture.md`. The homepage owns `Study Guide Maker`. Folveta will not create a Blog, Pricing page, Use Case hub, Tools hub, comparison cluster, or programmatic SEO inventory without distinct user value and a real product/search requirement. A public Pricing page is justified only by the implemented commercial model.
+SEO v2 follows `docs/architecture/SEO_GUIDE.md` and the Folveta-specific `docs/architecture/seo-architecture.md`. The homepage owns `Study Guide Maker`. Folveta will not create a Blog, Pricing page, Use Case hub, Tools hub, comparison cluster, or programmatic SEO inventory without distinct user value and a real product/search requirement. A public Pricing page is justified only by the implemented commercial model.
 
 ### Documentation decision
 
-- `docs/decisions.md` is the highest product-decision authority and preserves decision history.
-- `docs/product-context.md` is the concise current product context.
-- `docs/v5-master-roadmap.md` is the active delivery roadmap.
-- `docs/seo-architecture.md` is the project-specific SEO architecture; `docs/SEO_GUIDE.md` is the reusable standard.
-- `docs/technical-architecture.md` records the actual technical baseline and approved target boundaries.
-- `docs/current-state-audit.md` records the 2026-08-25 audit and cleanup classifications.
+- `docs/product/decisions.md` is the highest product-decision authority and preserves decision history.
+- `docs/product/product-context.md` is the concise current product context.
+- `docs/product/v5-master-roadmap.md` is the active delivery roadmap.
+- `docs/architecture/seo-architecture.md` is the project-specific SEO architecture; `docs/architecture/SEO_GUIDE.md` is the reusable standard.
+- `docs/architecture/technical-architecture.md` records the actual technical baseline and approved target boundaries.
+- `docs/research/current-state-audit.md` records the 2026-08-25 audit and cleanup classifications.
 - Historical plans and implementation reports must carry an explicit status banner and must not be interpreted as current authorization.
 
 ### v5 implementation sequence
@@ -143,7 +143,7 @@ SEO v2 follows `docs/SEO_GUIDE.md` and the Folveta-specific `docs/seo-architectu
 6. Phase 5 — Protected production pre-launch, full E2E, security/privacy, accessibility, and performance QA.
 7. Phase 6 — Public launch, explicit indexing cutover, and monitoring.
 
-The design-token foundation, Product-3 technical design, SEO research/page ownership, and pre-launch infrastructure design may overlap where `docs/v5-master-roadmap.md` permits. Identity must precede entitlement enforcement; product/pricing facts must settle before final SEO copy and structured data; all launch gates must pass before indexing is enabled.
+The design-token foundation, Product-3 technical design, SEO research/page ownership, and pre-launch infrastructure design may overlap where `docs/product/v5-master-roadmap.md` permits. Identity must precede entitlement enforcement; product/pricing facts must settle before final SEO copy and structured data; all launch gates must pass before indexing is enabled.
 
 ### v5 final judgment
 
@@ -151,7 +151,7 @@ The design-token foundation, Product-3 technical design, SEO research/page owner
 
 ### Payment / Billing v1 architecture status (2026-08-31)
 
-- Payment/Billing v1 has been audited and documented in `docs/payment-billing-architecture.md`.
+- Payment/Billing v1 has been audited and documented in `docs/architecture/payment-billing-architecture.md`.
 - This is a **draft awaiting owner confirmation**, not an approved commercial decision. No provider, price, quota, SDK, Checkout, webhook, live Product/Price, or production billing setting is approved.
 - The current proposal is Free + one Paid monthly subscription, Study Guide success as the user-facing usage unit, Quick Check included in that unit, and a provider-independent entitlement/reservation boundary keyed by `auth.users.id`.
 - Paddle Billing is the conditional primary candidate and Lemon Squeezy the conditional backup; Stripe remains conditional on an eligible overseas entity and settlement account. Mainland China onboarding and payout eligibility must be confirmed by the operator.

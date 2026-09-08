@@ -1,6 +1,6 @@
 # SEO Audit
 
-> Status: **Historical snapshot from 2026-08-24.** Many MISSING items in this report were implemented on 2026-08-25. Use `docs/current-state-audit.md` and `docs/seo-architecture.md` for current v5 state; retain this file as audit history.
+> Status: **Historical snapshot from 2026-08-24.** Many MISSING items in this report were implemented on 2026-08-25. Use `docs/research/current-state-audit.md` and `docs/architecture/seo-architecture.md` for current v5 state; retain this file as audit history.
 
 审查对象：`study-guide-maker` 当前项目工作区。
 
@@ -61,9 +61,9 @@
 
 ### SEO Intent and Product Fit
 
-文件：[docs/product-context.md](../product-context.md)、[docs/archive/mvp-ux-spec.md](mvp-ux-spec.md)、[app/page.tsx](../../app/page.tsx)
+文件：[docs/product/product-context.md](../product/product-context.md)、[docs/archive/mvp-ux-spec.md](mvp-ux-spec.md)、[app/page.tsx](../../app/page.tsx)
 
-- `study guide maker` 已被确定为核心关键词，见 `docs/product-context.md` 第 3-5 行。
+- `study guide maker` 已被确定为核心关键词，见 `docs/product/product-context.md` 第 3-5 行。
 - 首页页面形态正确：用户可以直接上传课程资料并生成学习指南，属于工具/交易型落地页。
 - H1 和 CTA 基本符合产品意图，但没有完整落实 UX 规范中指定的 SEO title、H1 文案、subhead 和完整流程文案。规范见 `docs/archive/mvp-ux-spec.md` 第 125-132 行。
 - 当前首页正文约 95 个英文词，包含品牌、短说明、CTA、上传限制和流程提示；对于竞争性 `study guide maker` SERP，内容深度不足。

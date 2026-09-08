@@ -1,6 +1,6 @@
 # Study Guide Maker MVP UX Specification
 
-> Status: **Superseded v3 UX plan; historical baseline only.** Current product context and delivery scope are in `docs/product-context.md` and `docs/v5-master-roadmap.md`. This file contains planned capabilities that were not all implemented and must not authorize v5 work.  
+> Status: **Superseded v3 UX plan; historical baseline only.** Current product context and delivery scope are in `docs/product/product-context.md` and `docs/product/v5-master-roadmap.md`. This file contains planned capabilities that were not all implemented and must not authorize v5 work.
 > Product direction: **Study Guide Maker + optional Quick Check**  
 > Core SEO keyword: `study guide maker`  
 > Audience: US college students in lecture-heavy, exam-based courses  

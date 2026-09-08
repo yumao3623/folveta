@@ -1,6 +1,6 @@
 # AI Generation Workflow Production Rollout
 
-Status: **Historical Generation v1 production rollout snapshot, verified 2026-08-31. Retained as v1 baseline evidence; current generation changes are tracked in `docs/generation-v2-design.md`.**
+Status: **Historical Generation v1 production rollout snapshot, verified 2026-08-31. Retained as v1 baseline evidence; current generation changes are tracked in `docs/architecture/generation-v2-design.md`.**
 Verified: 2026-08-31  
 Production commit: `6107dac49cae2eec559c19056b9abefe88ca3312`
 Production deployment: `dpl_8BeB3kMaagkXLT4WKJ13hiCfQqSy` (`READY`)

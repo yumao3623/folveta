@@ -2,8 +2,8 @@
 
 Status: **Current design-system foundation**  
 Established: 2026-08-26  
-Decision authority: `docs/decisions.md`  
-Delivery roadmap: `docs/v5-master-roadmap.md`
+Decision authority: `docs/product/decisions.md`
+Delivery roadmap: `docs/product/v5-master-roadmap.md`
 
 ## 1. Scope and visual acceptance brief
 
@@ -127,7 +127,7 @@ Controls use stable heights and icon dimensions. Long topic names truncate in si
 - Tokens and state classes: `app/globals.css`
 - Font loading: `app/layout.tsx`
 - Shared APIs: `components/ui/`
-- Foundation contract tests: `tests/ui-foundation.test.ts`
+- Foundation contract tests: `tests/unit/ui-foundation.test.ts`
 - First consumers: Landing navigation/actions, Upload, parsing/generation feedback, Guide and Assessment shells, source references, Quick Check controls, and Results cards.
 
 ## 9. Page-level composition rules

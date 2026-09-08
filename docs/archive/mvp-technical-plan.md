@@ -1,7 +1,7 @@
 # Study Guide Maker MVP Technical Plan
 
-> Status: **Superseded proposed v3 technical plan; historical baseline only.** Much of the core was implemented, while pasted text, source roles, lease/checkpoint resume, cleanup, rate limits, and other items were not. Use `docs/technical-architecture.md` for actual current state and `docs/v5-master-roadmap.md` for future work.  
-> Historical product decision authority: `docs/decisions.md` v3  
+> Status: **Superseded proposed v3 technical plan; historical baseline only.** Much of the core was implemented, while pasted text, source roles, lease/checkpoint resume, cleanup, rate limits, and other items were not. Use `docs/architecture/technical-architecture.md` for actual current state and `docs/product/v5-master-roadmap.md` for future work.
+> Historical product decision authority: `docs/product/decisions.md` v3
 > Product: **Study Guide Maker + optional Quick Check**  
 > Core loop: `Upload materials → Generate Study Guide → Review priority sections → Optional Quick Check → Return to weak Study Guide sections`
 

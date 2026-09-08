@@ -11,11 +11,11 @@ Current implemented loop:
 
 The repository is now governed by the v5 documents. Start with [docs/README.md](docs/README.md), then read:
 
-- [Product decisions](docs/decisions.md)
-- [Current product context](docs/product-context.md)
-- [v5 master roadmap](docs/v5-master-roadmap.md)
-- [Current technical architecture](docs/technical-architecture.md)
-- [Folveta SEO architecture](docs/seo-architecture.md)
+- [Product decisions](docs/product/decisions.md)
+- [Current product context](docs/product/product-context.md)
+- [v5 master roadmap](docs/product/v5-master-roadmap.md)
+- [Current technical architecture](docs/architecture/technical-architecture.md)
+- [Folveta SEO architecture](docs/architecture/seo-architecture.md)
 
 ## Current status
 

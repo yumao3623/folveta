@@ -3,8 +3,8 @@
 Status: **Current roadmap**  
 Last updated: 2026-09-07
 Last repository verification: 2026-09-07 (`npm run check`; dated Production records below were not revalidated)
-Decision authority: `docs/decisions.md`  
-Baseline audit: `docs/current-state-audit.md`
+Decision authority: `docs/product/decisions.md`
+Baseline audit: `docs/research/current-state-audit.md`
 
 ## Roadmap outcome
 
@@ -100,7 +100,7 @@ Create a trusted v5 baseline, eliminate planning ambiguity, and prepare a revers
 
 ## Phase 1 — UI/UX Polish v2
 
-Implementation status: **Phase 1 foundation and page-level polish complete on dedicated feature branches.** See `docs/ui-design-system.md`.
+Implementation status: **Phase 1 foundation and page-level polish complete on dedicated feature branches.** See `docs/architecture/ui-design-system.md`.
 
 **Goal**
 
@@ -202,9 +202,9 @@ Dependency/license constraints:
 
 Product-3A implementation record (2026-08-26): the repository now contains Supabase Auth email/password flows, PKCE callback, sign-out, session refresh, logged-in/anonymous states, owner-aware anonymous compatibility, an atomic token-only anonymous claim, stable Guide ID/title/access metadata, owner-derived Source/Quick Check/Result access, authenticated RLS policies, a Guide reopen metadata API, minimal private Auth/account UI, and a protected Storage-first retention endpoint. The migration is applied in the configured dev project; a scoped manual two-user E2E passed for claim, reopen, sign-out isolation, cross-owner denial, RLS, Quick Check, and Results. Real AI Guide generation in that run remains unverified because the configured model gateway returned retryable Cloudflare 502 responses, and deployment retention scheduling remains unconfigured. Product-3A does not implement My Guides, Recent Guides, Library, Search, full Profile, or Payment.
 
-Product-3B implementation record (2026-08-26): the repository now contains authenticated My Guides, real owner-only Landing Recent Guides, bounded active/archive pagination, embedded source counts, stable recent ordering, server-authorized reopen, title-only rename, archive/restore, and 30-day soft-delete staging behind Guide management Route Handlers. Private metadata remains `noindex,nofollow`; no user content enters public metadata or the sitemap. Automated coverage at completion was 54 tests plus typecheck, lint, and production build. A scoped real dev Supabase two-account E2E and 1440px/390px browser QA passed, and all temporary fixtures were cleaned. Its index migration was later applied through the official CLI during the Product-3 Gate. Library, Search, full Profile, Payment, SEO v2, deployment, indexing, and retention scheduling remain outside Product-3B. See `docs/guide-management.md` for the query, verification, and lifecycle contract.
+Product-3B implementation record (2026-08-26): the repository now contains authenticated My Guides, real owner-only Landing Recent Guides, bounded active/archive pagination, embedded source counts, stable recent ordering, server-authorized reopen, title-only rename, archive/restore, and 30-day soft-delete staging behind Guide management Route Handlers. Private metadata remains `noindex,nofollow`; no user content enters public metadata or the sitemap. Automated coverage at completion was 54 tests plus typecheck, lint, and production build. A scoped real dev Supabase two-account E2E and 1440px/390px browser QA passed, and all temporary fixtures were cleaned. Its index migration was later applied through the official CLI during the Product-3 Gate. Library, Search, full Profile, Payment, SEO v2, deployment, indexing, and retention scheduling remain outside Product-3B. See `docs/architecture/guide-management.md` for the query, verification, and lifecycle contract.
 
-Product-3C implementation record (2026-08-26): the repository now contains a Source-owned multi-format Library, owner-scoped sorting/filtering/pagination, archived/deleted relationship handling, PostgreSQL FTS over Guide/Topic/Source data, bounded authenticated search, a real Profile summary, two authenticated read APIs, and responsive My Guides/Library/Search/Profile navigation. All new routes are `noindex,nofollow`. Initial repository coverage was 66 tests. See `docs/library-search-profile.md`.
+Product-3C implementation record (2026-08-26): the repository now contains a Source-owned multi-format Library, owner-scoped sorting/filtering/pagination, archived/deleted relationship handling, PostgreSQL FTS over Guide/Topic/Source data, bounded authenticated search, a real Profile summary, two authenticated read APIs, and responsive My Guides/Library/Search/Profile navigation. All new routes are `noindex,nofollow`. Initial repository coverage was 66 tests. See `docs/architecture/library-search-profile.md`.
 
 Product-3 Phase 2 Gate record (2026-08-26): the official Supabase CLI channel is linked to dev and local/remote history matches through `202608260005`. Product-3B/Product-3C indexes, GIN indexes, RPC security/grants, and RLS were verified on the deployed schema; normalized filename search used its GIN query path. A deterministic two-account dev Gate passed My Guides, Recent, Library, Search, Profile, Guide lifecycle, Quick Check/Results regression, page/API/direct-client/RPC owner isolation, signed-out isolation, relogin persistence, desktop/390px layout, private noindex, and console checks. All fixtures and users were cleaned. Account deletion was originally deferred as a mandatory Payment/Production prerequisite; it is now implemented. At that gate, retention scheduling and real AI full-chain validation remained Production Readiness work; both are now completed.
 
@@ -390,7 +390,7 @@ Make `https://folveta.com` the canonical, technically sound owner of the `Study 
 
 - Stable Phase 2 public/private route map.
 - Stable Phase 3 pricing/offer facts for any pricing content.
-- `docs/SEO_GUIDE.md` and `docs/seo-architecture.md`.
+- `docs/architecture/SEO_GUIDE.md` and `docs/architecture/seo-architecture.md`.
 
 **Data/schema impact**
 
@@ -563,7 +563,7 @@ Make approved public canonical pages discoverable, submit them for indexing, and
 
 ## Recommended Codex task sequence
 
-1. `v5-cleanup-execution` — only after approving `docs/current-state-audit.md` candidates.
+1. `v5-cleanup-execution` — only after approving `docs/research/current-state-audit.md` candidates.
 2. `ui-polish-v2-foundation` — tokens, primitives, license/compatibility decision, visual acceptance fixtures.
 3. `ui-polish-v2-core-surfaces` — Landing/Upload then Guide/Quick Check/Results.
 4. `product3-identity-schema-threat-model`.

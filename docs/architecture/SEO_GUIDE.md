@@ -1,6 +1,6 @@
 # SEO Guide for AI Tools and SaaS Products
 
-> Status: **Current reusable SEO standard.** Folveta-specific keyword ownership, route index policy, pre-launch mode, and launch cutover are defined in `docs/seo-architecture.md`. For Folveta, the primary SEO category is `Study Guide Maker`; AI is a capability descriptor.
+> Status: **Current reusable SEO standard.** Folveta-specific keyword ownership, route index policy, pre-launch mode, and launch cutover are defined in `docs/architecture/seo-architecture.md`. For Folveta, the primary SEO category is `Study Guide Maker`; AI is a capability descriptor.
 
 This guide defines a reusable SEO standard for AI tools, AI SaaS products, and online software products. It is intentionally independent of any one framework, CMS, analytics platform, or business model.
 

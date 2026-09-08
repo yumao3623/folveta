@@ -1,6 +1,6 @@
 # Folveta Root Redesign Audit
 
-Status: **Historical Generation v2 research and architecture decision snapshot from 2026-09-03. Current implementation is tracked in `docs/generation-v2-design.md`.**
+Status: **Historical Generation v2 research and architecture decision snapshot from 2026-09-03. Current implementation is tracked in `docs/architecture/generation-v2-design.md`.**
 
 This document does not authorize or include a production, database, provider, UI, SEO, retry-policy, or deployment change.
 
@@ -205,7 +205,7 @@ Current call count is approximately `P + 2T + E`, where `P` is planning calls, `
 
 These are estimates, not promises: page density, chunk token budgets, and the planner's topic count vary. The configured invocation ceiling is 40, three total attempts per operation, and four shared retry credits, so retry cannot safely be described as a fixed maximum calls per Guide without modeling the DB admission state. It can nevertheless push an already broad call graph toward its global budget.
 
-Production rollout evidence recorded in [ai-generation-workflow-rollout.md](ai-generation-workflow-rollout.md) shows real PDFs using 16-18 operations and 15-17 provider attempts, roughly 175-189 seconds wall time, with 452-475 seconds summed provider time. That is consistent with an 8-topic single-plan Guide requiring one plan, eight Guide calls, eight grounding calls, and a finalizer. Five successful samples do not establish p95.
+Production rollout evidence recorded in [ai-generation-workflow-rollout.md](../operations/ai-generation-workflow-rollout.md) shows real PDFs using 16-18 operations and 15-17 provider attempts, roughly 175-189 seconds wall time, with 452-475 seconds summed provider time. That is consistent with an 8-topic single-plan Guide requiring one plan, eight Guide calls, eight grounding calls, and a finalizer. Five successful samples do not establish p95.
 
 Generation v2 target:
 
@@ -353,6 +353,6 @@ Continue investing in Folveta only if the narrower course-pack/exam-blueprint pr
 ## Evidence and scope notes
 
 - Current-code findings were inspected in `lib/ai/`, `lib/server/parser.ts`, `lib/schemas/guide.ts`, `app/workflows/`, `components/generation-panel.tsx`, and the generation/billing Supabase migrations on 2026-09-03.
-- Historical real-material timing and operation measurements are quoted from `docs/ai-generation-workflow-rollout.md`; they are not a p95 claim.
+- Historical real-material timing and operation measurements are quoted from `docs/operations/ai-generation-workflow-rollout.md`; they are not a p95 claim.
 - GitHub repository metadata, READMEs, source trees, and selected public issue feeds were reviewed on 2026-09-03. Public issue reports are signals, not verified root causes.
 - Product observations are public information only. Product limits/prices and landing-page details can change; the linked dated competitor analysis retains the detailed capture record.
