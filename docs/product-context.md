@@ -1,7 +1,7 @@
 # Folveta Current Product Context
 
 Status: **Current v5 context**  
-Last updated: 2026-09-02
+Last updated: 2026-09-07
 Decision authority: `docs/decisions.md`  
 Delivery roadmap: `docs/v5-master-roadmap.md`
 
@@ -27,7 +27,7 @@ The Guide is the primary artifact. Quick Check is optional and subordinate. Folv
 
 ## Actual implemented baseline
 
-The following exists in the current repository and passed build/typecheck/lint/tests during the Production release validation and 2026-09-02 public-launch cutover:
+The following exists in the current repository. The 2026-09-07 local repository check passed; Production-specific claims below retain their original verification dates and are not revalidated by that local check:
 
 - Next.js 16.3.2 App Router, React 19, TypeScript, Tailwind CSS 4.
 - Folveta landing/upload experience with real PDF, Office, and image input.
@@ -35,16 +35,17 @@ The following exists in the current repository and passed build/typecheck/lint/t
 - PDF, DOCX, XLSX, and PPTX parsing with page/slide/paragraph/sheet boundaries, warnings, duplicate detection, hashes, and stable evidence spans. Legacy `.ppt` uses local slide-text extraction; common images and legacy binary `.doc/.xls` use constrained model/file-input extraction with a single anchor only when no local structural parser is available.
 - Structured multi-stage model pipeline for topic extraction, topic merge, Guide generation, grounding verification, and persisted Guide JSON.
 - Durable Vercel Workflow orchestration with Supabase-backed logical runs, operation CAS/fencing/leases, database-authorized retries, four-per-run/eight-global provider capacity, minute reconciliation, privacy-safe telemetry, and browser-independent continuation.
+- A controlled Generation V2 path with separate request/artifact/terminal-Guide persistence, thin Workflow execution, dedicated billing admission/settlement, formal Generate/status/view/list integration, and runtime/product/allowlist write gates. Production V2 enablement and acceptance remain unverified.
 - Study Guide workspace with priorities, concepts, definitions, processes/relationships, confusions, gaps, and source references.
 - Lazy five-question MCQ Quick Check, independent validation/filtering, answer-safe taking payload, deterministic scoring, persisted results, and Guide return links.
-- Anonymous high-entropy session cookie with a default seven-day expiry, plus repository-level Supabase Auth, owner claim, and persistent Guide foundations from Product-3A.
+- Anonymous high-entropy session cookie with a default seven-day expiry, plus Supabase email/password Auth, owner claim, password recovery/reset, persistent Guide ownership, and synchronous account deletion.
 - Account-owned My Guides and real Landing Recent Guides, with bounded pagination, source counts, stable-ID reopen, rename, archive/restore, and 30-day soft-delete staging from Product-3B.
 - Account-owned Source Library with multi-format filtering, sorting, pagination, real source metadata, and archived/deleted Guide relationship handling from Product-3C.
 - Private PostgreSQL full-text knowledge Search across active Guide titles/topics/content and Source filenames/spans, with Guide/Topic/Source result types and bounded pagination from Product-3C.
 - A real Profile route with Supabase Auth email/creation date, owner-scoped Guide/Source totals, sign-out, and responsive Workspace navigation from Product-3C.
-- About, Privacy, Terms, canonical metadata, social images, JSON-LD, robots, sitemap, explicit study-route noindex rules, and fail-closed pre-launch indexing control.
+- About, Privacy, Terms, canonical metadata, social images, JSON-LD, robots, an eight-route current sitemap definition, explicit study-route noindex rules, and fail-closed pre-launch indexing control.
 - Folveta favicon/app icon assets derived from the approved green Folveta wordmark without changing the in-page wordmark or Logo treatment.
-- Synthetic demo Guide and Quick Check plus 124 passing automated tests (4 skipped) across schema, parser, Workflow durability, provider contracts, Quick Check, Auth/persistence, Guide management, Library/Search/Profile, SEO behavior, environment handling, and UI foundation contracts.
+- Synthetic demo Guide and Quick Check plus 188 ordinary tests passing (10 skipped) and 3 Workflow tests passing in the 2026-09-07 local repository check, across schema, parser, Workflow durability, provider contracts, Quick Check, Auth/persistence, Guide management, Library/Search/Profile, billing, Generation V2, SEO behavior, environment handling, and UI foundation contracts.
 
 Implemented UI milestones are UI-1 Study Guide Workspace, UI-2 Landing / Upload, and UI-4 Quick Check / Results. They are implementation baselines, not final visual sign-off.
 
@@ -55,7 +56,7 @@ Implemented UI milestones are UI-1 Study Guide Workspace, UI-2 Landing / Upload,
 - The official Supabase CLI channel is linked to the Production project. Remote migration history is traceable through `20260830080742`, including the AI reliability, source-format, durable Workflow, remote-validation, Supabase reconciler, and Cron registration migrations.
 - Product-3C passed a real dev two-account/RLS/browser Gate covering Library, Search, Profile, workspace navigation, cross-owner page/API/direct-client denial, signed-out isolation, relogin persistence, query behavior, and regression paths. All temporary aggregates and Auth users were cleaned.
 - A single `sgm_session` cookie represents one anonymous session token; creating another session replaces browser access to the prior session.
-- Account deletion is READY through the Storage-first, child-record/Auth cleanup, retry, retention, request-channel, and billing-cancellation orchestration; deleting only `auth.users` remains disallowed.
+- Account deletion runs synchronously through Storage, owned database sessions, and the Auth user. A valid Paddle Live subscription causes the request to be rejected; the flow does not automatically cancel the subscription. There is no persisted deletion request, retry, or audit state, and deleting only `auth.users` remains disallowed.
 - Live Payment and the approved public offer are implemented and validated in Production: Free (2 successful Study Guides/month) and Folveta Pro (10 successful Study Guides/month at US$12/month), with server-enforced usage, Checkout, signed/idempotent webhooks, Customer Portal, cancellation scheduling, and refund handling. Sandbox and Live state remain environment-scoped.
 - Public indexing cutover is complete for the approved discovery pages. Production `PRELAUNCH` is explicitly false; public pages return `index,follow`, while private routes remain `noindex,nofollow`.
 - Protected Storage-first retention cleanup is READY. Distributed rate limiting and production monitoring are READY; analytics consent and any broader support/privacy operations remain separate policy work.
@@ -93,7 +94,7 @@ Remaining UI limitations:
 - The transformation preview uses accurate synthetic demo content, not a captured real-user Guide or external illustration asset.
 - Process/relationship data remains a list of grounded claims. The UI does not invent nodes, edges, or ordered steps; Study Path visualizes only the real topic priority order.
 - Long Guide density still depends on generated topic count and claim length, and there is no automated browser visual-regression suite yet.
-- Product-3C Workspace navigation is implemented across My Guides, Library, Search, and Profile and passed desktop/390px browser QA. Full account deletion/recovery orchestration remains a Payment/Production prerequisite.
+- Product-3C Workspace navigation is implemented across My Guides, Library, Search, and Profile and passed desktop/390px browser QA. Password recovery, account deletion, and generation billing are implemented.
 
 UI/UX Polish v2 must establish Folveta-owned tokens and reusable primitives before Product-3 pages multiply the current inconsistencies.
 
@@ -157,7 +158,7 @@ Open questions for staged validation:
 1. Which Guide structures and priority explanations most improve real study behavior?
 2. Which free allowance proves value without making model cost unsustainable?
 3. Which paid unit is clearest: Guides, source pages/slides, monthly processing allowance, or a hybrid?
-4. Should anonymous work be claimable after sign-up, and under what security/expiry rules?
+4. ~~Should anonymous work be claimable after sign-up, and under what security/expiry rules?~~ Resolved: atomic one-time anonymous claim after authentication is implemented.
 5. What cross-guide search scope is valuable without requiring a premature vector platform?
 6. Which UI changes improve clarity and trust rather than adding decoration?
 7. Which public pages have enough distinct user value to deserve indexing after launch?

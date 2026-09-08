@@ -1,6 +1,6 @@
 # Folveta Generation v2 Design
 
-**Status: Slice 1-4 implementation contract and record.** Generation v2 remains internal/development-only; this document authorizes no production routing, UI rollout, or billing change.
+Status: **Repository implementation through controlled allowlist routing.** V2 contract, provider, four-table persistence, Workflow runtime, billing RPCs, formal generate/status/view/list integration, and allowlist routing are implemented. V2 Quick Check, search, library related-guide reads, intermediate snapshots, synthesis, v2 reconciliation, percentage rollout, measured acceptance reports, Production enablement, default routing, and v1 retirement remain unimplemented or unverified.
 
 ## 1. Decision summary
 
@@ -66,12 +66,12 @@ Generation v2 does not add a vector database, general chat, a multi-agent system
 
 | Request state | Meaning | User result | Billing |
 | --- | --- | --- | --- |
-| `queued` / `working` | Server-owned work is continuing | Progress and any already assembled snapshot | No settlement yet |
+| `queued` / `working` | Server-owned work is continuing | Progress only; no Guide snapshot is assembled or displayed yet | No settlement yet |
 | `complete` | Every required readable partition has a valid artifact | Full Guide | One unit consumed |
-| `complete_with_gaps` | Core map plus one or more valid sections are persisted; remaining work is exhausted, deferred, or unavailable | Usable Guide with an explicit coverage-gap view and retry actions | One unit consumed because a usable Guide was delivered |
+| `complete_with_gaps` | Required artifacts are terminal and at least one usable artifact completed while another ended as a gap | Terminal Guide with a generic incomplete/gaps notice; no detailed Gap operation or Retry button | One unit consumed because a usable Guide was delivered |
 | `failed_no_guide` | No valid core section can be delivered, or no readable source exists | No Guide; actionable source/provider message | Reservation released |
 
-`complete_with_gaps` is intentionally not an error disguised as success. The Guide displays the gap source, locator/range when known, reason (`unreadable`, `provider_transient_exhausted`, `invalid_output`, `not_requested`, or `synthesis_unavailable`), and the action available to the user.
+`complete_with_gaps` is intentionally not an error disguised as success. The current V2 page displays only a generic incomplete/gaps notice. It does not expose detailed Gap operations, source/locator/reason details for each gap, or a user Retry action.
 
 ### True success unit
 
@@ -82,7 +82,7 @@ A Guide snapshot is deliverable only if all of the following hold:
 - Every non-gap claim has at least one supplied source span ID.
 - Every source reference resolves server-side to the current source, locator, and canonical excerpt.
 - The JSON passes the v2 schema and deterministic referential-integrity checks.
-- The snapshot, request status, and billing settlement are committed consistently.
+- Request creation, billing reservation, terminal Guide assembly, and billing settlement are separate idempotent database calls. The current runtime does not include a terminal reconciliation path for an assembly-success/billing-settlement-failure window.
 
 For long input, "full" means every readable partition in the manifest has a section artifact. A section that contains no useful readable text is a parser gap, not a provider failure and is excluded from the required-partition denominator.
 
@@ -131,15 +131,15 @@ Keep `Study First`, `Study Next`, and `Review If Time`. They are useful navigati
 - `Study Next`: supported material that follows the first band or completes a prerequisite chain.
 - `Review If Time`: lower-emphasis or peripheral material that is still present in the course pack.
 
-No band claims to predict an exam or certify mastery. The Guide should render, in order: priority map, why, concise explanation, source click-back, visible coverage gaps, and the Quick Check review target. Existing rich blocks remain compatible as optional presentations rather than generation gates.
+No band claims to predict an exam or certify mastery. The intended Guide contract includes a priority map, rationale, explanation, source click-back, visible coverage gaps, and a Quick Check review target. The current V2 page does not yet provide detailed Gap operations, source click-back, or a V2 Quick Check entry. Existing rich blocks remain compatible as optional presentations rather than generation gates.
 
 ## 4. Generation flow
 
 ### Step 0: source snapshot
 
-The server collects only `ready` and `ready_with_gaps` sources and readable spans. It computes a deterministic snapshot from sorted source content hashes plus source role metadata (ordinary material, optional scope/review-sheet material). A changed file creates a new snapshot; artifacts from different snapshots are never mixed.
+The server collects only `ready` and `ready_with_gaps` sources and readable spans. It computes an ordered snapshot hash from source IDs/display names/status/counts/warnings and span IDs/locators/ordinals/content hashes. Runtime-loaded sources currently use the `material` role. A changed file creates a new snapshot; artifacts from different snapshots are never mixed.
 
-The parser contract records unit counts and warnings in the request. A parser warning is carried into `coverage.gaps[]`; it does not silently disappear at finalization.
+The parser contract records unit counts and warnings in the request. Parser warnings participate in the snapshot hash but are not currently copied into the terminal runtime Guide's `coverage.gaps[]`; runtime status is derived from artifact completion.
 
 ### Step 1: deterministic manifest
 
@@ -149,7 +149,7 @@ The server groups spans into ordered partitions while preserving source and loca
 - **Long:** partitions are independently sized evidence bundles. One section artifact call per partition, with bounded concurrency.
 - **Multi-file:** the same partition engine, but never crosses a source boundary unless a source is itself split. File identity and late-file coverage remain visible.
 
-There is no separate `extract_topics` or `merge_topics` call on the bounded path. A planning artifact is the `study_map` in the Guide response. On the long path, each section call emits its priority and rationale. If more than one section succeeds, one optional `synthesis` artifact may reorder the map and explain cross-file dependencies; it is never required to show the sections.
+There is no separate `extract_topics` or `merge_topics` call on the bounded path. A planning artifact is the `study_map` in the Guide response. On the long path, each section call emits its priority and rationale. No synthesis artifact is currently scheduled; terminal ordering is the manifest/section result order.
 
 ### Step 2: provider artifact
 
@@ -169,9 +169,9 @@ An invalid artifact is not inserted as content. It becomes a retryable or termin
 
 ### Step 4: immediate persistence and assembly
 
-After each successful artifact settlement, the server writes the immutable artifact and rebuilds the current Guide snapshot deterministically. A snapshot can therefore be visible while later long-document sections are still working. Assembly has no provider call and never rewrites a completed artifact.
+After each successful artifact settlement, the server writes the immutable artifact row. Completed artifact rows are durable while sibling sections continue, but they are not exposed as a partial Guide snapshot through the current product status or viewer routes. The runtime assembles and persists one immutable Guide only after all required artifacts are terminal.
 
-When all required partitions are complete, the request becomes `complete`. When the deadline or retry policy leaves gaps but the minimum delivery contract is met, it becomes `complete_with_gaps`. A synthesis failure only adds a `synthesis_unavailable` gap and falls back to deterministic priority ordering.
+Only after every required artifact is terminal does assembly run. The request becomes `complete` when every required artifact completed, `complete_with_gaps` when at least one usable artifact completed and another ended as a gap, or `failed_no_guide` when no usable artifact can be delivered. No intermediate Guide snapshot is persisted or displayed.
 
 ## 5. Small, long, and multi-file policy
 
@@ -181,7 +181,7 @@ The product does need different *sizing* paths, but not three different semantic
 | --- | --- | ---: | --- |
 | Small text PDF | One bounded evidence bundle | 1 | One atomic Guide artifact and snapshot |
 | Medium PDF | Still fits gateway/model safety budget | 1 | Same as small; no hidden planner |
-| Long PDF | Readable spans exceed safe budget | `S + optional 1` | Section artifacts stream into a partial/full Guide |
+| Long PDF | Readable spans exceed safe budget | `S` section calls | Section artifacts persist while work continues; one terminal Guide is assembled only after all required artifacts are terminal |
 | Multi-file pack | Combined evidence exceeds budget or source boundaries matter | `S + optional 1 + X` | Section artifacts retain file coverage; `X` is existing best-effort image/legacy extraction calls |
 
 `S` is the deterministic number of readable partitions. It is bounded by a configured maximum and is based on characters/tokens, not an arbitrary topic count. A five-file pack that fits the one-call budget takes the one-call path. A 100-page PDF and a five-file pack that do not fit take the same section path.
@@ -212,11 +212,11 @@ Schemas, IDs, locators, and anchor validation are language-neutral. Token estima
 
 The gateway keeps SDK retries disabled. A v2 artifact has at most two provider attempts: the initial call and one bounded retry. The retry is scheduled only after the failed attempt is durably recorded.
 
-Retryable classes are limited to verified transient behavior: timeout/deadline, connection interruption, 408, 429 (respecting a bounded `Retry-After`), and allowlisted 5xx responses. A schema-invalid response may receive one constrained repair attempt if the request itself was valid. Refusal, wrong model/protocol, unknown source references, contract mismatch, deterministic size-limit failure, and unsupported source content become terminal gaps without another provider call.
+Retryable classes are timeout/deadline, connection interruption, 408, 429, and 5xx responses. A schema-invalid response may receive one constrained repair attempt if the request itself was valid. Refusal, wrong model/protocol, unknown source references, contract mismatch, deterministic size-limit failure, and unsupported source content become terminal gaps without another provider call.
 
-The retry delay is exponential with jitter and a request deadline. A lost response can produce one duplicate external call because exactly-once provider execution is unavailable; artifact-key idempotency makes the database result safe. A late response cannot overwrite a newer artifact claim.
+The retry delay is a persisted fixed exponential delay, `min(2^attempt, 30)` seconds, without jitter or `Retry-After` handling. The request schema has no overall deadline field. A lost response can produce one duplicate external call because exactly-once provider execution is unavailable; artifact-key idempotency makes the database result safe. A late response cannot overwrite a newer artifact claim.
 
-Retry is per user-visible artifact, not per workflow. Completed sections are never retried. A failed synthesis is not allowed to retry sections. A user Retry creates or rejoins a request with the same snapshot and contract and retries only artifacts in `retry_wait` or `gap` states that are eligible for retry.
+Retry is per artifact, not per workflow. Completed sections are never retried. No synthesis artifact is currently scheduled. The current UI does not provide a user Retry button or a detailed Gap retry operation; terminal requests are not restarted by a Gap action.
 
 ## 8. Resume, duplicate Generate, and reuse
 
@@ -273,7 +273,7 @@ No v2 queue service, vector store, per-claim verifier table, provider fallback p
 
 ### Study Guide persistence compatibility
 
-`study_guides` must support both `schema_version = 1.0` and `2.0`. The viewer and search path perform a dual read: v1 rows use the current topic renderer and topic-oriented search extraction; v2 rows use sections and study-map fields. No historical JSON is migrated or rewritten. A v2 assembly snapshot is written after each successful artifact, but only one current Guide row exists per session.
+`study_guides` remains the V1 one-row-per-session aggregate. V2 terminal snapshots are stored in `generation_v2_guides`, uniquely by request, so a session may have multiple historical V2 snapshots. The study page and Guide management paths prefer the latest delivered V2 Guide and otherwise retain V1 reads. Historical V1 JSON is not migrated or rewritten. Search, Quick Check, and library related-guide reads remain V1-only.
 
 ## 10. Billing boundary
 
@@ -285,24 +285,24 @@ Billing remains at **request admission and Guide delivery**, never at a provider
 4. Settle the reservation when a `complete` or qualifying `complete_with_gaps` Guide snapshot is committed.
 5. Release it for `failed_no_guide`, source-only failure, contract supersession, or an admission failure before a usable artifact exists.
 
-The existing billing tables and idempotent usage semantics are retained. Because the current reservation trigger is tied to `generation_executions`, v2 needs one narrow v2 reservation/settlement RPC path or a compatibility adapter; it must not insert fake v1 operations merely to trigger billing. This is a direct response to the FK/trigger sequencing issue fixed on 2026-09-03.
+The existing billing tables and idempotent usage semantics are retained. V2 has a dedicated reservation table and service-role reservation/settlement RPCs. It does not insert fake v1 operations merely to trigger billing.
 
-The product must state plainly that a useful partial Guide consumes one Guide unit, while a no-Guide failure does not. Quick Check remains included and may reuse a cached result without another unit.
+The product must state plainly that a useful terminal Guide with gaps consumes one Guide unit, while a no-Guide failure does not. Quick Check remains included and may reuse a cached result without another unit.
 
 ## 11. Vercel Workflow decision
 
 Keep Vercel Workflow during and after the first v2 release, but reduce its role to a single request runner:
 
 ```text
-ack request
- -> claim a bounded batch of pending artifacts
- -> call provider and settle each artifact
- -> assemble snapshot after each settlement
- -> optionally run synthesis
+create/join request and reserve billing
+ -> claim at most one eligible artifact per Workflow turn
+ -> call provider and settle that artifact
+ -> persist or sleep until retry/next pending artifact
+ -> after every required artifact is terminal, assemble one Guide
  -> settle request and billing
 ```
 
-There is one Workflow per v2 request, not one dynamic Workflow branch per topic or grounding operation. Workflow input contains only the opaque request ID and dispatch token. Supabase owns claim/lease/status truth; replay is expected and harmless.
+Workflow input contains only the opaque V2 request ID. Duplicate Generate calls may start duplicate Workflow instances for the same nonterminal request; Supabase artifact claims and leases serialize provider work. Supabase owns claim/lease/status truth; replay is expected and harmless.
 
 The existing reconciler remains useful for lost starts and stale request leases, so it can be extended with a v2 predicate. No new scheduler or worker fleet is introduced. Once production evidence shows that v2 jobs fit a simpler runtime, replacing Workflow is a separate decision; it is not needed to achieve the generation reliability goal.
 
@@ -313,11 +313,11 @@ The following estimates exclude Quick Check and count provider attempts, not dat
 | Input | v1 normal calls | v1 retry case | v2 normal calls | v2 retry case | Persistence unit | Main failure points | Latency/cost profile | Partial delivery |
 | --- | ---: | ---: | ---: | ---: | --- | --- | --- | --- |
 | Small text PDF, 10 pages, 6 topics | 13 (`1 plan + 6 guide + 6 grounding`) | up to 17 | 1 | up to 2 | 1 request + 1 Guide artifact | parse, one provider response, strict validation, finalizer | v1 commonly 2-3 min; v2 target one short request and about 50%+ fewer calls | v1 no; v2 one artifact can be delivered or fail clearly |
-| Medium PDF, 50 pages, 10 topics | about 26 (`5 extract + merge + 20`) | about 30 | 1 if within safe budget; otherwise 4 sections + synthesis = 5 | 2 or up to 10 | 1 request + 1 or 4 section artifacts | v1 batch/merge plus 20 gates; v2 per-artifact provider/validation | v2 bounded single-call fast path, or parallel section cost proportional to sections | v1 no; v2 completed sections remain visible |
-| Long PDF, 100 pages, 8 partitions | about 32 (`7 extract + merge + 24`) | up to 36 | 9 (`8 sections + optional synthesis`) | up to 18 | 1 request + 8 reusable sections + assembled snapshots | v1 32-operation graph and hard finalizer; v2 section timeout/validation and optional synthesis | v2 parallel work, lower summed tokens and roughly half the failure opportunities | v1 no; v2 yes after any valid section, with coverage gaps |
-| Five-file course pack near cap, 6 partitions, 2 image/legacy extraction calls | about 34 (`7 + merge + 24 + 2 extraction`) | up to 38 | 9 (`6 sections + synthesis + 2 extraction`) | up to 18 | 1 request + extraction/section artifacts + join rows | v1 opaque pre-generation extraction plus all topic gates; v2 source-specific gaps and section retries | v2 cost is `S + X + optional 1`, not topic x verifier; parallelism protects wall time | v1 no; v2 readable files/sections deliver while failed files remain gaps |
+| Medium PDF, 50 pages, 10 topics | about 26 (`5 extract + merge + 20`) | about 30 | 1 if within safe budget; otherwise one call per section partition | 2 or up to two attempts per partition | 1 request + 1 or more section artifacts + 1 terminal Guide | v1 batch/merge plus 20 gates; v2 per-artifact provider/validation | v2 bounded single-call fast path or sequential partition cost | v1 no; v2 artifacts persist during work and one Guide appears only after all required artifacts are terminal |
+| Long PDF, 100 pages, 8 partitions | about 32 (`7 extract + merge + 24`) | up to 36 | 8 section calls | up to 16 | 1 request + 8 reusable sections + 1 terminal Guide | v1 32-operation graph and hard finalizer; v2 section timeout/validation | v2 sequential work with fewer failure joins | v1 no; v2 can deliver a terminal Guide with explicit gaps after every required artifact is terminal |
+| Five-file course pack near cap, 6 partitions, 2 image/legacy extraction calls | about 34 (`7 + merge + 24 + 2 extraction`) | up to 38 | 6 V2 section calls plus 2 pre-generation extraction calls | up to 12 V2 section attempts; parser extraction retries are separate | 1 request + section artifacts + join rows + 1 terminal Guide | v1 opaque pre-generation extraction plus all topic gates; v2 source-specific artifact gaps | V2 Guide calls scale with deterministic partitions; parser extraction remains outside V2 | v1 no; v2 delivers only after all required V2 artifacts are terminal |
 
-These are planning estimates, not provider SLOs. The important change is the slope: v1 grows with planning batches plus twice the selected topic count; v2 grows with deterministic evidence partitions and at most one optional synthesis. A v2 retry never repeats a completed sibling. For bounded material the normal call reduction is approximately 13x for the representative small case and 5x or more for a medium case that fits one call.
+These are planning estimates, not provider SLOs. The important change is the slope: v1 grows with planning batches plus twice the selected topic count, while the current v2 runtime grows with deterministic evidence partitions and schedules no synthesis artifact. A v2 retry never repeats a completed sibling. For bounded material the normal call reduction is approximately 13x for the representative small case and 5x or more for a medium case that fits one call.
 
 ## 13. Parsing contract
 
@@ -338,21 +338,22 @@ Scanned PDF pages without a reliable text layer remain gaps until an independent
 3. **Expand persistence.** Add v2 request/artifact/join storage and the minimum billing adapter. Verify RLS, retention, idempotency, and owner-scoped reuse before routing users.
 4. **Dual-read first.** Teach the Guide loader, search extraction, Quick Check target collection, and status projection to read v1 or v2 by schema/version. Historical rows are untouched.
 5. **Internal gate.** Run v2 only for explicit internal/test sessions and dedicated fixture provider calls. Do not shadow every real-user request, double-charge, or make a second provider call merely for comparison. Existing production v1 telemetry is a baseline; v2 quality evaluation uses a fixed redacted/golden corpus and opt-in test requests.
-6. **Controlled routing.** Enable `GENERATION_V2_ENABLED` for an allowlist, then a small percentage/cohort flag. The request records its pipeline version immutably. Never switch an in-flight request between engines.
+6. **Controlled routing.** Enable `GENERATION_V2_RUNTIME_ENABLED` and `GENERATION_V2_PRODUCT_ENABLED` with an allowlist. The formal Generate route selects V2 only when both booleans are true and `GENERATION_V2_ROLLOUT_ALLOWLIST` matches the session ID, owner-user ID, or `*`. No percentage rollout exists. V2 identity is represented by the V2 request table and immutable generation contract hash, not a separate pipeline-version column. Never switch an in-flight request between engines.
 7. **Observe and compare.** Track Guide delivery, complete-with-gaps rate, calls/Guide, provider duration, total latency, reuse rate, anchor failures, parser gaps, and post-Quick-Check return actions.
 8. **Default and rollback.** Make v2 default only after all gates below pass. Rollback means set new-request routing to v1 and leave v2 rows readable; it does not automatically fall back after a v2 provider call, which would duplicate cost and make billing ambiguous.
 9. **Retire later.** After a measured rollback window, stop creating v1 runs, keep v1 reads and historical attempts for retention, then remove v1 machinery in a separately approved cleanup task.
 
-Recommended flags:
+Current flags:
 
-- `GENERATION_V2_ENABLED`: global kill switch, default false during development.
-- `GENERATION_V2_ALLOWLIST`: internal/test owner IDs or session IDs.
-- `GENERATION_V2_ROLLOUT_PERCENT`: controlled new-request routing after allowlist pass.
-- `GENERATION_V2_READ_ENABLED`: optional operational guard for v2 viewer/search reads; historical v1 reads remain unconditional.
+- `GENERATION_V2_RUNTIME_ENABLED`: global V2 runtime gate; default `false`.
+- `GENERATION_V2_PRODUCT_ENABLED`: enables V2 selection from the formal Generate route; default `false`.
+- `GENERATION_V2_ROLLOUT_ALLOWLIST`: comma-separated session IDs or owner-user IDs; `*` matches all; default empty.
+- V2 write routing requires both booleans and an allowlist match.
+- There is no percentage-rollout variable and no V2 read flag. Existing V2 rows are read independently of write admission.
 
-## 15. Acceptance gates before implementation/cutover
+## 15. Outstanding acceptance gates before Production enablement/default cutover
 
-The first implementation slice is not ready for user routing until these are executable tests or measured reports:
+The repository implementation is not ready for Production enablement or default routing until these are executable tests or measured reports:
 
 ### Reliability and delivery
 
@@ -404,17 +405,17 @@ Keep indefinitely or until a separate retention decision: private source storage
 
 ## 17. Implementation slices
 
-The first slice should be deliberately narrow:
+The first four slices are implemented in the repository:
 
-**Slice 1: v2 contract and offline artifact runner.** Implement the v2 Zod schema, deterministic manifest/partitioner, allowed-span validation, canonical reference resolver, owner/contract reuse-key functions, and a local runner against fixed fixture evidence. No database migration, UI route, provider switch, or production flag change is included.
+**Slice 1: v2 contract and offline artifact runner.** Implemented. V2 Zod schema, deterministic manifest/partitioner, allowed-span validation, canonical reference resolver, owner/contract reuse-key functions, and a local runner against fixed fixture evidence.
 
-**Slice 2: persistence and assembly.** Add the three v2 structures, idempotent request/artifact claims, immediate assembly snapshots, and dual-read adapters for `study_guides`, search, and Quick Check.
+**Slice 2: persistence and assembly.** Implemented. The four v2 structures, idempotent request/artifact claims, terminal assembly snapshots, and dual-read adapters for `study_guides` and status projection.
 
-**Slice 3: provider integration (development/test only).** Route internal fixtures through a thin provider adapter backed by `ModelGateway`; claim an artifact before its provider call, validate and canonicalize its structured result, then settle that same artifact. The adapter has no v1 DAG, route, Workflow, billing, or UI integration. It verifies live Responses Structured Output compatibility against English, Chinese, and mixed fixtures and uses controlled failures for recovery semantics.
+**Slice 3: provider integration.** Implemented. The provider adapter is used by the gated V2 Workflow runtime and product/internal HTTP routes. V2 billing is connected at admission and terminal settlement. Whether any of those paths are enabled in Production is not established by this repository.
 
-**Slice 4: runtime integration.** Add an internal-only entry, a thin server-owned request runner, artifact retry wakeup, terminal snapshot assembly, and runtime/read-model validation. It does not route production traffic or change the formal user UI.
+**Slice 4: runtime integration.** Implemented. The thin V2 Workflow runtime is integrated with both the internal entry and the formal session Generate route. Formal status and Guide rendering read V2 independently of write gates. The runtime reserves and settles V2 billing through dedicated database RPCs.
 
-**Slice 5: controlled production cohort.** Enable allowlisted sessions, verify the gates and telemetry, then increase rollout only through an explicit release decision.
+**Slice 5: controlled production cohort.** Repository-level allowlist routing is implemented. Production deployment, cohort enablement, acceptance evidence, and percentage rollout are unverified.
 
 ## 18. Decision log
 
@@ -443,18 +444,18 @@ Slice 3 keeps `ModelGateway` as the only real-provider transport. The adapter su
 
 The provider-facing schema represents logical optional blocks as required nullable fields because the verified Responses Structured Output boundary rejects omitted object properties. The adapter removes `null` optional blocks before applying the unchanged v2 artifact contract, so an omitted optional teaching block does not fail an otherwise deliverable Guide. Its span-ID enum remains exact for each partition.
 
-The executor is intentionally a development/test integration surface. It uses the Slice 2 request/artifact lease state to prove claim-before-call, immediate settlement, replay safety, stale-lease rejection, and `complete` / `complete_with_gaps` / `failed_no_guide` assembly. The lease is 210 seconds: it preserves time to record a result at the existing 180-second request boundary plus bounded settlement overhead. This followed a development gateway 524 observed after 125.2 seconds, which demonstrated that the old 120-second lease could expire before a retryable result was settled. The provider timeout remains 180 seconds pending a larger private latency sample. It does not authorize production generation, create a Vercel Workflow v2 runner, route HTTP traffic, or settle billing.
+The executor is intentionally a development/test integration surface. It uses the Slice 2 request/artifact lease state to prove claim-before-call, immediate settlement, replay safety, stale-lease rejection, and `complete` / `complete_with_gaps` / `failed_no_guide` assembly. The lease is 210 seconds: it preserves time to record a result at the existing 180-second request boundary plus bounded settlement overhead. This followed a development gateway 524 observed after 125.2 seconds, which demonstrated that the old 120-second lease could expire before a retryable result was settled. The provider timeout remains 180 seconds pending a larger private latency sample. The provider adapter is now used by the gated V2 Workflow runtime and product/internal HTTP routes, and V2 billing is connected at admission and terminal settlement. Whether any of those paths are enabled in Production is not established by this repository.
 
 ## 20. Slice 4 runtime integration decision
 
-Slice 4 retains Vercel Workflow only as a thin, at-least-once wakeup shell. The internal `generation-v2` entry is gated by `GENERATION_V2_RUNTIME_ENABLED` (default false), requires an owned session, and creates or joins the canonical request before starting the Workflow. It does not alter `/generate`, `/status`, the v1 Workflow, formal UI, or Paddle.
+Slice 4 retains Vercel Workflow only as a thin, at-least-once wakeup shell. The internal `generation-v2` entry is gated by `GENERATION_V2_RUNTIME_ENABLED` (default false), requires an owned session, and creates or joins the canonical request before starting the Workflow. The formal `/api/sessions/[sessionId]/generate` route also selects V2 behind the runtime, product, and allowlist gates. Formal status and Guide rendering read V2 independently of write gates.
 
 Each Workflow turn runs one server-side request-runner step. The step reads the request and artifact rows from Supabase, claims at most one eligible artifact with the existing 210-second lease, invokes the Slice 3 provider, and durably settles that artifact. A retryable settlement records `retry_at`; the Workflow sleeps until the persisted retry or active-lease expiry, then re-enters. No Workflow-local business state, DAG, dispatch epoch, shared retry credit, or acknowledgement layer is introduced.
 
 The assembly RPC locks the request, verifies every required artifact is terminal, derives `complete`, `complete_with_gaps`, or `failed_no_guide` from durable artifact facts, and inserts at most one immutable Guide snapshot. `complete_with_gaps` is therefore a delivery result, while `failed_no_guide` writes no Guide. The internal status projection exposes only `preparing`, `generating`, `ready`, `ready_with_gaps`, or `unable_to_generate`, together with completed/total/gap counts; it does not project leases or retry mechanics as user-facing states.
 
-Runtime logs contain only request ID, artifact status counts, persisted/provider attempt counts, duration, runner outcome, and final status. The first terminal transition to `complete` or `complete_with_gaps` remains the future idempotent billing-success candidate boundary; Slice 4 emits no Paddle event or billing mutation.
+Runtime logs contain only request ID, artifact status counts, persisted/provider attempt counts, duration, runner outcome, and final status. The first terminal transition to `complete` or `complete_with_gaps` is followed by `billing_settle_generation_v2`; V2 billing mutations are implemented. Direct Paddle API calls are not part of the runner.
 
 ## 21. Final recommendation
 
-Implement Generation v2 as a small, owner-scoped, artifact-persisting engine behind a feature flag. Preserve the proven ingestion, ownership, Guide storage, Quick Check, billing concepts, and thin Workflow shell. Remove the v1 assumption that every internal operation must succeed before a student can see anything. The first code should prove the contract and artifact boundaries offline; only then should persistence, Workflow routing, and controlled production migration begin.
+Continue Generation v2 as the small, owner-scoped, artifact-persisting engine already implemented behind runtime, product, and allowlist gates. Preserve the proven ingestion, ownership, historical Guide reads, Quick Check, billing concepts, and thin Workflow shell. Production enablement, measured acceptance, missing V2 read integrations, and any default-routing or V1-retirement decision remain separate work.

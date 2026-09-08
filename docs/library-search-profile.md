@@ -5,7 +5,7 @@ Last updated: 2026-08-26
 
 ## Scope
 
-Product-3C turns the remaining private Workspace destinations into real features: `/library`, `/search`, and `/profile`, plus shared navigation with `/my-guides`. It does not add Payment, public sharing, embeddings, RAG, new model calls, unsupported upload formats, social profile fields, or account deletion.
+Product-3C turns the remaining private Workspace destinations into real features: `/library`, `/search`, and `/profile`, plus shared navigation with `/my-guides`. It does not add Payment, public sharing, embeddings, RAG, new model calls, unsupported upload formats, or social profile fields. Account deletion is documented below and was implemented separately.
 
 ## Migration status
 
@@ -57,7 +57,7 @@ Profile uses Supabase Auth as the account source and adds no profile table. It s
 
 ## Account deletion
 
-Delete Account is deliberately absent and deferred as a mandatory Payment/Production prerequisite. A correct implementation must stop new writes, stage every owned aggregate, remove private Storage objects first, cascade Postgres children including spans/Quick Checks/results, preserve observable retry/retention behavior, then delete the Auth user. Payment must add billing cancellation/retained-record coordination before Auth deletion. Deleting only `auth.users` is explicitly not a complete account deletion flow. The public Privacy page states that no account-deletion request channel currently exists.
+Delete Account is available from Profile and is handled synchronously by the server. Same-origin confirmation and rate limiting are required. A valid Paddle Live subscription causes deletion to be rejected; the server does not automatically cancel it. Otherwise private Storage objects, owned database sessions and dependent data, and the Auth user are deleted in order. No persistent deletion request, retry, or audit state is written; billing cancellation/retained-record coordination remains a separate Payment concern. Deleting only `auth.users` is explicitly not a complete account deletion flow.
 
 ## Verification boundary
 

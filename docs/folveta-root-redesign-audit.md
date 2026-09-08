@@ -1,6 +1,8 @@
 # Folveta Root Redesign Audit
 
-**Decision document, 2026-09-03.** This is a research and architecture decision record. It does not authorize or include a production, database, provider, UI, SEO, retry-policy, or deployment change.
+Status: **Historical Generation v2 research and architecture decision snapshot from 2026-09-03. Current implementation is tracked in `docs/generation-v2-design.md`.**
+
+This document does not authorize or include a production, database, provider, UI, SEO, retry-policy, or deployment change.
 
 ## 1. Executive conclusion
 

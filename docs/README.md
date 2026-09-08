@@ -1,7 +1,7 @@
 # Folveta Documentation Index
 
 Status: **Active governance index**  
-Last updated: 2026-08-31
+Last updated: 2026-09-07
 
 ## Authority order
 
@@ -25,23 +25,36 @@ If current code contradicts a document's claim that something is implemented, th
 | `product-context.md` | Current product, market, UI, commercial, SEO, and implementation context |
 | `v5-master-roadmap.md` | Current master delivery roadmap |
 | `technical-architecture.md` | Current code/data/API/security architecture and approved target boundaries |
-| `payment-billing-architecture.md` | Draft Payment/Billing v1 product rules, provider research, entitlement, usage, webhook, deletion, and implementation handoff; owner confirmation required |
+| `payment-billing-architecture.md` | Current Payment/Billing architecture and completed Sandbox/Live implementation record |
 | `auth-and-persistence.md` | Product-3A identity, anonymous claim, RLS, persistence, and retention architecture |
 | `guide-management.md` | Product-3B My Guides, Recent Guides, management API, lifecycle, pagination, and privacy architecture |
 | `library-search-profile.md` | Product-3C Library, PostgreSQL search, Profile, navigation, authorization, migration, and verification architecture |
 | `ui-design-system.md` | Current Folveta UI Foundation v2 tokens, primitives, states, icon policy, and asset policy |
+| `generation-v2-design.md` | Current Generation v2 architecture, implementation record, rollout gates, and rollback contract |
 | `seo-architecture.md` | Folveta-specific SEO v2 architecture and index policy |
 | `SEO_GUIDE.md` | Reusable SEO standard, not Folveta page ownership by itself |
-| `current-state-audit.md` | Dated audit, hygiene classification, and approved cleanup execution record |
+| `seo-growth-v1.md` | Current post-launch SEO growth operating record and query/page ownership |
+| `seo-growth-backlink-tracker.md` | Active backlink and mention research tracker; external communication requires owner approval |
 | `production-seo-checklist.md` | Operational pre-launch/launch/post-launch checklist |
-| `production-deployment.md` | Vercel, domain, environment, Supabase Auth, PRELAUNCH, and production verification runbook |
-| `ai-generation-workflow-rollout.md` | Durable AI Workflow Production rollout evidence, telemetry, privacy/retry/concurrency contract, and remaining risks |
+| `production-deployment.md` | Current Vercel, domain, environment, Supabase Auth, PRELAUNCH, and production verification runbook; verification evidence is dated |
 
 ## Supabase migration workflow
 
 Dev schema changes are applied only through the official Supabase CLI and the ordered files in `supabase/migrations/`. The current dev project is linked in local ignored CLI state; a new workstation must run `npx --yes supabase@latest login` and `npx --yes supabase@latest link --project-ref <dev-project-ref>` locally without sharing credentials in chat. Review with `npx --yes supabase@latest db push --dry-run`, apply with `npx --yes supabase@latest db push`, and confirm local/remote parity with `npx --yes supabase@latest migration list`.
 
 Never execute repository migrations ad hoc through the service-role client or dashboard SQL editor. If history or schema drifts, inspect both first and repair the repository/official migration history rather than creating untracked remote state.
+
+## Historical snapshots
+
+These files remain in their current locations unless shown under the archive section below. They preserve dated decisions or verification evidence and must not be used as the current repository status.
+
+| Document | Status |
+| --- | --- |
+| `current-state-audit.md` | Historical repository snapshot from 2026-08-25 with cleanup execution recorded on 2026-08-26 |
+| `folveta-root-redesign-audit.md` | Historical Generation v2 research and decision snapshot from 2026-09-03 |
+| `ai-generation-p0-remediation-design.md` | Historical Generation v1 remediation design snapshot from 2026-08-28 |
+| `ai-generation-workflow-rollout.md` | Historical Generation v1 production rollout snapshot verified on 2026-08-31 |
+| `paddle-live-onboarding.md` | Historical Paddle Live onboarding and closeout snapshot from 2026-09-02 |
 
 ## Archived historical documents
 

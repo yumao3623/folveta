@@ -1,5 +1,7 @@
 # Folveta Backlink and Mention Tracker
 
+Status: **Active operational tracker; external communication requires owner approval.**
+
 Status key: `researching`, `ready for owner`, `submitted`, `pending`, `accepted`, `rejected`, `not pursuing`.
 
 Use this tracker for relevant discovery, editorial mentions, and referral opportunities. Do not add bulk directories, paid backlink packages, link farms, PBNs, automated profile links, forum spam, or keyword-stuffed anchors.

@@ -1,7 +1,8 @@
 # Folveta v5 Master Roadmap
 
 Status: **Current roadmap**  
-Last updated: 2026-09-01
+Last updated: 2026-09-07
+Last repository verification: 2026-09-07 (`npm run check`; dated Production records below were not revalidated)
 Decision authority: `docs/decisions.md`  
 Baseline audit: `docs/current-state-audit.md`
 
@@ -205,7 +206,7 @@ Product-3B implementation record (2026-08-26): the repository now contains authe
 
 Product-3C implementation record (2026-08-26): the repository now contains a Source-owned multi-format Library, owner-scoped sorting/filtering/pagination, archived/deleted relationship handling, PostgreSQL FTS over Guide/Topic/Source data, bounded authenticated search, a real Profile summary, two authenticated read APIs, and responsive My Guides/Library/Search/Profile navigation. All new routes are `noindex,nofollow`. Initial repository coverage was 66 tests. See `docs/library-search-profile.md`.
 
-Product-3 Phase 2 Gate record (2026-08-26): the official Supabase CLI channel is linked to dev and local/remote history matches through `202608260005`. Product-3B/Product-3C indexes, GIN indexes, RPC security/grants, and RLS were verified on the deployed schema; normalized filename search used its GIN query path. A deterministic two-account dev Gate passed My Guides, Recent, Library, Search, Profile, Guide lifecycle, Quick Check/Results regression, page/API/direct-client/RPC owner isolation, signed-out isolation, relogin persistence, desktop/390px layout, private noindex, and console checks. All fixtures and users were cleaned. Account deletion remains absent by design: its Storage-first, child/Auth cleanup, retry, request-channel, retention, and future billing dependency is explicitly deferred as a mandatory Payment/Production prerequisite. At that gate, retention scheduling and real AI full-chain validation remained Production Readiness work; the AI full-chain item was later closed by the 2026-08-31 Workflow rollout record, while retention scheduling remains open.
+Product-3 Phase 2 Gate record (2026-08-26): the official Supabase CLI channel is linked to dev and local/remote history matches through `202608260005`. Product-3B/Product-3C indexes, GIN indexes, RPC security/grants, and RLS were verified on the deployed schema; normalized filename search used its GIN query path. A deterministic two-account dev Gate passed My Guides, Recent, Library, Search, Profile, Guide lifecycle, Quick Check/Results regression, page/API/direct-client/RPC owner isolation, signed-out isolation, relogin persistence, desktop/390px layout, private noindex, and console checks. All fixtures and users were cleaned. Account deletion was originally deferred as a mandatory Payment/Production prerequisite; it is now implemented. At that gate, retention scheduling and real AI full-chain validation remained Production Readiness work; both are now completed.
 
 **Goal**
 
@@ -282,7 +283,7 @@ Replace the one-cookie/one-session limitation and visual placeholders with durab
 - Expired/deleted content and Storage objects follow documented retention behavior.
 - Private routes are noindex and absent from sitemap.
 
-Current exit judgment: **PASS**. Product-3 feature scope, formal migrations, dev two-account/RLS/browser validation, private-route isolation, regressions, and the truthful current account-lifecycle boundary are complete. Full account deletion/recovery orchestration and deployed retention scheduling remain explicit Payment/Production prerequisites. The external AI full-chain prerequisite was completed separately by the 2026-08-31 Workflow rollout and is not retroactively part of Product-3 scope.
+Current exit judgment: **PASS**. Product-3 feature scope, formal migrations, dev two-account/RLS/browser validation, private-route isolation, regressions, and the truthful current account-lifecycle boundary are complete. Password recovery, Storage-first account deletion, and deployed retention scheduling are implemented. The external AI full-chain prerequisite was completed separately by the 2026-08-31 Workflow rollout and is not retroactively part of Product-3 scope.
 
 **Separate Codex task**
 
@@ -499,7 +500,7 @@ Run the complete release candidate on `https://folveta.com` under controlled acc
 
 ## Phase 6 — Public Launch, Google Indexing, and Monitoring
 
-Current cutover status (2026-09-02): **Public Launch Cutover PASS.** Production `PRELAUNCH=false`; `/`, `/pricing`, `/about`, `/privacy`, `/terms`, `/refunds`, and `/contact` return `index,follow` with self-canonicals and are the only sitemap URLs. Private and user-data routes remain `noindex,nofollow`. Search Console ownership and sitemap submission passed; indexing was requested for `/`, `/pricing`, and `/about`. Google inclusion remains pending Google processing where not yet reported. The separate 24-hour/7-day monitoring task has not been started.
+Current cutover status (2026-09-02): **Public Launch Cutover PASS.** At the `6107dac` cutover, Production `PRELAUNCH=false`; `/`, `/pricing`, `/about`, `/privacy`, `/terms`, `/refunds`, and `/contact` returned `index,follow` with self-canonicals and were the seven sitemap URLs. Private and user-data routes remained `noindex,nofollow`. Search Console ownership and sitemap submission passed; indexing was requested for `/`, `/pricing`, and `/about`. The current repository later adds `/study-guide-maker-from-pdf` as an eighth intended sitemap URL; that later route is not part of the 2026-09-02 Production verification record. Google inclusion remains pending Google processing where not yet reported. The separate 24-hour/7-day monitoring task has not been started.
 
 **Goal**
 

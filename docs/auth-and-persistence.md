@@ -40,11 +40,11 @@ The approved current boundary is:
 - **Guide archive and soft delete:** `archived_at`, `deleted_at`, and `purge_after` separate visibility from physical deletion. Archive is reversible. Delete immediately marks both Guide and aggregate unavailable, cannot be reopened/restored, and sets `purge_after` to 30 days later.
 - **30-day purge:** the timestamp makes a deleted aggregate eligible for the protected retention endpoint. The endpoint also selects expired anonymous sessions, removes private Storage objects first, and then deletes `preparation_sessions`, whose foreign-key cascades remove Sources, units/spans, generation runs, Guides, Quick Checks, and attempts/results. A production scheduler is not configured or verified, so the product does not claim automatic physical deletion after exactly 30 days.
 - **Failure and retry:** a Storage error stops before database deletion, keeping the due aggregate available to a later retry. If Storage succeeds and the database delete fails, the due aggregate remains and must be safely retried. Production readiness requires scheduling, idempotency verification, observable failures, bounded retry/backoff, and an operator recovery path.
-- **Account deletion request:** no request endpoint, support/privacy request channel, or Delete Account UI exists today. The product must not imply otherwise.
-- **Account/Auth deletion:** the future orchestration must stop new writes, enumerate and stage every owned aggregate, complete Storage cleanup, delete child database aggregates through the parent, and only then delete the Supabase Auth user. Although `owner_user_id` uses `on delete cascade`, deleting `auth.users` first is forbidden because it can orphan private Storage objects.
-- **Future billing dependency:** before Auth deletion, the future Payment implementation must cancel or settle provider billing state and preserve only retention-required billing records under the approved legal policy. Product-3 contains no billing records or fake plan state.
+- **Account deletion request:** the authenticated `/api/account` request is exposed through Profile, requires same-origin confirmation and rate limiting, and runs synchronously. A valid Paddle Live subscription is rejected; the flow does not automatically cancel it.
+- **Account/Auth deletion:** after the billing guard passes, the server removes private Storage objects, deletes owned database sessions and their dependent data, and then deletes the Supabase Auth user. Although `owner_user_id` uses `on delete cascade`, deleting `auth.users` first is forbidden because it can orphan private Storage objects.
+- **Deletion state:** no persistent deletion request, retry, or audit state is written. This is distinct from the separate retention purge path.
 
-Full account deletion is therefore deliberately deferred as a mandatory Payment/Production prerequisite. This is a bounded lifecycle decision, not a claim that the workflow already exists.
+Account deletion is implemented, while billing cancellation/retained-record coordination for a future Payment flow remains a separate launch requirement.
 
 ## Migration and repair
 

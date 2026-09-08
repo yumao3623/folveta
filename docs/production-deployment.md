@@ -1,7 +1,7 @@
 # Folveta Production Deployment
 
-Status: **Production public launch and indexing cutover recorded**
-Last updated: 2026-09-02
+Status: **Current deployment runbook; the production verification below is a historical snapshot at commit `6107dac` on 2026-09-02. Later repository changes are not production-verified here.**
+Last updated: 2026-09-07
 Canonical target: `https://folveta.com`
 
 ## Deployment identity
@@ -14,7 +14,7 @@ Canonical target: `https://folveta.com`
 | Framework | Next.js 16.3.2 App Router | Vercel native Next.js preset |
 | Root directory | `./` | Confirmed |
 | Build/output/install | `npm run build`; Next.js default output; `npm install` | Vercel defaults, no override |
-| Runtime compatibility | Next.js requires Node.js 20.9+; Vercel supported Node runtime | Production build verified |
+| Runtime compatibility | This repository requires Node.js 22+; Next.js 16.3.2 itself requires Node.js 20.9+ | Repository build verified on Node.js 22+; historical Production verification remains dated below |
 | Production origin | `https://folveta.com` | Live with valid HTTPS |
 | Preferred hostname | `folveta.com` | `www.folveta.com` redirects `308` to apex |
 
@@ -22,11 +22,11 @@ The pre-launch infrastructure and environment hotfix were followed by the indepe
 
 ## Paddle Sandbox boundary
 
-Paddle Billing v1 is deployed only to the separate `folveta-paddle-sandbox` Vercel project. Its Sandbox environment uses a Paddle Sandbox API key, client-side token, notification secret, Product/Price, and `PADDLE_ENV=sandbox`; secret values are not recorded here. The notification destination is active at the Sandbox webhook route and recent subscription and transaction deliveries succeeded.
+The Paddle Sandbox instance is deployed to the separate `folveta-paddle-sandbox` Vercel project. It uses a Paddle Sandbox API key, client-side token, notification secret, Product/Price, `PADDLE_ENV=sandbox`, and `NEXT_PUBLIC_PADDLE_ENV=sandbox`; secret values are not recorded here. The notification destination is active at the Sandbox webhook route and recent subscription and transaction deliveries succeeded.
 
 The existing shared Supabase project is isolated at the billing-record level by the server-derived `billing_environment` (`sandbox` or `live`). All provider IDs, entitlement reads, usage/reservations, generation accounting, and webhook idempotency are scoped to that value; missing, unknown, or legacy environments fail closed. Therefore a Sandbox subscription cannot grant Pro on `folveta.com`.
 
-Production `folveta.com` is configured for Paddle Live. Merchant/KYC, website approval, payout setup, Live Product/Price/Checkout/webhook, payment acceptance, cancellation, and the US$12 refund flow were completed in the inherited onboarding task. Secrets are intentionally not recorded here.
+Production `folveta.com` is configured for Paddle Live with `PADDLE_ENV=live` and `NEXT_PUBLIC_PADDLE_ENV=production`. Merchant/KYC, website approval, payout setup, Live Product/Price/Checkout/webhook, payment acceptance, cancellation, and the US$12 refund flow were completed in the inherited onboarding task. Secrets are intentionally not recorded here.
 
 ## Domain and DNS strategy
 
@@ -61,8 +61,18 @@ No secret value belongs in this document, source control, screenshots, or chat.
 | `QUICK_CHECK_SCHEMA_VERSION` | Server-only | `1.0` |
 | `SESSION_RETENTION_DAYS` | Server-only | `7` |
 | `AI_GENERATION_WORKFLOW_ENABLED` | Server-only | `true`; legacy OFF fallback remains in code |
+| `GENERATION_V2_RUNTIME_ENABLED` | Server-only | `false` in repo defaults; enables V2 runtime gate |
+| `GENERATION_V2_PRODUCT_ENABLED` | Server-only | `false` in repo defaults; enables V2 from formal Generate route |
+| `GENERATION_V2_ROLLOUT_ALLOWLIST` | Server-only | Comma-separated session/owner IDs; `*` matches all |
 | `CRON_SECRET` | Secret, server-only | Configured for the protected reconciler; never exported or recorded |
 | `RETENTION_JOB_SECRET` | Secret, server-only | Optional for app startup; required before scheduling retention cleanup |
+| `PADDLE_ENV` | Server-only | `sandbox` for Sandbox; `live` for Production |
+| `NEXT_PUBLIC_PADDLE_ENV` | Public | `sandbox` for Sandbox; `production` for Production Paddle.js |
+| `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` | Public client credential | Paddle.js client-side token |
+| `PADDLE_API_KEY` | Secret, server-only | Paddle Billing API key |
+| `PADDLE_NOTIFICATION_WEBHOOK_SECRET` | Secret, server-only | Paddle webhook signature verification secret |
+| `PADDLE_PRODUCT_ID` | Server-only | Paddle Product ID |
+| `PADDLE_PRICE_ID` | Server-only | Paddle Price ID |
 
 Preview is always `noindex,nofollow` through `VERCEL_ENV`, regardless of `PRELAUNCH`. Production Supabase and OpenAI secret credentials are withheld from Preview until an isolated preview service plan exists.
 
@@ -72,7 +82,7 @@ Preview is always `noindex,nofollow` through `VERCEL_ENV`, regardless of `PRELAU
 
 - Missing, invalid, or `true`: public discovery pages inherit `noindex,nofollow`; sitemap contains no URLs; robots does not advertise the sitemap.
 - Any Vercel environment other than Production: always treated as pre-launch.
-- Exact `false` in Vercel Production: public `/`, `/about`, `/privacy`, and `/terms` may become `index,follow` and enter the sitemap.
+- Exact `false` in Vercel Production: public `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/study-guide-maker-from-pdf`, `/refunds`, and `/contact` may become `index,follow` and enter the sitemap.
 - Private, account, search, study, result, and future billing routes remain `noindex,nofollow` in every mode.
 
 Changing `PRELAUNCH` to `false` was the explicit public-launch action for this task. Rollback is to restore the prior fail-closed value and re-verify live metadata, robots, and sitemap before resubmitting indexing.
@@ -117,7 +127,8 @@ Verified locally and in Production:
 - Vercel Production is `READY` from GitHub `main` commit `6107dac49cae2eec559c19056b9abefe88ca3312`. The latest deployment is linked to that commit (Vercel ID `dpl_8BeB3kMaagkXLT4WKJ13hiCfQqSy`).
 - `folveta.com` returns `200` over HTTPS; HTTP and `www` redirect `308` to the preferred HTTPS apex.
 - Public `/`, `/about`, `/privacy`, and `/terms` return `200`, self-canonicalize to the Production origin, and emit `index,follow` after the launch cutover.
-- `robots.txt` returns `200` and advertises the production sitemap; `sitemap.xml` returns `200` with the seven approved public URLs.
+- At the `6107dac` launch verification, `robots.txt` returned `200` and advertised the production sitemap; `sitemap.xml` returned `200` with the seven approved public URLs: `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/refunds`, and `/contact`.
+- The current repository adds `/study-guide-maker-from-pdf`, so `app/sitemap.ts` now defines eight intended public URLs. This later repository state is not part of the `6107dac` Production verification snapshot.
 - Favicon/app icon, fonts, CSS, desktop/mobile rendering, and public-page console checks passed.
 - Anonymous session create/persist, signed Storage upload, PDF parse, AI Guide generation/grounding, anonymous-to-account claim, Guide reopen, My Guides, Library, Search, Profile, Quick Check, persisted Results, Auth refresh, sign-out isolation, and relogin passed against Production test data.
 - AI Workflow smoke plus real PDF x3 and legacy PPT x2 passed from new Production sessions; reload/browser loss did not own or stop Workflow execution.

@@ -1,6 +1,6 @@
 # Folveta v5 Current State and Cleanup Audit
 
-Status: **Current dated audit; approved cleanup completed**
+Status: **Historical repository snapshot from 2026-08-25; cleanup execution completed 2026-08-26. Do not use its implementation or open-work lists as current state.**
 
 Audit date: 2026-08-25
 

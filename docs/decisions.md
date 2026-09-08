@@ -54,7 +54,7 @@ Decision date: 2026-08-26
 - Search executes under the authenticated Supabase session through a `security invoker` RPC and existing owner RLS. It does not use embeddings, a vector database, RAG, or new AI calls.
 - Profile is an account page backed by Supabase Auth and owner-scoped counts. It shows only email, account creation date, Guide count, Source count, and sign-out. No profile table, social fields, or invented plan state is added.
 - `/account` remains a compatibility redirect to `/profile`. My Guides, Library, Search, and Profile share a real responsive Workspace navigation.
-- Account deletion is intentionally not implemented. A complete design must stage owned aggregates, remove private Storage first, handle spans/Quick Checks/results and retention observably, then delete the Auth user, and later coordinate billing state. This lifecycle decision is required before Payment/Production completion.
+- Account deletion is implemented synchronously through Profile and `/api/account`: after same-origin confirmation and rate limiting, the server removes private Storage, owned database sessions and dependent data, then the Auth user. A valid Paddle Live subscription is rejected rather than automatically cancelled; no persistent deletion request, retry, or audit state is written.
 - `202608260003_product_3c_library_search_profile.sql` is the formal Product-3C migration. It and the earlier Product-3B migration were applied to dev in order through the official Supabase CLI during the Product-3 Gate, followed by forward-only security and filename-search repairs `202608260004` and `202608260005`.
 - The detailed contract is in `docs/library-search-profile.md`.
 
@@ -66,8 +66,8 @@ Decision date: 2026-08-26
 - Search remains PostgreSQL FTS, not semantic/AI search. The deployed RPC is `security invoker`, authenticated-only, owner/RLS scoped, excludes archived/deleted aggregates, and uses punctuation-normalized Source filename indexing.
 - The Product-3 deterministic two-account dev Gate passed My Guides, Library, Search, Profile, Guide lifecycle, Quick Check/Results regression, page/API/direct-client/RPC isolation, sign-out, relogin, desktop/390px, noindex, and console checks. Test data and Auth users were removed.
 - Sign out and Auth expiry revoke browser access but do not delete owned data. Guide delete is immediate access revocation plus 30-day purge eligibility; it is not a promise of automatic physical deletion because production scheduling/retry monitoring is not deployed.
-- No Delete Account UI or request endpoint may appear before a complete Storage-first deletion orchestrator exists. That future flow must stop writes, coordinate billing cancellation, remove Storage, cascade database children, handle retries/audit needs, and delete the Auth user last.
-- With these current boundaries documented truthfully, Product-3/Phase 2 passes. Its original Production pre-launch infrastructure evidence came from `main@2dcc4d9`; the later AI Workflow rollout and fresh Production Product-3 regression are recorded below. Full account deletion/recovery, retention scheduling, rate limiting, production monitoring, support/privacy operations, Payment, SEO v2, and indexing cutover remain later gates.
+- Account deletion is available through the confirmed Profile flow and rejects valid Paddle Live subscriptions without attempting cancellation. Persistent deletion orchestration state and billing cancellation coordination remain outside the current implementation.
+- With these current boundaries documented truthfully, Product-3/Phase 2 passes. Its original Production pre-launch infrastructure evidence came from `main@2dcc4d9`; the later AI Workflow rollout and fresh Production Product-3 regression are recorded below. Retention scheduling, production monitoring, support/privacy operations, Payment, SEO v2, and indexing cutover remain later gates.
 
 ### AI Workflow Production rollout decision
 

@@ -1,6 +1,6 @@
 # AI Generation P0 Remediation Design
 
-Status: Approved for implementation by Integrator/Arbiter
+Status: **Historical Generation v1 remediation design snapshot from 2026-08-28. The implemented rollout is recorded in `docs/ai-generation-workflow-rollout.md`; current generation work is governed by `docs/generation-v2-design.md`.**
 Date: 2026-08-28
 Scope: Real-material upload to persisted, visible Study Guide
 Root-cause report: current task evidence and production diagnostics at `main@6b018fa`
