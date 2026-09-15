@@ -54,7 +54,10 @@ export async function signUp(formData: FormData) {
     ...parsed.data,
     options: { emailRedirectTo: callback.toString() },
   });
-  if (error) redirect(authErrorPath("sign-up", next, "This account could not be created. Please retry."));
+  if (error) {
+    console.error("[auth-sign-up-failed]", JSON.stringify({ status: error.status ?? null, code: error.code ?? null, name: error.name }));
+    redirect(authErrorPath("sign-up", next, "This account could not be created. Please retry."));
+  }
   if (data.session) {
     await claimCurrentAnonymousSession();
     redirect(next);

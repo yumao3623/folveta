@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { validateQuickCheckCandidates } from "@/lib/ai/quick-check";
+import { collectV2QuestionTargets, validateQuickCheckCandidates } from "@/lib/ai/quick-check";
+import { v2GuideSchema } from "@/lib/ai/generation-v2";
 import type { QuestionVerdicts, RawQuickCheckCandidate } from "@/lib/ai/schemas";
 import { demoGuide } from "@/lib/fixtures/demo-guide";
 import { demoQuickCheck } from "@/lib/fixtures/demo-quick-check";
@@ -64,6 +65,52 @@ describe("Quick Check contracts and filtering", () => {
     expect(targets.length).toBeGreaterThanOrEqual(5);
     expect(targets.every((item) => item.source_refs.length > 0)).toBe(true);
     expect(targets.every((item) => item.anchor.startsWith(`topic-${item.topic_id}`))).toBe(true);
+  });
+
+  it("collects grounded V2 sections while excluding non-direct claims", () => {
+    const sourceRef = {
+      span_id: "12345678-1234-4234-8234-123456789012:page:1:0",
+      source_id: "12345678-1234-4234-8234-123456789012",
+      source_name: "notes.pdf",
+      locator: { kind: "page" as const, number: 1 },
+      excerpt: "Grounded source evidence.",
+    };
+    const guide = v2GuideSchema.parse({
+      schema_version: "2.0",
+      id: "v2-guide-test",
+      session_id: "12345678-1234-4234-8234-123456789013",
+      title: "V2 Guide",
+      source_snapshot_hash: "a".repeat(64),
+      generation_status: "complete_with_gaps",
+      coverage: { readable_units: 1, covered_units: 1, total_units: 1, gaps: [] },
+      study_map: [{ section_id: "section-one", priority: "study_first", why_this_matters: "Core material.", source_refs: [sourceRef] }],
+      sections: [{
+        id: "section-one",
+        title: "Section one",
+        priority: "study_first",
+        focus_reason: "Core material.",
+        explanation: [
+          { id: "direct", text: "Directly supported.", support_status: "direct", source_refs: [sourceRef] },
+          { id: "partial", text: "Only partially supported.", support_status: "partial", source_refs: [sourceRef] },
+        ],
+        key_concepts: ["Key concept"],
+        definitions: ["Term — grounded definition."],
+        processes_relationships: ["Cause leads to effect."],
+        common_confusions: ["Do not confuse cause and effect."],
+        source_refs: [sourceRef],
+        gaps: [],
+      }],
+      generated_at: "2030-01-01T00:00:00.000Z",
+    });
+
+    const targets = collectV2QuestionTargets(guide);
+    const [target] = targets;
+    expect(target.guide_text).toContain("Directly supported.");
+    expect(target.guide_text).not.toContain("Only partially supported.");
+    expect(target.anchor).toBe("topic-section-one-explanation");
+    expect(target.source_refs).toEqual([sourceRef]);
+    expect(targets.map((item) => item.section_type)).toEqual(["concise_explanation", "key_concept", "definition", "process_relationship", "common_confusion"]);
+    expect(targets.every((item) => item.source_refs.length === 1)).toBe(true);
   });
 
   it("keeps only candidates that pass structural, evidence, topic, and single-answer checks", () => {

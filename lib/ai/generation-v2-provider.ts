@@ -18,23 +18,31 @@ export type V2ArtifactProvider = {
 };
 
 const instructions = [
-  "Create one concise, evidence-backed study-guide section from the supplied evidence.",
+  "Create a coherent study-guide topic bundle from the supplied evidence.",
+  "Split genuinely distinct concepts into 2-6 focused sections when the evidence supports multiple topics; use one section only for truly single-topic evidence.",
+  "Order and label each section by learning importance: study_first, study_next, or review_if_time. Avoid duplicate or near-duplicate section titles.",
   "Use only supplied span IDs. Every explanation claim must cite one or more supplied IDs.",
+  "Represent the full supplied evidence across the sections. If evidence cannot be represented, record an explicit source_coverage gap.",
   "Do not invent source names, page numbers, excerpts, facts, exam predictions, or mastery guarantees.",
-  "Required fields are section title, priority, focus reason, and one or more source-backed explanation claims.",
+  "Each section requires a title, priority, focus reason, and one or more source-backed explanation claims.",
   "Optional instructional blocks may be omitted when unsupported by the evidence.",
 ].join("\n");
 
 function evidenceFor(spans: V2Span[]) {
-  return spans.map((span) => `[span_id: ${span.id}]\n${span.text}`).join("\n\n");
+  return spans.map((span) => `[span_id: ${span.id} | source_id: ${span.source_id} | ${span.locator.kind}: ${span.locator.number}]\n${span.text}`).join("\n\n");
 }
 
 function normalizeStructuredArtifact(value: unknown): V2Artifact {
   if (!value || typeof value !== "object" || Array.isArray(value)) return v2ArtifactSchema.parse(value);
   const normalized = { ...(value as Record<string, unknown>) };
-  for (const key of ["review_targets", "key_concepts", "definitions", "processes_relationships", "common_confusions", "practice_prompts"]) {
-    if (normalized[key] === null) delete normalized[key];
-  }
+  if (Array.isArray(normalized.sections)) normalized.sections = normalized.sections.map((section) => {
+    if (!section || typeof section !== "object" || Array.isArray(section)) return section;
+    const normalizedSection = { ...(section as Record<string, unknown>) };
+    for (const key of ["review_targets", "key_concepts", "definitions", "processes_relationships", "common_confusions", "practice_prompts"]) {
+      if (normalizedSection[key] === null) delete normalizedSection[key];
+    }
+    return normalizedSection;
+  });
   return v2ArtifactSchema.parse(normalized);
 }
 
@@ -71,7 +79,7 @@ export function v2ArtifactFailure(error: unknown) {
   if (error instanceof z.ZodError) {
     return { code: "invalid_output", message: "The provider returned an invalid structured artifact.", retryable: true };
   }
-  if (code === "MODEL_INVALID_SOURCE_REFERENCE" || code === "MODEL_UNSUPPORTED_CLAIM" || code === "MODEL_UNSUPPORTED_CLAIM_IN_EXPLANATION") {
+  if (code === "MODEL_INVALID_SOURCE_REFERENCE" || code === "MODEL_UNSUPPORTED_CLAIM" || code === "MODEL_UNSUPPORTED_CLAIM_IN_EXPLANATION" || code === "MODEL_DUPLICATE_SECTION_TITLE") {
     return { code: "invalid_output", message: "The provider cited evidence outside this artifact.", retryable: false };
   }
   const safe = classifyProviderError(error);

@@ -2,10 +2,12 @@ import type { LibraryListOptions } from "@/lib/schemas/library-search";
 import { LIBRARY_DEFAULT_LIMIT } from "@/lib/schemas/library-search";
 import type { Database } from "@/lib/server/database.types";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
+import { isGenerationV2SchemaUnavailable } from "@/lib/ai/generation-v2-rollout";
 
 type SourceRow = Database["public"]["Tables"]["sources"]["Row"];
 type SessionRow = Database["public"]["Tables"]["preparation_sessions"]["Row"];
 type GuideRow = Database["public"]["Tables"]["study_guides"]["Row"];
+type V2GuideRow = Database["public"]["Tables"]["generation_v2_guides"]["Row"];
 
 export type LibraryQueryRow = Pick<SourceRow, "id" | "display_name" | "kind" | "status" | "unit_count" | "readable_unit_count" | "created_at"> & {
   preparation_sessions: Pick<SessionRow, "id" | "archived_at" | "deleted_at"> & {
@@ -26,6 +28,11 @@ export type LibraryItem = {
   createdAt: string;
   sessionId: string;
   relatedGuide: { id: string; title: string; archived: boolean } | null;
+};
+
+type V2LibraryGuideRow = Pick<V2GuideRow, "id" | "session_id" | "created_at"> & {
+  preparation_sessions: Pick<SessionRow, "title" | "archived_at" | "deleted_at">;
+  generation_v2_requests: { status: string } | Array<{ status: string }>;
 };
 
 export type LibraryListResult = {
@@ -95,8 +102,42 @@ export async function listOwnedSources(
   const { data, error } = await query.range(offset, offset + options.limit);
   if (error) throw error;
   const rows = (data ?? []) as unknown as LibraryQueryRow[];
+  const items = rows.slice(0, options.limit).map(toLibraryItem);
+  const sessionIds = [...new Set(items.map((item) => item.sessionId))];
+  if (sessionIds.length) {
+    const { data: v2Data, error: v2Error } = await getSupabaseAdmin()
+      .from("generation_v2_guides")
+      .select(`
+        id,
+        session_id,
+        created_at,
+        generation_v2_requests!inner(status),
+        preparation_sessions!inner(title, archived_at, deleted_at)
+      `)
+      .in("session_id", sessionIds)
+      .in("generation_v2_requests.status", ["complete", "complete_with_gaps"])
+      .is("preparation_sessions.deleted_at", null)
+      .order("created_at", { ascending: false });
+    if (v2Error && !isGenerationV2SchemaUnavailable(v2Error)) throw v2Error;
+    if (!v2Error) {
+      const latestBySession = new Map<string, V2LibraryGuideRow>();
+      for (const row of (v2Data ?? []) as unknown as V2LibraryGuideRow[]) {
+        if (!latestBySession.has(row.session_id)) latestBySession.set(row.session_id, row);
+      }
+      for (const item of items) {
+        const guide = latestBySession.get(item.sessionId);
+        if (guide) {
+          item.relatedGuide = {
+            id: guide.id,
+            title: guide.preparation_sessions.title,
+            archived: Boolean(guide.preparation_sessions.archived_at),
+          };
+        }
+      }
+    }
+  }
   return {
-    sources: rows.slice(0, options.limit).map(toLibraryItem),
+    sources: items,
     page: options.page,
     limit: options.limit,
     hasPreviousPage: options.page > 1,

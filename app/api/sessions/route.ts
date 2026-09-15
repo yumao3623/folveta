@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getServerEnv } from "@/lib/env";
 import { SESSION_COOKIE } from "@/lib/config";
 import { createSessionToken, hashValue } from "@/lib/server/crypto";
-import { errorResponse } from "@/lib/server/http";
+import { errorResponse, requireSameOrigin } from "@/lib/server/http";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 import { getCurrentUser } from "@/lib/server/auth";
 import { enforceRateLimit, requestRateLimitKey } from "@/lib/server/rate-limit";
@@ -14,6 +14,7 @@ const createSessionSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    requireSameOrigin(request);
     await enforceRateLimit({ scope: "session.create", key: requestRateLimitKey(request), limit: 8, windowSeconds: 3600 });
     const input = createSessionSchema.parse(await request.json().catch(() => ({})));
     const user = await getCurrentUser();

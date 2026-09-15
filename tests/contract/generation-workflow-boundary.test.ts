@@ -42,11 +42,12 @@ describe("generation Workflow execution boundary", () => {
 
   it("keeps the new execution path safely disabled by default", () => {
     expect(envExample).toContain("AI_GENERATION_WORKFLOW_ENABLED=false");
-    expect(envExample).toContain("GENERATION_V2_PRODUCT_ENABLED=false");
+    expect(envExample).toContain("GENERATION_V2_RUNTIME_ENABLED=false");
     expect(generateRoute).toContain("if (env.AI_GENERATION_WORKFLOW_ENABLED)");
-    expect(generateRoute).toContain("env.GENERATION_V2_RUNTIME_ENABLED && env.GENERATION_V2_PRODUCT_ENABLED");
+    expect(generateRoute).toContain("if (isGenerationV2WriteEnabled())");
     expect(generateRoute).toContain("generateGuideStep(sessionId, session.title)");
-    expect(reconcile).toContain("if (!getServerEnv().AI_GENERATION_WORKFLOW_ENABLED)");
+    expect(reconcile).toContain("if (env.AI_GENERATION_WORKFLOW_ENABLED)");
+    expect(reconcile).toContain("if (env.GENERATION_V2_RUNTIME_ENABLED)");
   });
 
 });

@@ -9,7 +9,7 @@ import {
 } from "@/lib/schemas";
 import type { Json } from "@/lib/server/database.types";
 import { requireOwnedSession } from "@/lib/server/auth";
-import { AppError, errorResponse } from "@/lib/server/http";
+import { AppError, errorResponse, requireSameOrigin } from "@/lib/server/http";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 
 const submitSchema = z.object({
@@ -22,6 +22,7 @@ export async function POST(
   context: { params: Promise<{ sessionId: string }> },
 ) {
   try {
+    requireSameOrigin(request);
     const { sessionId } = await context.params;
     const session = await requireOwnedSession(sessionId);
     if (!session) throw new AppError("SESSION_NOT_FOUND", "This study session is missing or expired.", 404);

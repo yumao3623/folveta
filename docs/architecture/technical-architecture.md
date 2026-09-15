@@ -111,7 +111,7 @@ There is no ORM, custom queue/worker service, vector database, component framewo
 | `POST /api/sources/[sourceId]/parse` | Verify ownership, download private object, validate/hash/parse, persist units/spans |
 | `POST /api/sources/[sourceId]/upload-failed` | Persist failed upload state |
 | `GET /api/sessions/[sessionId]/status` | Return owned session/source/Guide state, preferring the latest V2 request when present |
-| `POST /api/sessions/[sessionId]/generate` | Authorize the session, enforce rate and billing admission, select allowlisted V2 when all V2 write gates match, otherwise use Workflow V1 or the legacy fallback |
+| `POST /api/sessions/[sessionId]/generate` | Authorize the session, enforce rate and billing admission, select V2 for every new request when its release switch is enabled, otherwise use Workflow V1 or the legacy fallback |
 | `GET /api/internal/generation-reconcile` | Bearer-protected dispatch-gap and watchdog reconciliation invoked by Supabase Cron |
 | `POST /api/internal/generation-v2` | Owner-authorized, fully gated V2 request creation/join and Workflow start |
 | `GET /api/internal/generation-v2/status` | Owner-authorized V2 request/artifact/terminal-Guide status projection |
@@ -184,7 +184,7 @@ Implemented generation path:
 
 Guide generation is now durable and browser-independent. `generation_run_id` is the business identity; a `workflow_run_id` never grants execution rights. At-least-once Workflow steps must acquire database ownership, fencing, a DB-time lease, capacity, and attempt authorization before a provider call. SDK/gateway retries are disabled; Workflow schedules only database-authorized retry state. Capacity is four calls per run and eight globally. Current evidence and remaining risks are recorded in `docs/operations/ai-generation-workflow-rollout.md`.
 
-Generation V2 is implemented alongside V1 behind `GENERATION_V2_RUNTIME_ENABLED`, `GENERATION_V2_PRODUCT_ENABLED`, and `GENERATION_V2_ROLLOUT_ALLOWLIST`. The formal Generate route can create or join a V2 request and start its thin Workflow runner; the status route, Study page, Guide lists, reopen, and Guide management can read delivered V2 Guides. V2 persists requests, artifacts, request-artifact joins, terminal Guide snapshots, and dedicated billing reservations in separate tables. Search, Quick Check, and Library related-Guide reads remain V1-only, and Production V2 enablement has not been verified by this document.
+Generation V2 is implemented alongside V1 behind the single `GENERATION_V2_RUNTIME_ENABLED` release switch. A bounded provider call returns a bundle of distinct study topics; long inputs still persist and retry one evidence partition at a time, then assemble all delivered topics in stable priority order. The formal Generate route creates or joins a V2 request and starts its thin Workflow runner whenever the switch is enabled; status, Study, Guide management, Search, Quick Check, and Library reads prefer delivered V2 Guides while retaining V1 fallback. V2 persists requests, artifacts, request-artifact joins, terminal Guide snapshots, and dedicated billing reservations in separate tables. Parser/source coverage gaps derive `complete_with_gaps`; a changed source snapshot atomically aborts its old request and releases billing. Production V2 migration application and isolated real-provider acceptance remain unverified by this document.
 
 Important limitations:
 
@@ -202,7 +202,7 @@ Important limitations:
 - OpenAI-compatible base URL/API key
 - task model aliases for topic extraction/merge, Guide, grounding, Quick Check, and question verification
 - `AI_GENERATION_WORKFLOW_ENABLED` and the server-only reconciler secret
-- `GENERATION_V2_RUNTIME_ENABLED`, `GENERATION_V2_PRODUCT_ENABLED`, and `GENERATION_V2_ROLLOUT_ALLOWLIST` for controlled Generation v2 routing
+- `GENERATION_V2_RUNTIME_ENABLED` as the single Generation v2 release/rollback switch
 - Paddle server/client environment, client token, API key, webhook secret, Product ID, and Price ID
 - prompt/schema versions and session retention days
 

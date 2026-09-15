@@ -1,5 +1,5 @@
 import type { Json, Database } from "@/lib/server/database.types";
-import type { V2ArtifactResult } from "@/lib/ai/generation-v2-persistence";
+import type { V2ArtifactResult } from "@/lib/ai/generation-v2";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 
 type RequestInsert = Database["public"]["Tables"]["generation_v2_requests"]["Insert"];
@@ -120,6 +120,26 @@ export async function assembleGenerationV2Request(input: { requestId: string; de
     p_request_id: input.requestId,
     p_delivery_status: input.deliveryStatus,
     p_guide_json: input.guide ?? null,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function finalizeGenerationV2Request(input: { requestId: string; deliveryStatus: "complete" | "complete_with_gaps" | "failed_no_guide"; guide?: Json | null }) {
+  const { data, error } = await getSupabaseAdmin().rpc("finalize_generation_v2_request", {
+    p_request_id: input.requestId,
+    p_delivery_status: input.deliveryStatus,
+    p_guide_json: input.guide ?? null,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function abortGenerationV2Request(input: { requestId: string; code: string; message: string }) {
+  const { data, error } = await getSupabaseAdmin().rpc("abort_generation_v2_request", {
+    p_request_id: input.requestId,
+    p_code: input.code,
+    p_message: input.message,
   });
   if (error) throw error;
   return data;

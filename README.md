@@ -1,7 +1,7 @@
 # Folveta
 
 Status: **Current repository overview; production-specific claims defer to dated deployment records.**
-Last updated: 2026-09-07
+Last updated: 2026-09-11
 
 Folveta is a Study Guide Maker that turns supported course materials into a structured, source-grounded Study Guide with an optional five-question Quick Check.
 
@@ -14,7 +14,9 @@ The repository is now governed by the v5 documents. Start with [docs/README.md](
 - [Product decisions](docs/product/decisions.md)
 - [Current product context](docs/product/product-context.md)
 - [v5 master roadmap](docs/product/v5-master-roadmap.md)
+- [V2 release baseline](docs/product/release-baseline.md)
 - [Current technical architecture](docs/architecture/technical-architecture.md)
+- [Repository structure](docs/architecture/repository-structure.md)
 - [Folveta SEO architecture](docs/architecture/seo-architecture.md)
 
 ## Current status
@@ -22,7 +24,7 @@ The repository is now governed by the v5 documents. Start with [docs/README.md](
 Implemented:
 
 - Landing/upload, private multi-format parsing, source-grounded Guide generation, Study Guide workspace, Quick Check, and Results/Learning Loop.
-- Durable Generation v1 plus a controlled Generation v2 path with artifact persistence, partial-delivery support, dual reads, billing admission, and allowlist routing.
+- Durable Generation v1 plus a release-candidate Generation v2 path with multi-topic artifacts, partial-delivery support, dual reads, billing admission, and one release switch.
 - Anonymous seven-day session access plus Supabase email/password Auth, anonymous claim, password recovery, persistent My Guides, Library, Search, Profile, and account deletion.
 - Paddle Live Checkout, signed/idempotent webhooks, Customer Portal, Free/Pro entitlements, and server-side usage enforcement.
 - Daily retention cleanup, distributed rate limiting, private-route `noindex`, and eight approved public sitemap routes including the PDF-focused landing page.
@@ -30,7 +32,7 @@ Implemented:
 
 Open work:
 
-- Complete controlled Generation v2 Production acceptance, representative quality/latency measurement, default-routing review, and eventual Generation v1 retirement.
+- Apply and verify the pending Generation v2 migrations, run an isolated real-provider release check, then enable V2 for all new generation at formal launch; retire Generation v1 only after a rollback window.
 - Expand reusable browser E2E, visual regression, cross-browser, accessibility, and performance coverage.
 - Complete the post-launch 24-hour/7-day monitoring review; backup/PITR remains an accepted operator risk.
 - Google indexing and field Core Web Vitals remain external, asynchronous signals rather than repository-complete work.
@@ -41,7 +43,7 @@ Requirements: Node.js 22+ and a Supabase project for real upload/generation. The
 
 ```bash
 npm install
-copy .env.example .env.local
+cp .env.example .env.local
 npm run dev
 ```
 

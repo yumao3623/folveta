@@ -60,7 +60,7 @@ type GenerationV2RequestArtifactRow = {
   request_id: string; artifact_id: string; session_id: string; partition_key: string; partition_order: number; required: boolean; created_at: string;
 };
 type QuickCheckRow = {
-  id: string; session_id: string; guide_id: string; guide_checksum: string; schema_version: string;
+  id: string; session_id: string; guide_id: string | null; generation_v2_guide_id: string | null; guide_checksum: string; schema_version: string;
   prompt_version: string; requested_question_count: number; question_count: number;
   quick_check_json: Json; validation_warnings: Json; created_at: string; updated_at: string;
 };
@@ -185,7 +185,7 @@ export type Database = {
         request_id: string; artifact_id: string; session_id: string; partition_key: string; partition_order: number; required?: boolean; created_at?: string;
       }>;
       quick_checks: Table<QuickCheckRow, {
-        id: string; session_id: string; guide_id: string; guide_checksum: string; schema_version: string;
+        id: string; session_id: string; guide_id?: string | null; generation_v2_guide_id?: string | null; guide_checksum: string; schema_version: string;
         prompt_version: string; requested_question_count: number; question_count: number;
         quick_check_json: Json; validation_warnings?: Json; created_at?: string; updated_at?: string;
       }>;
@@ -246,6 +246,10 @@ export type Database = {
       claim_generation_v2_artifact: { Args: { p_artifact_id: string; p_lease_id: string; p_lease_seconds?: number }; Returns: GenerationV2ArtifactRow };
       settle_generation_v2_artifact: { Args: { p_artifact_id: string; p_lease_id: string; p_status: "complete" | "retry_wait" | "gap"; p_result_json?: Json | null; p_result_hash?: string | null; p_gap_code?: string | null; p_gap_message?: string | null; p_retryable?: boolean; p_retry_after_seconds?: number }; Returns: GenerationV2ArtifactRow };
       assemble_generation_v2_request: { Args: { p_request_id: string; p_delivery_status: "complete" | "complete_with_gaps" | "failed_no_guide"; p_guide_json?: Json | null }; Returns: GenerationV2RequestRow };
+      finalize_generation_v2_request: { Args: { p_request_id: string; p_delivery_status: "complete" | "complete_with_gaps" | "failed_no_guide"; p_guide_json?: Json | null }; Returns: GenerationV2RequestRow };
+      abort_generation_v2_request: { Args: { p_request_id: string; p_code: string; p_message: string }; Returns: GenerationV2RequestRow };
+      reconcile_generation_v2_billing: { Args: { p_limit?: number }; Returns: number };
+      claim_stale_generation_v2_requests: { Args: { p_limit?: number; p_stale_seconds?: number }; Returns: Array<{ request_id: string }> };
       billing_reserve_generation_v2: { Args: { p_request_id: string; p_billing_environment?: "sandbox" | "live" | null }; Returns: Json };
       billing_settle_generation_v2: { Args: { p_request_id: string; p_delivery_status: "complete" | "complete_with_gaps" | "failed_no_guide" }; Returns: Json };
       get_generation_execution_status: { Args: { p_generation_run_id: string }; Returns: Json };

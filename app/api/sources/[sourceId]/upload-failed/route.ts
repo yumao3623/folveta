@@ -1,12 +1,13 @@
 import { z } from "zod";
 import { requireOwnedSource } from "@/lib/server/auth";
-import { AppError, errorResponse } from "@/lib/server/http";
+import { AppError, errorResponse, requireSameOrigin } from "@/lib/server/http";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 
 const schema = z.object({ message: z.string().min(1).max(500) }).strict();
 
 export async function POST(request: Request, context: RouteContext<"/api/sources/[sourceId]/upload-failed">) {
   try {
+    requireSameOrigin(request);
     const { sourceId } = await context.params;
     const source = await requireOwnedSource(sourceId);
     if (!source) throw new AppError("SOURCE_NOT_FOUND", "This source is missing or expired.", 404);

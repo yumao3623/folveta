@@ -79,6 +79,29 @@ export async function executePersistedGenerationV2(input: {
     }
   }
 
+  const settledArtifacts = input.store.artifactsForRequest(input.requestId);
+  const sourceGaps: V2Guide["coverage"]["gaps"] = [
+    ...input.snapshot.warnings.map((warning) => ({
+      code: warning.code,
+      message: warning.message,
+      source_id: warning.source_id,
+      locator: warning.locator === null ? null : { kind: "file" as const, number: warning.locator },
+      partition_id: null,
+    })),
+    ...settledArtifacts.flatMap((artifact) => {
+      if (artifact.status !== "complete" || !artifact.result) return [];
+      const cited = new Set(artifact.result.sections.flatMap((section) => section.source_refs.map((reference) => reference.span_id)));
+      const expected = input.snapshot.spans.filter((span) => artifact.spanContentHashes.includes(span.content_hash)).map((span) => span.id);
+      const missing = expected.filter((id) => !cited.has(id));
+      return missing.length ? [{
+        code: "source_coverage",
+        message: `${missing.length} readable source span${missing.length === 1 ? " was" : "s were"} not represented in the delivered sections.`,
+        source_id: null,
+        locator: null,
+        partition_id: artifact.partitionKey,
+      }] : [];
+    }),
+  ];
   const assembled = input.store.assemble(input.requestId, {
     schema_version: "2.0",
     id: `v2-guide-${input.requestId}`,
@@ -87,6 +110,7 @@ export async function executePersistedGenerationV2(input: {
     source_snapshot_hash: input.snapshot.snapshot_hash,
     totalUnits: input.snapshot.sources.reduce((sum, source) => sum + source.unit_count, 0),
     readableUnits: input.snapshot.sources.reduce((sum, source) => sum + source.readable_unit_count, 0),
+    sourceGaps,
   });
   return { guide: assembled.guide, metrics };
 }

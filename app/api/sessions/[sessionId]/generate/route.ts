@@ -1,7 +1,7 @@
 import { requireOwnedSession } from "@/lib/server/auth";
 import { generateGuideStep } from "@/lib/ai/pipeline";
 import { claimGenerationLease, releaseGenerationLease } from "@/lib/ai/generation-lease";
-import { AppError, errorResponse } from "@/lib/server/http";
+import { AppError, errorResponse, requireSameOrigin } from "@/lib/server/http";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 import { getServerEnv } from "@/lib/env";
 import { claimLogicalGeneration, dispatchGeneration, generationSnapshot } from "@/lib/ai/generation-dispatch";
@@ -10,22 +10,9 @@ import { start } from "workflow/api";
 import { generateStudyGuideV2Workflow } from "@/app/workflows/generation-v2";
 import { createOrJoinV2RuntimeRequest } from "@/lib/ai/generation-v2-runtime";
 import { isGenerationV2WriteEnabled } from "@/lib/ai/generation-v2-rollout";
+import { isGenerationClaimable } from "@/lib/ai/generation-state";
 
 export const maxDuration = 300;
-
-const continuableGenerationStates = [
-  "ready",
-  "ready_with_gaps",
-  "failed_retryable",
-  "extracting_topics",
-  "merging_topics",
-  "generating_guide",
-  "verifying_guide",
-];
-
-export function isGenerationClaimable(state: string) {
-  return continuableGenerationStates.includes(state);
-}
 
 export async function POST(request: Request, context: RouteContext<"/api/sessions/[sessionId]/generate">) {
   const { sessionId } = await context.params;
@@ -33,6 +20,7 @@ export async function POST(request: Request, context: RouteContext<"/api/session
   let authorized = false;
   let claimed = false;
   try {
+    requireSameOrigin(request);
     const session = await requireOwnedSession(sessionId);
     if (!session) throw new AppError("SESSION_NOT_FOUND", "This study session is missing or expired.", 404);
     authorized = true;
@@ -41,8 +29,7 @@ export async function POST(request: Request, context: RouteContext<"/api/session
     if (!isGenerationClaimable(session.state)) throw new AppError("GENERATION_NOT_AVAILABLE", "Guide generation is not available for this session.", 409);
 
     const env = getServerEnv();
-    const v2RuntimeAndProductEnabled = env.GENERATION_V2_RUNTIME_ENABLED && env.GENERATION_V2_PRODUCT_ENABLED;
-    if (v2RuntimeAndProductEnabled && isGenerationV2WriteEnabled(session)) {
+    if (isGenerationV2WriteEnabled()) {
       const { request: runtimeRequest } = await createOrJoinV2RuntimeRequest(sessionId);
       let workflowRunId: string | null = null;
       if (!["complete", "complete_with_gaps", "failed_no_guide"].includes(runtimeRequest.status)) {

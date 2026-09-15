@@ -1,7 +1,7 @@
 # Folveta Documentation Index
 
 Status: **Active governance index**  
-Last updated: 2026-09-07
+Last updated: 2026-09-10
 
 ## Authority order
 
@@ -24,12 +24,14 @@ If current code contradicts a document's claim that something is implemented, th
 | `product/decisions.md` | Highest product decision source of truth; never erase historical decisions |
 | `product/product-context.md` | Current product, market, UI, commercial, SEO, and implementation context |
 | `product/v5-master-roadmap.md` | Current master delivery roadmap |
+| `product/release-baseline.md` | Current V2 release scope, capability inventory, and stage gates |
 
 ## Architecture documents
 
 | Document | Role |
 | --- | --- |
 | `architecture/technical-architecture.md` | Current code/data/API/security architecture and approved target boundaries |
+| `architecture/repository-structure.md` | Current repository layout and file ownership rules |
 | `architecture/payment-billing-architecture.md` | Current Payment/Billing architecture and completed Sandbox/Live implementation record |
 | `architecture/auth-and-persistence.md` | Product-3A identity, anonymous claim, RLS, persistence, and retention architecture |
 | `architecture/guide-management.md` | Product-3B My Guides, Recent Guides, management API, lifecycle, pagination, and privacy architecture |

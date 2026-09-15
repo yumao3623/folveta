@@ -1,12 +1,10 @@
 import { createHash, randomUUID } from "node:crypto";
-import type { V2Guide } from "@/lib/ai/generation-v2";
+import { assembleV2Sections, type V2ArtifactResult, type V2Guide } from "@/lib/ai/generation-v2";
 
 export type V2OutputLanguage = "match_materials" | "en" | "zh";
 export type V2RequestStatus = "queued" | "working" | "complete" | "complete_with_gaps" | "failed_no_guide";
 export type V2ArtifactStatus = "pending" | "working" | "retry_wait" | "complete" | "gap";
 export type V2ArtifactKind = "guide" | "section" | "synthesis";
-
-export type V2ArtifactResult = V2Guide["sections"][number];
 
 export type V2RequestInput = {
   sessionId: string;
@@ -168,19 +166,22 @@ export class GenerationV2Persistence {
     return artifact;
   }
 
-  assemble(requestId: string, guide: Omit<V2Guide, "sections" | "study_map" | "generation_status" | "coverage" | "generated_at"> & { totalUnits: number; readableUnits: number }) {
+  assemble(requestId: string, guide: Omit<V2Guide, "sections" | "study_map" | "generation_status" | "coverage" | "generated_at"> & { totalUnits: number; readableUnits: number; sourceGaps?: V2Guide["coverage"]["gaps"] }) {
     const request = this.requests.get(requestId);
     if (!request) throw new Error("UNKNOWN_V2_REQUEST");
     const artifacts = this.artifactsForRequest(requestId);
     const complete = artifacts.filter((artifact) => artifact.status === "complete" && artifact.result);
-    const gaps = artifacts.filter((artifact) => artifact.status === "gap").map((artifact) => ({ code: artifact.gap?.code ?? "provider_transient_exhausted", message: artifact.gap?.message ?? "Artifact unavailable.", source_id: null, locator: null, partition_id: artifact.partitionKey }));
+    const gaps = [
+      ...(guide.sourceGaps ?? []),
+      ...artifacts.filter((artifact) => artifact.status === "gap").map((artifact) => ({ code: artifact.gap?.code ?? "provider_transient_exhausted", message: artifact.gap?.message ?? "Artifact unavailable.", source_id: null, locator: null, partition_id: artifact.partitionKey })),
+    ];
     const requiredComplete = artifacts.filter((artifact) => artifact.kind !== "synthesis" && artifact.status === "complete").length;
     const requiredTotal = artifacts.filter((artifact) => artifact.kind !== "synthesis").length;
     request.status = requiredComplete === 0 ? (artifacts.every((artifact) => artifact.status === "gap") ? "failed_no_guide" : "working") : requiredComplete === requiredTotal && gaps.length === 0 ? "complete" : "complete_with_gaps";
     request.updatedAt = new Date(this.now()).toISOString();
     if (request.status === "failed_no_guide" || request.status === "working") return { request, guide: null };
-    const sections = complete.map((artifact) => artifact.result!);
-    const coveredUnits = new Set(complete.flatMap((artifact) => artifact.spanContentHashes)).size;
+    const sections = assembleV2Sections(complete.flatMap((artifact) => artifact.result!.sections));
+    const coveredUnits = new Set(sections.flatMap((section) => section.source_refs.map((reference) => `${reference.source_id}:${reference.locator.kind}:${reference.locator.number}`))).size;
     const assembled = {
       schema_version: "2.0" as const,
       id: guide.id,

@@ -7,10 +7,15 @@ export function SourceReference({
 }: {
   reference: SourceReferenceType;
 }) {
-  const locator =
-    reference.locator.kind === "page"
-      ? `Page ${reference.locator.number}`
-      : `Slide ${reference.locator.number}`;
+  const locatorLabel = {
+    page: "Page",
+    slide: "Slide",
+    paragraph: "Paragraph",
+    sheet: "Sheet",
+    image: "Image",
+    file: "File",
+  }[reference.locator.kind];
+  const locator = `${locatorLabel} ${reference.locator.number}`;
 
   return (
     <details className="ui-surface ui-surface--source group px-3 py-2.5 transition-[background-color,border-color,box-shadow] hover:border-[#a9cae7] hover:bg-[#dcecff] hover:shadow-[var(--shadow-xs)]">

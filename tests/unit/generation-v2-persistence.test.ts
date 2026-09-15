@@ -6,12 +6,12 @@ import {
   v2BillingOutcome,
   v2RequestContentKey,
 } from "@/lib/ai/generation-v2-persistence";
-import type { V2Guide } from "@/lib/ai/generation-v2";
+import type { V2ArtifactResult } from "@/lib/ai/generation-v2";
 
-const result = (id: string, span: string): V2Guide["sections"][number] => ({
+const result = (id: string, span: string): V2ArtifactResult => ({ sections: [{
   id, title: id, priority: "study_first", focus_reason: "supported", source_refs: [{ span_id: span, source_id: "source", source_name: "notes", locator: { kind: "page", number: 1 }, excerpt: "evidence" }],
   explanation: [{ id: `${id}:claim`, text: "supported claim", support_status: "direct", source_refs: [{ span_id: span, source_id: "source", source_name: "notes", locator: { kind: "page", number: 1 }, excerpt: "evidence" }] }], gaps: [],
-});
+}] });
 
 describe("Generation v2 persistence semantics", () => {
   const input = { sessionId: "session-a", sourceSnapshotHash: "snapshot-a", generationContractHash: "contract-a", outputLanguage: "en" as const, manifest: [
@@ -88,6 +88,26 @@ describe("Generation v2 persistence semantics", () => {
     const assembled = store.assemble(request.id, { schema_version: "2.0", id: "guide-complete", session_id: "session-a", title: "Guide", source_snapshot_hash: "snapshot-a", totalUnits: 2, readableUnits: 2 });
     expect(assembled.request.status).toBe("complete");
     expect(assembled.guide?.generation_status).toBe("complete");
+  });
+
+  it("assembles complete_with_gaps when parsing reported a source gap", () => {
+    const store = new GenerationV2Persistence();
+    const request = store.createOrJoinRequest({ ...input, manifest: input.manifest.slice(0, 1) }).request;
+    const artifact = store.attachManifest(request.id)[0];
+    const claim = store.claimArtifact(artifact.id, "parser-gap");
+    store.settleArtifactSuccess(artifact.id, claim!.leaseId, result("partition_0", "span-a"));
+    const assembled = store.assemble(request.id, {
+      schema_version: "2.0",
+      id: "guide-parser-gap",
+      session_id: "session-a",
+      title: "Guide",
+      source_snapshot_hash: "snapshot-a",
+      totalUnits: 2,
+      readableUnits: 1,
+      sourceGaps: [{ code: "UNREADABLE_UNIT", message: "One page had no reliable text.", source_id: "source", locator: { kind: "page", number: 2 }, partition_id: null }],
+    });
+    expect(assembled.request.status).toBe("complete_with_gaps");
+    expect(assembled.guide?.coverage.gaps).toHaveLength(1);
   });
 
   it("records failed_no_guide without inventing a deliverable snapshot", () => {
@@ -173,5 +193,11 @@ describe("Generation v2 persistence semantics", () => {
     expect(permissionFix).toContain("from public, anon, authenticated;");
     expect(permissionFix).toContain("grant execute on function public.create_or_join_generation_v2_request(uuid, text, text, text, text, jsonb)");
     expect(permissionFix).toContain("to service_role;");
+    const releaseCandidate = readFileSync("supabase/migrations/20260910010911_generation_v2_release_candidate_state.sql", "utf8");
+    expect(releaseCandidate).toContain("guide_gap_count > 0");
+    expect(releaseCandidate).toContain("create or replace function public.abort_generation_v2_request");
+    expect(releaseCandidate).toContain("perform public.billing_settle_generation_v2(p_request_id, 'failed_no_guide')");
+    expect(releaseCandidate).toContain("set search_path = ''");
+    expect(releaseCandidate).toContain("grant select on table public.generation_v2_guides to authenticated");
   });
 });

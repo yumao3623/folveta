@@ -13,6 +13,7 @@ const searchDal = readFileSync("lib/server/knowledge-search.ts", "utf8");
 const profileDal = readFileSync("lib/server/profile.ts", "utf8");
 const migration = readFileSync("supabase/migrations/202608260003_product_3c_library_search_profile.sql", "utf8");
 const filenameSearchMigration = readFileSync("supabase/migrations/202608260005_product_3c_source_filename_search.sql", "utf8");
+const v2ProductReadsMigration = readFileSync("supabase/migrations/20260909154815_generation_v2_product_reads.sql", "utf8");
 const libraryPage = readFileSync("app/library/page.tsx", "utf8");
 const searchPage = readFileSync("app/search/page.tsx", "utf8");
 const profilePage = readFileSync("app/profile/page.tsx", "utf8");
@@ -101,7 +102,7 @@ describe("private knowledge search", () => {
   it("builds real targets for Guide, Topic, and Source results", () => {
     const base = { guide_id: "guide-a", session_id: "session-a", source_id: null, title: "Cells", subtitle: "Biology", excerpt: null, rank: 2, total_count: 3 };
     expect(toKnowledgeSearchResult({ ...base, result_type: "guide", result_id: "guide-a" }).href).toBe("/api/guides/guide-a/reopen");
-    expect(toKnowledgeSearchResult({ ...base, result_type: "topic", result_id: "cell membrane" }).href).toBe("/study/session-a#cell%20membrane");
+    expect(toKnowledgeSearchResult({ ...base, result_type: "topic", result_id: "cell membrane" }).href).toBe("/study/session-a#topic-cell-membrane");
     expect(toKnowledgeSearchResult({ ...base, result_type: "source", result_id: "source-a", source_id: "source-a" }).href).toBe("/api/guides/guide-a/reopen");
   });
 
@@ -125,6 +126,16 @@ describe("private knowledge search", () => {
     expect(filenameSearchMigration).toContain("using gin");
     expect(filenameSearchMigration).toContain("security invoker");
     expect(filenameSearchMigration).toContain("from anon");
+  });
+
+  it("prefers delivered V2 Guides in private Library and Search reads", () => {
+    expect(libraryDal).toContain('.from("generation_v2_guides")');
+    expect(libraryDal).toContain("latestBySession");
+    expect(v2ProductReadsMigration).toContain("active_v2_guides as");
+    expect(v2ProductReadsMigration).toContain("v2_guide_matches as");
+    expect(v2ProductReadsMigration).toContain("v2_topic_matches as");
+    expect(v2ProductReadsMigration).toContain("security invoker");
+    expect(v2ProductReadsMigration).toContain("session.owner_user_id = auth.uid()");
   });
 
   it("renders empty query, invalid query, no-results, and result states", () => {

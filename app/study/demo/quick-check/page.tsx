@@ -1,7 +1,8 @@
 import { QuickCheckRunner } from "@/components/quick-check-runner";
-import { demoGuide } from "@/lib/fixtures/demo-guide";
+import { quickCheckGuideTopics } from "@/lib/ai/quick-check";
+import { demoV2Guide } from "@/lib/fixtures/demo-guide-v2";
 import { demoQuickCheck } from "@/lib/fixtures/demo-quick-check";
-import { guideSectionAnchor, toTakingQuickCheck } from "@/lib/schemas";
+import { toTakingQuickCheck } from "@/lib/schemas";
 
 export default function DemoQuickCheckPage() {
   return (
@@ -9,10 +10,10 @@ export default function DemoQuickCheckPage() {
       sessionId="demo"
       initialQuickCheck={toTakingQuickCheck(demoQuickCheck)}
       demoQuickCheck={demoQuickCheck}
-      topics={demoGuide.topics.map((topic) => ({
+      topics={quickCheckGuideTopics(demoV2Guide).map((topic) => ({
         id: topic.id,
         title: topic.title,
-        href: `/study/demo#${guideSectionAnchor(topic.id)}`,
+        href: `/study/demo#${topic.anchor}`,
       }))}
     />
   );

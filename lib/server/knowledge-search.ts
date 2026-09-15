@@ -1,4 +1,5 @@
 import type { SearchOptions } from "@/lib/schemas/library-search";
+import { guideSectionAnchor } from "@/lib/schemas";
 import { getSupabaseAuth } from "@/lib/server/supabase-auth";
 
 export type KnowledgeSearchResultType = "guide" | "topic" | "source";
@@ -38,7 +39,7 @@ export type KnowledgeSearchPage = {
 };
 
 function resultHref(row: SearchRpcRow) {
-  if (row.result_type === "topic") return `/study/${row.session_id}#${encodeURIComponent(row.result_id)}`;
+  if (row.result_type === "topic") return `/study/${row.session_id}#${guideSectionAnchor(row.result_id)}`;
   if (row.guide_id) return `/api/guides/${row.guide_id}/reopen`;
   return `/study/${row.session_id}`;
 }

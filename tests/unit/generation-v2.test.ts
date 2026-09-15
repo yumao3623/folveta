@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildSourceSnapshot,
+  assembleV2Sections,
   classifyV2Input,
   detectV2Language,
   partitionV2Snapshot,
@@ -14,10 +15,10 @@ import type { ParsedMaterial } from "@/lib/server/parser";
 function material(texts: string[], locatorKind: "page" | "slide" | "paragraph" | "sheet" | "image" | "file" = "page"): ParsedMaterial {
   return { units: texts.map((text, index) => ({ locatorKind, locatorNumber: index + 1, title: null, rawText: text, normalizedText: text, readable: text.length > 20, warnings: text.length > 20 ? [] : [{ code: "UNREADABLE_UNIT", message: "No readable text.", locator: index + 1 }], contentHash: `unit-hash-${locatorKind}-${index}-123456`, blocks: text.length > 20 ? [text] : [] })), warnings: texts.flatMap((text, index) => text.length > 20 ? [] : [{ code: "UNREADABLE_UNIT", message: "No readable text.", locator: index + 1 }]) };
 }
-function artifactFor(snapshot: V2SourceSnapshot, partitionIndex: number, overrides: Partial<V2Artifact> = {}): V2Artifact {
+function artifactFor(snapshot: V2SourceSnapshot, partitionIndex: number, overrides: Partial<V2Artifact["sections"][number]> = {}): V2Artifact {
   const partition = partitionV2Snapshot(snapshot)[partitionIndex];
   const spanId = partition.span_ids[0];
-  return { section_id: "ignored-by-runner", title: "Core concepts", priority: "study_first", focus_reason: "This is supported by the supplied material.", explanation: [{ id: "model-id", text: "The material explains the core relationship.", span_ids: [spanId], support_status: "direct" }], review_targets: ["Recall the core relationship."], ...overrides };
+  return { sections: [{ title: "Core concepts", priority: "study_first", focus_reason: "This is supported by the supplied material.", explanation: [{ id: "model-id", text: "The material explains the core relationship.", span_ids: [spanId], support_status: "direct" }], review_targets: ["Recall the core relationship."], ...overrides }] };
 }
 
 describe("Generation v2 offline contract runner", () => {
@@ -91,13 +92,43 @@ describe("Generation v2 offline contract runner", () => {
     const snapshot = buildSourceSnapshot({ sessionId: "session-no-review", ownerScope: "owner-a", title: "No review target", sources: [{ id: "source-no-review", displayName: "notes.pdf", parsed: material(["Identity, rationale, explanation, and provenance are sufficient for delivery."]) }] });
     const guide = await runGenerationV2(snapshot, async ({ partition }) => {
       const artifact = artifactFor(snapshot, partition.index);
-      const { review_targets: _reviewTargets, ...withoutReviewTargets } = artifact;
+      const { review_targets: _reviewTargets, ...withoutReviewTargets } = artifact.sections[0];
       void _reviewTargets;
-      return withoutReviewTargets;
+      return { sections: [withoutReviewTargets] };
     });
     expect(guide.generation_status).toBe("complete");
     expect(guide.sections[0]).not.toHaveProperty("review_targets");
     expect(guide.sections[0]).not.toHaveProperty("key_concepts");
+  });
+
+  it("creates a coherent multi-topic guide in one bounded provider call and orders priorities", async () => {
+    const snapshot = buildSourceSnapshot({ sessionId: "session-topics", ownerScope: "owner-a", title: "Biology", sources: [{ id: "source-topics", displayName: "biology.pdf", parsed: material(["Cellular respiration builds a proton gradient.", "Enzymes regulate metabolic pathway rates.", "Fermentation regenerates NAD+ for glycolysis."]) }] });
+    let calls = 0;
+    const guide = await runGenerationV2(snapshot, async ({ partition }) => {
+      calls += 1;
+      return { sections: [
+        { ...artifactFor(snapshot, partition.index).sections[0], title: "Fermentation", priority: "review_if_time", explanation: [{ id: "fermentation", text: "Fermentation regenerates NAD+.", span_ids: [partition.span_ids[2]], support_status: "direct" }] },
+        { ...artifactFor(snapshot, partition.index).sections[0], title: "Cellular respiration", priority: "study_first", explanation: [{ id: "respiration", text: "Respiration builds a proton gradient.", span_ids: [partition.span_ids[0]], support_status: "direct" }] },
+        { ...artifactFor(snapshot, partition.index).sections[0], title: "Enzyme regulation", priority: "study_next", explanation: [{ id: "enzymes", text: "Enzymes regulate pathway rates.", span_ids: [partition.span_ids[1]], support_status: "direct" }] },
+      ] };
+    });
+    expect(calls).toBe(1);
+    expect(guide.sections.map((section) => section.title)).toEqual(["Cellular respiration", "Enzyme regulation", "Fermentation"]);
+    expect(guide.generation_status).toBe("complete");
+  });
+
+  it("collapses the same normalized topic from separate partitions without dropping evidence", async () => {
+    const snapshot = buildSourceSnapshot({ sessionId: "session-deduplicate", ownerScope: "owner-a", title: "Deduplicate", sources: [{ id: "source-deduplicate", displayName: "long.pdf", parsed: material(["A".repeat(30_000), "B".repeat(30_000)]) }] });
+    const guide = await runGenerationV2(snapshot, async ({ partition }) => artifactFor(snapshot, partition.index, {
+      title: partition.index === 0 ? "  Shared   Topic " : "shared topic",
+      key_concepts: [`Concept ${partition.index + 1}`],
+    }));
+    expect(guide.sections).toHaveLength(1);
+    expect(guide.sections[0].explanation).toHaveLength(2);
+    expect(guide.sections[0].source_refs).toHaveLength(2);
+    expect(guide.sections[0].key_concepts).toEqual(["Concept 1", "Concept 2"]);
+    expect(assembleV2Sections(guide.sections)).toEqual(guide.sections);
+    expect(guide.generation_status).toBe("complete");
   });
 
   it("rejects an artifact missing delivery-critical explanation", async () => {
@@ -129,5 +160,12 @@ describe("Generation v2 offline contract runner", () => {
   it("treats duplicate source references as invalid output", async () => {
     const snapshot = buildSourceSnapshot({ sessionId: "session-duplicate-ref", ownerScope: "owner-a", title: "Duplicate refs", sources: [{ id: "source-duplicate-ref", displayName: "refs.pdf", parsed: material(["Readable evidence that is sufficient for a section."]) }] });
     await expect(runGenerationV2(snapshot, async ({ partition }) => artifactFor(snapshot, partition.index, { explanation: [{ id: "duplicate", text: "Repeated citation", span_ids: [partition.span_ids[0], partition.span_ids[0]], support_status: "direct" }] }))).rejects.toThrow("failed_no_guide");
+  });
+
+  it("rejects untrusted source references embedded in model-reported gaps", async () => {
+    const snapshot = buildSourceSnapshot({ sessionId: "session-gap-ref", ownerScope: "owner-a", title: "Gap refs", sources: [{ id: "source-gap-ref", displayName: "gaps.pdf", parsed: material(["Readable evidence that is sufficient for a section."]) }] });
+    await expect(runGenerationV2(snapshot, async ({ partition }) => artifactFor(snapshot, partition.index, {
+      gaps: [{ code: "source_coverage", message: "Untrusted reference", span_ids: ["span-not-allowed"] }],
+    }))).rejects.toThrow("failed_no_guide");
   });
 });

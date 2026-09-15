@@ -1,5 +1,17 @@
 # Folveta Product Decisions
 
+## Generation V2 rollout and delivery decision
+
+Decision date: 2026-09-10
+
+- Before the first real-user launch, Generation V2 is an all-or-nothing release path behind the single server-only `GENERATION_V2_RUNTIME_ENABLED` switch. Percentage cohorts and allowlists add no useful safety while there is no established user traffic.
+- Each bounded V2 provider call returns a coherent bundle of distinct study topics rather than one section per mechanical source partition. Long-input partitions remain independently durable and are assembled in stable priority order without reintroducing a planner/verifier call graph.
+- Source/parser gaps participate in terminal status, and an immutable source snapshot change aborts the old request and releases its billing reservation instead of leaving retryable work stuck.
+- A delivered `complete_with_gaps` Guide consumes one Guide unit and may start Quick Check, but Quick Check questions must use directly supported V2 claims and canonical source references.
+- Browser mutation routes reject requests with a missing or mismatched `Origin`; signed internal jobs and provider webhooks retain their separate authentication boundaries.
+- Add repeatable browser coverage for public and demo flows. Any E2E that creates accounts, database rows, provider calls, or billable activity must remain explicitly opt-in and run only against an isolated Supabase/test environment.
+- Patch the current Next.js security advisories without broad dependency upgrades or automatic audit fixes.
+
 ## Current decision — v5 (Launch-ready Study Guide Workspace)
 
 Decision date: 2026-08-25

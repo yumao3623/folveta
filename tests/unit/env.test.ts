@@ -31,6 +31,14 @@ afterEach(() => {
 });
 
 describe("server environment", () => {
+  it("parses the single V2 release switch", () => {
+    stubRequiredEnvironment();
+    vi.stubEnv("GENERATION_V2_RUNTIME_ENABLED", "true");
+    expect(getServerEnv().GENERATION_V2_RUNTIME_ENABLED).toBe(true);
+    vi.stubEnv("GENERATION_V2_RUNTIME_ENABLED", "false");
+    expect(getServerEnv().GENERATION_V2_RUNTIME_ENABLED).toBe(false);
+  });
+
   it("treats a blank optional retention secret as unconfigured", () => {
     stubRequiredEnvironment();
     vi.stubEnv("RETENTION_JOB_SECRET", "   ");

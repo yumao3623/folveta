@@ -1,7 +1,7 @@
 # Folveta Production Deployment
 
 Status: **Current deployment runbook; the production verification below is a historical snapshot at commit `6107dac` on 2026-09-02. Later repository changes are not production-verified here.**
-Last updated: 2026-09-07
+Last updated: 2026-09-10
 Canonical target: `https://folveta.com`
 
 ## Deployment identity
@@ -11,10 +11,10 @@ Canonical target: `https://folveta.com`
 | GitHub repository | `https://github.com/yumao3623/folveta` | Vercel GitHub App access confirmed |
 | Production branch | `main` | GitHub-triggered Production deployment at `6107dac49cae2eec559c19056b9abefe88ca3312` (`READY`) |
 | Vercel team/project | `creen ai` / `folveta` | Live and connected to `yumao3623/folveta` |
-| Framework | Next.js 16.3.2 App Router | Vercel native Next.js preset |
+| Framework | Repository: Next.js 16.3.4 App Router; historical Production snapshot: 16.3.2 | Vercel native Next.js preset |
 | Root directory | `./` | Confirmed |
 | Build/output/install | `npm run build`; Next.js default output; `npm install` | Vercel defaults, no override |
-| Runtime compatibility | This repository requires Node.js 22+; Next.js 16.3.2 itself requires Node.js 20.9+ | Repository build verified on Node.js 22+; historical Production verification remains dated below |
+| Runtime compatibility | This repository requires Node.js 22+; Next.js 16.3.4 itself requires Node.js 20.9+ | Repository build verified on Node.js 22+; historical Production verification remains dated below |
 | Production origin | `https://folveta.com` | Live with valid HTTPS |
 | Preferred hostname | `folveta.com` | `www.folveta.com` redirects `308` to apex |
 
@@ -61,9 +61,7 @@ No secret value belongs in this document, source control, screenshots, or chat.
 | `QUICK_CHECK_SCHEMA_VERSION` | Server-only | `1.0` |
 | `SESSION_RETENTION_DAYS` | Server-only | `7` |
 | `AI_GENERATION_WORKFLOW_ENABLED` | Server-only | `true`; legacy OFF fallback remains in code |
-| `GENERATION_V2_RUNTIME_ENABLED` | Server-only | `false` in repo defaults; enables V2 runtime gate |
-| `GENERATION_V2_PRODUCT_ENABLED` | Server-only | `false` in repo defaults; enables V2 from formal Generate route |
-| `GENERATION_V2_ROLLOUT_ALLOWLIST` | Server-only | Comma-separated session/owner IDs; `*` matches all |
+| `GENERATION_V2_RUNTIME_ENABLED` | Server-only | `false` in repo defaults; the single V2 release/rollback switch for all new Guide generation |
 | `CRON_SECRET` | Secret, server-only | Configured for the protected reconciler; never exported or recorded |
 | `RETENTION_JOB_SECRET` | Secret, server-only | Optional for app startup; required before scheduling retention cleanup |
 | `PADDLE_ENV` | Server-only | `sandbox` for Sandbox; `live` for Production |
@@ -90,6 +88,14 @@ Changing `PRELAUNCH` to `false` was the explicit public-launch action for this t
 ## AI reliability status
 
 The AI Workflow rollout gate passed on commit `613dbeb`. The Production provider boundary probe passed inside Vercel runtime and its temporary route was removed. A Workflow smoke, three fresh real-PDF generations, and two fresh legacy-PPT generations completed and rendered with no retry, deadline, or duplicate-settlement observation. Supabase Cron is the only reconciler scheduler and runs every minute. Detailed privacy-safe telemetry and remaining risks are in `docs/operations/ai-generation-workflow-rollout.md`. The current five real-material samples do not establish p95.
+
+### Generation V2 release cutover
+
+There is no established real-user cohort to stage by percentage. V2 therefore has one release switch: `false` keeps all new requests on V1, while `true` routes all new requests to V2. Existing V1 and delivered V2 Guides remain readable in either state.
+
+Before setting the switch to `true`, apply every pending V2 migration to the intended environment, run the database-backed V2 contract tests, perform an isolated real-provider PDF/PPTX/multi-file check, deploy the matching application revision, and verify Guide rendering, Quick Check, billing settlement, and the signed minute reconciler. Formal deployment and the switch change require explicit owner approval.
+
+Rollback new writes by setting `GENERATION_V2_RUNTIME_ENABLED=false`; keep V2 reads available so already delivered Guides and Quick Checks remain accessible. Investigate delivery status, terminal latency, provider attempts, stale-request redispatches, reservations left in `reserved`, `complete_with_gaps` reasons, Quick Check creation, and user-visible errors before re-enabling it.
 
 ## Supabase Auth and environment boundary
 
@@ -139,7 +145,7 @@ Verified locally and in Production:
 Open or not live-verified:
 
 - Raw Supabase Auth `Set-Cookie` attribute inspection; functional refresh, sign-out, isolation, and relogin passed without recording token values.
-- A reusable automated browser suite, full cross-browser/accessibility/performance audit, and comprehensive runtime-log/observability review.
+- The reusable browser suite currently covers desktop/mobile Chromium public and demo Guide/Quick Check flows without external writes. Authenticated upload/generation coverage still requires an isolated Supabase/test environment; full cross-browser/accessibility/performance audit and comprehensive runtime-log/observability review remain open.
 - Full cross-browser/accessibility/performance audit and post-launch monitoring remain separate operational work. Backup/PITR remains an accepted owner risk; account deletion, retention cleanup, distributed rate limiting, and monitoring are READY per the inherited Production Readiness closeout.
 - Preview remains intentionally unable to build against Production-only Supabase credentials; no Production secret should be added to Preview to clear that expected isolation failure.
 

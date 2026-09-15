@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { isSupportedSourceMimeType, MVP_LIMITS, sourceKindFromFilename, STORAGE_BUCKET } from "@/lib/config";
 import { requireOwnedSession } from "@/lib/server/auth";
-import { AppError, errorResponse } from "@/lib/server/http";
+import { AppError, errorResponse, requireSameOrigin } from "@/lib/server/http";
 import { getBillingLimitsForUser } from "@/lib/server/billing";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 import { enforceRateLimit, requestRateLimitKey } from "@/lib/server/rate-limit";
@@ -25,6 +25,7 @@ function safeFilename(filename: string) {
 
 export async function POST(request: Request, context: RouteContext<"/api/sessions/[sessionId]/sources/upload-url">) {
   try {
+    requireSameOrigin(request);
     const { sessionId } = await context.params;
     const session = await requireOwnedSession(sessionId);
     if (!session) throw new AppError("SESSION_NOT_FOUND", "This study session is missing or expired.", 404);

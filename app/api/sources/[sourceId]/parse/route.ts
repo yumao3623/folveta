@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { MVP_LIMITS, STORAGE_BUCKET } from "@/lib/config";
 import { requireOwnedSource } from "@/lib/server/auth";
-import { AppError, errorResponse } from "@/lib/server/http";
+import { AppError, errorResponse, requireSameOrigin } from "@/lib/server/http";
 import { createSpanRows, parseMaterial } from "@/lib/server/parser";
 import { getBillingLimitsForUser } from "@/lib/server/billing";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
@@ -34,6 +34,7 @@ export async function POST(request: Request, context: RouteContext<"/api/sources
   const { sourceId } = await context.params;
   let authorized = false;
   try {
+    requireSameOrigin(request);
     const source = await requireOwnedSource(sourceId);
     if (!source) throw new AppError("SOURCE_NOT_FOUND", "This source is missing or expired.", 404);
     authorized = true;

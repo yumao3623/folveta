@@ -118,13 +118,15 @@ export function partitionV2Snapshot(snapshot: V2SourceSnapshot): V2Partition[] {
 
 const rawClaimSchema = z.object({ id: z.string().min(1), text: z.string().min(1), span_ids: z.array(z.string().min(1)).default([]), support_status: z.enum(["direct", "partial", "conflict", "unsupported_gap"]).default("direct") }).strict();
 const optionalBlocksSchema = z.object({ key_concepts: z.array(z.string().min(1)).optional(), definitions: z.array(z.string().min(1)).optional(), processes_relationships: z.array(z.string().min(1)).optional(), common_confusions: z.array(z.string().min(1)).optional(), practice_prompts: z.array(z.string().min(1)).optional() }).strict();
-export const v2ArtifactSchema = z.object({
-  section_id: z.string().min(1), title: z.string().min(1), priority: z.enum(["study_first", "study_next", "review_if_time"]), focus_reason: z.string().min(1),
+const rawSectionSchema = z.object({
+  title: z.string().min(1), priority: z.enum(["study_first", "study_next", "review_if_time"]), focus_reason: z.string().min(1),
   explanation: z.array(rawClaimSchema).min(1), review_targets: z.array(z.string().min(1)).min(1).optional(), gaps: z.array(z.object({ code: z.enum(["optional_missing", "source_coverage", "unreadable", "invalid_output", "provider_transient_exhausted", "not_requested", "synthesis_unavailable"]), message: z.string().min(1), span_ids: z.array(z.string().min(1)).default([]) }).strict()).default([]),
   ...optionalBlocksSchema.shape,
 }).strict();
+export const v2ArtifactSchema = z.object({ sections: z.array(rawSectionSchema).min(1).max(8) }).strict();
 export type V2Artifact = z.input<typeof v2ArtifactSchema>;
-type ValidatedV2Artifact = Omit<z.output<typeof v2ArtifactSchema>, "explanation"> & {
+type ValidatedV2Section = Omit<z.output<typeof rawSectionSchema>, "explanation"> & {
+  id: string;
   explanation: Array<{ id: string; text: string; support_status: z.infer<typeof rawClaimSchema>["support_status"]; source_refs: z.infer<typeof v2SourceReferenceSchema>[] }>;
   source_refs: z.infer<typeof v2SourceReferenceSchema>[];
 };
@@ -149,8 +151,7 @@ export function v2ArtifactSchemaForSpanIds(spanIds: readonly string[]) {
   // Responses Structured Output requires every object property to be present.
   // A null optional block means "not supplied" after adapter normalization.
   const claim = rawClaimSchema.extend({ span_ids: z.array(spanId) });
-  return z.object({
-    section_id: z.string().min(1),
+  const section = z.object({
     title: z.string().min(1),
     priority: z.enum(["study_first", "study_next", "review_if_time"]),
     focus_reason: z.string().min(1),
@@ -163,6 +164,7 @@ export function v2ArtifactSchemaForSpanIds(spanIds: readonly string[]) {
     common_confusions: z.array(z.string().min(1)).nullable(),
     practice_prompts: z.array(z.string().min(1)).nullable(),
   }).strict();
+  return z.object({ sections: z.array(section).min(1).max(8) }).strict();
 }
 
 export type V2Provider = (input: { partition: V2Partition; spans: V2Span[]; output_language: "match_materials" | "en" | "zh" }) => Promise<unknown>;
@@ -174,7 +176,7 @@ function canonicalReference(span: V2Span, sources: Map<string, V2Source>) {
   return { span_id: span.id, source_id: source.id, source_name: source.display_name, locator: span.locator, excerpt: span.excerpt };
 }
 
-function validateAndCanonicalizeArtifact(value: unknown, partition: V2Partition, snapshot: V2SourceSnapshot): ValidatedV2Artifact {
+function validateAndCanonicalizeArtifact(value: unknown, partition: V2Partition, snapshot: V2SourceSnapshot): ValidatedV2Section[] {
   const artifact = v2ArtifactSchema.parse(value);
   const allowed = new Set(partition.span_ids);
   const spans = new Map(snapshot.spans.map((span) => [span.id, span]));
@@ -184,28 +186,78 @@ function validateAndCanonicalizeArtifact(value: unknown, partition: V2Partition,
     if (unique.length !== ids.length || unique.some((id) => !allowed.has(id))) throw new Error("MODEL_INVALID_SOURCE_REFERENCE");
     return unique.map((id) => canonicalReference(spans.get(id)!, sources));
   };
-  if (artifact.explanation.some((claim) => claim.support_status === "unsupported_gap")) throw new Error("MODEL_UNSUPPORTED_CLAIM_IN_EXPLANATION");
-  const explanation = artifact.explanation.map((claim, index) => ({ id: `${partition.id}:claim:${index}`, text: claim.text, support_status: claim.support_status, source_refs: claim.support_status === "unsupported_gap" ? [] : references(claim.span_ids) }));
-  if (explanation.some((claim) => claim.support_status !== "unsupported_gap" && claim.source_refs.length === 0)) throw new Error("MODEL_UNSUPPORTED_CLAIM");
-  const sourceRefs = [...new Map(explanation.flatMap((claim) => claim.source_refs).map((ref) => [ref.span_id, ref])).values()];
-  const { explanation: _rawExplanation, ...rest } = artifact;
-  void _rawExplanation;
-  return { ...rest, section_id: partition.id, explanation, source_refs: sourceRefs };
+  const normalizedTitles = artifact.sections.map((section) => normalizeText(section.title).toLocaleLowerCase());
+  if (new Set(normalizedTitles).size !== normalizedTitles.length) throw new Error("MODEL_DUPLICATE_SECTION_TITLE");
+  return artifact.sections.map((section, sectionIndex) => {
+    if (section.explanation.some((claim) => claim.support_status === "unsupported_gap")) throw new Error("MODEL_UNSUPPORTED_CLAIM_IN_EXPLANATION");
+    section.gaps.forEach((gap) => {
+      if (gap.span_ids.length) references(gap.span_ids);
+    });
+    const id = `${partition.id}:topic:${sectionIndex + 1}`;
+    const explanation = section.explanation.map((claim, claimIndex) => ({ id: `${id}:claim:${claimIndex + 1}`, text: claim.text, support_status: claim.support_status, source_refs: references(claim.span_ids) }));
+    if (explanation.some((claim) => claim.source_refs.length === 0)) throw new Error("MODEL_UNSUPPORTED_CLAIM");
+    const sourceRefs = [...new Map(explanation.flatMap((claim) => claim.source_refs).map((ref) => [ref.span_id, ref])).values()];
+    const { explanation: _rawExplanation, ...rest } = section;
+    void _rawExplanation;
+    return { ...rest, id, explanation, source_refs: sourceRefs };
+  });
 }
 
-export function canonicalizeV2Artifact(value: unknown, partition: V2Partition, snapshot: V2SourceSnapshot): V2Guide["sections"][number] {
-  const artifact = validateAndCanonicalizeArtifact(value, partition, snapshot);
-  return v2SectionSchema.parse({
-    id: artifact.section_id,
-    title: artifact.title,
-    priority: artifact.priority,
-    focus_reason: artifact.focus_reason,
-    explanation: artifact.explanation,
-    source_refs: artifact.source_refs,
-    gaps: artifact.gaps.map(({ code, message }) => ({ code, message })),
-    ...(artifact.review_targets === undefined ? {} : { review_targets: artifact.review_targets }),
-    ...Object.fromEntries(Object.entries(optionalBlocksSchema.shape).flatMap(([key]) => artifact[key as keyof typeof artifact] === undefined ? [] : [[key, artifact[key as keyof typeof artifact]]])),
-  });
+export const v2ArtifactResultSchema = z.object({ sections: z.array(v2SectionSchema).min(1).max(8) }).strict();
+export type V2ArtifactResult = z.infer<typeof v2ArtifactResultSchema>;
+
+export function canonicalizeV2Artifact(value: unknown, partition: V2Partition, snapshot: V2SourceSnapshot): V2ArtifactResult {
+  const sections = validateAndCanonicalizeArtifact(value, partition, snapshot).map((section) => v2SectionSchema.parse({
+    id: section.id,
+    title: section.title,
+    priority: section.priority,
+    focus_reason: section.focus_reason,
+    explanation: section.explanation,
+    source_refs: section.source_refs,
+    gaps: section.gaps.map(({ code, message }) => ({ code, message })),
+    ...(section.review_targets === undefined ? {} : { review_targets: section.review_targets }),
+    ...Object.fromEntries(Object.entries(optionalBlocksSchema.shape).flatMap(([key]) => section[key as keyof typeof section] === undefined ? [] : [[key, section[key as keyof typeof section]]])),
+  }));
+  return v2ArtifactResultSchema.parse({ sections });
+}
+
+const priorityOrder = { study_first: 0, study_next: 1, review_if_time: 2 } as const;
+
+export function orderV2Sections(sections: V2Guide["sections"]): V2Guide["sections"] {
+  return sections
+    .map((section, index) => ({ section, index }))
+    .sort((left, right) => priorityOrder[left.section.priority] - priorityOrder[right.section.priority] || left.index - right.index)
+    .map(({ section }) => section);
+}
+
+const mergeableSectionLists = ["review_targets", "key_concepts", "definitions", "processes_relationships", "common_confusions", "practice_prompts"] as const;
+
+/**
+ * Partitioned generation can independently discover the same topic. Collapse
+ * exact normalized titles after priority ordering so the delivered guide has
+ * one stable study-map entry while retaining every grounded claim and block.
+ */
+export function assembleV2Sections(sections: V2Guide["sections"]): V2Guide["sections"] {
+  const assembled: V2Guide["sections"] = [];
+  const byTitle = new Map<string, V2Guide["sections"][number]>();
+  for (const section of orderV2Sections(sections)) {
+    const key = normalizeText(section.title).toLocaleLowerCase();
+    const existing = byTitle.get(key);
+    if (!existing) {
+      const next = structuredClone(section);
+      assembled.push(next);
+      byTitle.set(key, next);
+      continue;
+    }
+    existing.explanation.push(...section.explanation);
+    existing.source_refs = [...new Map([...existing.source_refs, ...section.source_refs].map((reference) => [reference.span_id, reference])).values()];
+    existing.gaps = [...new Map([...existing.gaps, ...section.gaps].map((gap) => [`${gap.code}:${gap.message}`, gap])).values()];
+    for (const field of mergeableSectionLists) {
+      const values = [...new Set([...(existing[field] ?? []), ...(section[field] ?? [])])];
+      if (values.length) existing[field] = values;
+    }
+  }
+  return assembled;
 }
 
 export async function runGenerationV2(snapshotInput: V2SourceSnapshot, provider: V2Provider, options: V2RunOptions = {}): Promise<V2Guide> {
@@ -215,20 +267,33 @@ export async function runGenerationV2(snapshotInput: V2SourceSnapshot, provider:
   if (snapshot.spans.some((span) => !snapshot.sources.some((source) => source.id === span.source_id))) throw new Error("SPAN_SOURCE_MISMATCH");
   const partitions = partitionV2Snapshot(snapshot);
   const covered = new Set<string>();
-  const artifacts: V2Guide["sections"] = [];
+  const artifacts: V2ArtifactResult[] = [];
   const gaps: V2Guide["coverage"]["gaps"] = snapshot.warnings.map((warning) => ({ code: warning.code, message: warning.message, source_id: warning.source_id, locator: warning.locator === null ? null : { kind: "file" as const, number: warning.locator }, partition_id: null }));
   const language = options.output_language ?? "match_materials";
   const resolvedLanguage = language === "match_materials" ? detectV2Language(snapshot.spans.map((span) => span.text).join("\n")) : language;
   for (const partition of partitions) {
     try {
       const result = canonicalizeV2Artifact(await provider({ partition, spans: partition.span_ids.map((id) => snapshot.spans.find((span) => span.id === id)!), output_language: resolvedLanguage }), partition, snapshot);
-      artifacts.push(result); partition.span_ids.forEach((id) => covered.add(id));
+      artifacts.push(result);
+      result.sections.flatMap((section) => section.source_refs).forEach((reference) => covered.add(reference.span_id));
     } catch (error) {
       gaps.push({ code: error instanceof Error && error.message === "MODEL_INVALID_SOURCE_REFERENCE" ? "invalid_output" : "provider_transient_exhausted", message: error instanceof Error ? error.message : "Provider artifact failed.", source_id: partition.source_ids[0] ?? null, locator: null, partition_id: partition.id });
     }
   }
   if (!artifacts.length) throw new Error("failed_no_guide");
-  const sections = artifacts;
+  const sections = assembleV2Sections(artifacts.flatMap((artifact) => artifact.sections));
+  for (const partition of partitions) {
+    const delivered = sections.some((section) => section.id.startsWith(`${partition.id}:topic:`));
+    if (!delivered) continue;
+    const missing = partition.span_ids.filter((id) => !covered.has(id));
+    if (missing.length) gaps.push({
+      code: "source_coverage",
+      message: `${missing.length} readable source span${missing.length === 1 ? " was" : "s were"} not represented in the delivered sections.`,
+      source_id: partition.source_ids[0] ?? null,
+      locator: null,
+      partition_id: partition.id,
+    });
+  }
   const studyMap = sections.map((section) => ({ section_id: section.id, priority: section.priority, why_this_matters: section.focus_reason, source_refs: section.source_refs }));
   const totalUnits = snapshot.sources.reduce((sum, source) => sum + source.unit_count, 0);
   const readableUnits = snapshot.sources.reduce((sum, source) => sum + source.readable_unit_count, 0);
@@ -238,5 +303,5 @@ export async function runGenerationV2(snapshotInput: V2SourceSnapshot, provider:
 }
 
 export function v2ContractHash() {
-  return hash({ schema: "2.0", partition: { characters: MAX_PARTITION_CHARACTERS, tokens: MAX_PARTITION_TOKENS }, grounding: "allowed_span_ids" });
+  return hash({ schema: "2.0-topic-bundles", partition: { characters: MAX_PARTITION_CHARACTERS, tokens: MAX_PARTITION_TOKENS }, grounding: "allowed_span_ids", ordering: "priority_then_partition_with_exact_title_consolidation" });
 }

@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
+import { v2GuideSchema, type V2Guide } from "@/lib/ai/generation-v2";
 import { ModelGateway, SafeProviderError, type ModelTask, type StructuredResult } from "@/lib/ai/gateway";
 import { PROMPTS } from "@/lib/ai/prompts";
 import {
@@ -12,10 +13,12 @@ import { MVP_LIMITS } from "@/lib/config";
 import { getServerEnv } from "@/lib/env";
 import {
   collectQuestionTargets,
+  guideSectionAnchor,
   mcqQuestionSchema,
   normalizeText,
   optionIdSchema,
   quickCheckSchema,
+  sourceReferenceSchema,
   stemsAreNearDuplicates,
   type Guide,
   type MCQQuestion,
@@ -46,8 +49,64 @@ type CandidateRejection = {
 
 const forbiddenQuestionLanguage = /mock exam|professor(?:'s)? exam|predict(?:s|ed|ion)? (?:the |your )?exam|master(?:ed|y)|safe to skip|guaranteed readiness/i;
 
-export function checksumGuide(guide: Guide) {
+export type QuickCheckGuide = Guide | V2Guide;
+
+export function checksumGuide(guide: QuickCheckGuide) {
   return createHash("sha256").update(JSON.stringify(guide), "utf8").digest("hex");
+}
+
+export function collectV2QuestionTargets(input: V2Guide): QuestionTarget[] {
+  const guide = v2GuideSchema.parse(input);
+  return guide.sections.flatMap((section) => {
+    const claims = section.explanation.filter((claim) => claim.support_status === "direct" && claim.source_refs.length > 0);
+    if (!claims.length) return [];
+    const sourceRefs = [...new Map(
+      claims.flatMap((claim) => claim.source_refs).map((reference) => [reference.span_id, sourceReferenceSchema.parse(reference)]),
+    ).values()];
+    const targets: QuestionTarget[] = [{
+      id: `${section.id}:concise_explanation:${section.id}`,
+      topic_id: section.id,
+      topic_title: section.title,
+      section_type: "concise_explanation" as const,
+      section_item_id: section.id,
+      anchor: guideSectionAnchor(section.id, "concise_explanation", section.id),
+      guide_text: `Concise explanation\n${claims.map((claim) => claim.text).join("\n")}`,
+      source_refs: sourceRefs,
+    }];
+    const addBlock = (
+      items: string[] | undefined,
+      sectionType: Exclude<QuestionTarget["section_type"], "concise_explanation">,
+      label: string,
+    ) => {
+      if (!items?.length) return;
+      const blockAnchor = guideSectionAnchor(section.id, sectionType, `${section.id}-${sectionType}-1`);
+      items.forEach((text, index) => targets.push({
+        id: `${section.id}:${sectionType}:${index + 1}`,
+        topic_id: section.id,
+        topic_title: section.title,
+        section_type: sectionType,
+        section_item_id: `${section.id}-${sectionType}-${index + 1}`,
+        anchor: blockAnchor,
+        guide_text: `${label}\n${text}`,
+        source_refs: sourceRefs,
+      }));
+    };
+    addBlock(section.key_concepts, "key_concept", "Key concept");
+    addBlock(section.definitions, "definition", "Definition");
+    addBlock(section.processes_relationships, "process_relationship", "Process or relationship");
+    addBlock(section.common_confusions, "common_confusion", "Common confusion");
+    return targets;
+  });
+}
+
+export function quickCheckGuideTopics(guide: QuickCheckGuide) {
+  return guide.schema_version === "2.0"
+    ? guide.sections.map((section) => ({
+        id: section.id,
+        title: section.title,
+        anchor: guideSectionAnchor(section.id, "concise_explanation", section.id),
+      }))
+    : guide.topics.map((topic) => ({ id: topic.id, title: topic.title, anchor: guideSectionAnchor(topic.id) }));
 }
 
 function modelForTask(task: ModelTask) {
@@ -78,28 +137,37 @@ async function trackedQuickCheckCall<T>(
   });
   if (insertError) throw insertError;
 
-  try {
-    const result = await call();
-    await admin.from("generation_runs").update({
-      status: "succeeded",
-      model: result.actualModel,
-      usage: result.usage as Json,
-      attempt: result.retryCount + 1,
-      completed_at: new Date().toISOString(),
-    }).eq("id", runId);
-    return result.data;
-  } catch (error) {
-    const providerError = error instanceof SafeProviderError ? error : null;
-    await admin.from("generation_runs").update({
-      status: "failed",
-      error_code: providerError?.code ?? (error instanceof AppError ? error.code : "QUICK_CHECK_MODEL_FAILED"),
-      error_message: error instanceof AppError ? error.message : "The model provider request failed.",
-      completed_at: new Date().toISOString(),
-    }).eq("id", runId);
-    if (providerError) {
-      throw new AppError(providerError.code, "The model provider request failed.", providerError.retryable ? 503 : 422);
+  let transientRetry = 0;
+  while (true) {
+    try {
+      const result = await call();
+      await admin.from("generation_runs").update({
+        status: "succeeded",
+        model: result.actualModel,
+        usage: result.usage as Json,
+        attempt: transientRetry + result.retryCount + 1,
+        completed_at: new Date().toISOString(),
+      }).eq("id", runId);
+      return result.data;
+    } catch (error) {
+      const providerError = error instanceof SafeProviderError ? error : null;
+      if (providerError?.retryable && transientRetry < 1) {
+        transientRetry += 1;
+        await new Promise((resolve) => setTimeout(resolve, 1_000));
+        continue;
+      }
+      await admin.from("generation_runs").update({
+        status: "failed",
+        error_code: providerError?.code ?? (error instanceof AppError ? error.code : "QUICK_CHECK_MODEL_FAILED"),
+        error_message: error instanceof AppError ? error.message : "The model provider request failed.",
+        attempt: transientRetry + 1,
+        completed_at: new Date().toISOString(),
+      }).eq("id", runId);
+      if (providerError) {
+        throw new AppError(providerError.code, "The model provider request failed.", providerError.retryable ? 503 : 422);
+      }
+      throw error;
     }
-    throw error;
   }
 }
 
@@ -276,11 +344,12 @@ function buildQuestion(candidate: RawQuickCheckCandidate, target: QuestionTarget
 
 export async function generateQuickCheck(
   sessionId: string,
-  guide: Guide,
+  guide: QuickCheckGuide,
   requestedQuestionCount: number = MVP_LIMITS.defaultQuickCheckQuestions,
+  identity: { engine: "v1" | "v2"; guideId: string } = { engine: "v1", guideId: guide.id },
 ): Promise<{ quickCheck: QuickCheck; rejectionCount: number }> {
   const requested = z.number().int().min(5).max(MVP_LIMITS.maxQuickCheckQuestions).parse(requestedQuestionCount);
-  const allTargets = collectQuestionTargets(guide);
+  const allTargets = guide.schema_version === "2.0" ? collectV2QuestionTargets(guide) : collectQuestionTargets(guide);
   const targets = roundRobinTargets(allTargets, Math.min(allTargets.length, requested * 3));
   if (targets.length === 0) {
     throw new AppError(
@@ -394,7 +463,7 @@ export async function generateQuickCheck(
   const quickCheck = quickCheckSchema.parse({
     schema_version: "1.0",
     id: randomUUID(),
-    guide_id: guide.id,
+    guide_id: identity.guideId,
     guide_checksum: checksumGuide(guide),
     requested_question_count: requested,
     question_count: questions.length,
@@ -413,7 +482,8 @@ export async function generateQuickCheck(
   const { error: persistError } = await admin.from("quick_checks").insert({
     id: quickCheck.id,
     session_id: sessionId,
-    guide_id: guide.id,
+    guide_id: identity.engine === "v1" ? identity.guideId : null,
+    generation_v2_guide_id: identity.engine === "v2" ? identity.guideId : null,
     guide_checksum: quickCheck.guide_checksum,
     schema_version: env.QUICK_CHECK_SCHEMA_VERSION,
     prompt_version: env.PROMPT_VERSION,

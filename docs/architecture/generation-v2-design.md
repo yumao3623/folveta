@@ -1,6 +1,6 @@
 # Folveta Generation v2 Design
 
-Status: **Repository implementation through controlled allowlist routing.** V2 contract, provider, four-table persistence, Workflow runtime, billing RPCs, formal generate/status/view/list integration, and allowlist routing are implemented. V2 Quick Check, search, library related-guide reads, intermediate snapshots, synthesis, v2 reconciliation, percentage rollout, measured acceptance reports, Production enablement, default routing, and v1 retirement remain unimplemented or unverified.
+Status: **Release-candidate repository implementation with dual reads.** V2 contract, multi-topic provider artifacts, four-table persistence, Workflow runtime, atomic billing finalization, stale-request reconciliation, source-snapshot abort, formal generate/status/view/list integration, complete V2 workspace rendering, Quick Check, search, library related-guide reads, one release switch, and a representative local fixture corpus are implemented. Production migration application, isolated real-provider acceptance, formal enablement, and v1 retirement remain unverified.
 
 ## 1. Decision summary
 
@@ -32,8 +32,8 @@ The key decisions are:
 
 - The user-visible success unit is a persisted Guide snapshot, not a workflow, operation, model attempt, or all internal sections.
 - `complete_with_gaps` is a successful delivery state when the core study map and at least one valid section are available and every missing area is explicit.
-- Small and medium bounded material use one call. Long and multi-file material use a bounded number of section artifacts. There is no topic-generation plus per-topic grounding graph.
-- Planning is a product output, not a mandatory standalone model stage. For bounded input it is included in the one Guide call. For long input section priorities are produced locally by each section call; one optional synthesis call can improve global ordering.
+- Small and medium bounded material use one call that returns multiple distinct study topics when the evidence supports them. Long and multi-file material use a bounded number of partition topic-bundle artifacts. There is no topic-generation plus per-topic grounding graph.
+- Planning is a product output, not a mandatory standalone model stage. For bounded input it is included in the one Guide call. For long input topic priorities are produced by each partition call and assembled in stable priority/partition order; exact normalized titles are consolidated without dropping claims, blocks, or references, and no synthesis call is currently scheduled.
 - Grounding is enforced by allowed source-span IDs plus deterministic resolution of the canonical source name, locator, and excerpt. Runtime LLM verification is not a delivery gate.
 - Reuse is private and contract-bound: the same stable preparation-session lineage, source snapshot, parsing contract, generation contract, artifact kind, partition, and output-language policy. The session's current owner controls authorization; anonymous-to-account claim does not alter content identity. There is no cross-user global content cache.
 - Vercel Workflow remains temporarily as one thin, at-least-once job runner. Supabase remains authoritative for request/artifact claims and persistence, but the v1 operation DAG, fencing graph, and per-topic workflow branches are not copied.
@@ -71,7 +71,7 @@ Generation v2 does not add a vector database, general chat, a multi-agent system
 | `complete_with_gaps` | Required artifacts are terminal and at least one usable artifact completed while another ended as a gap | Terminal Guide with a generic incomplete/gaps notice; no detailed Gap operation or Retry button | One unit consumed because a usable Guide was delivered |
 | `failed_no_guide` | No valid core section can be delivered, or no readable source exists | No Guide; actionable source/provider message | Reservation released |
 
-`complete_with_gaps` is intentionally not an error disguised as success. The current V2 page displays only a generic incomplete/gaps notice. It does not expose detailed Gap operations, source/locator/reason details for each gap, or a user Retry action.
+`complete_with_gaps` is intentionally not an error disguised as success. The V2 page exposes persisted coverage-gap reasons and source context when available. It consumes one Guide unit and permits Quick Check over directly supported claims. A user Retry action remains unimplemented.
 
 ### True success unit
 
@@ -84,7 +84,7 @@ A Guide snapshot is deliverable only if all of the following hold:
 - The JSON passes the v2 schema and deterministic referential-integrity checks.
 - Request creation, billing reservation, terminal Guide assembly, and billing settlement are separate idempotent database calls. The current runtime does not include a terminal reconciliation path for an assembly-success/billing-settlement-failure window.
 
-For long input, "full" means every readable partition in the manifest has a section artifact. A section that contains no useful readable text is a parser gap, not a provider failure and is excluded from the required-partition denominator.
+For long input, "full" means every readable partition in the manifest has a topic-bundle artifact and every readable source span is represented by a canonical citation or an explicit coverage gap. A unit that contains no useful readable text is a parser gap, not a provider failure and is excluded from the required-partition denominator.
 
 ### Canonical v2 shape
 
@@ -131,7 +131,7 @@ Keep `Study First`, `Study Next`, and `Review If Time`. They are useful navigati
 - `Study Next`: supported material that follows the first band or completes a prerequisite chain.
 - `Review If Time`: lower-emphasis or peripheral material that is still present in the course pack.
 
-No band claims to predict an exam or certify mastery. The intended Guide contract includes a priority map, rationale, explanation, source click-back, visible coverage gaps, and a Quick Check review target. The current V2 page does not yet provide detailed Gap operations, source click-back, or a V2 Quick Check entry. Existing rich blocks remain compatible as optional presentations rather than generation gates.
+No band claims to predict an exam or certify mastery. The Guide contract includes a priority map, rationale, explanation, source click-back, visible coverage gaps, and a Quick Check review target. Existing rich blocks remain compatible as optional presentations rather than generation gates.
 
 ## 4. Generation flow
 
@@ -146,10 +146,10 @@ The parser contract records unit counts and warnings in the request. Parser warn
 The server groups spans into ordered partitions while preserving source and locator boundaries. It chooses the smallest safe path based on estimated input tokens, gateway limits, and non-ASCII/CJK safety margins:
 
 - **Small/medium:** all readable evidence plus metadata fits in one bounded request. One Guide artifact call.
-- **Long:** partitions are independently sized evidence bundles. One section artifact call per partition, with bounded concurrency.
+- **Long:** partitions are independently sized evidence bundles. One multi-topic artifact call per partition, with bounded concurrency.
 - **Multi-file:** the same partition engine, but never crosses a source boundary unless a source is itself split. File identity and late-file coverage remain visible.
 
-There is no separate `extract_topics` or `merge_topics` call on the bounded path. A planning artifact is the `study_map` in the Guide response. On the long path, each section call emits its priority and rationale. No synthesis artifact is currently scheduled; terminal ordering is the manifest/section result order.
+There is no separate `extract_topics` or `merge_topics` call on the bounded path. Each artifact contains one to eight distinct study sections plus their priority and rationale. No synthesis artifact is currently scheduled; terminal ordering is `study_first`, `study_next`, `review_if_time`, preserving partition and local topic order inside each priority band.
 
 ### Step 2: provider artifact
 
@@ -273,7 +273,7 @@ No v2 queue service, vector store, per-claim verifier table, provider fallback p
 
 ### Study Guide persistence compatibility
 
-`study_guides` remains the V1 one-row-per-session aggregate. V2 terminal snapshots are stored in `generation_v2_guides`, uniquely by request, so a session may have multiple historical V2 snapshots. The study page and Guide management paths prefer the latest delivered V2 Guide and otherwise retain V1 reads. Historical V1 JSON is not migrated or rewritten. Search, Quick Check, and library related-guide reads remain V1-only.
+`study_guides` remains the V1 one-row-per-session aggregate. V2 terminal snapshots are stored in `generation_v2_guides`, uniquely by request, so a session may have multiple historical V2 snapshots. The study page, Guide management paths, search, Quick Check, and library related-guide reads prefer the latest delivered V2 Guide and otherwise retain V1 reads. Historical V1 JSON is not migrated or rewritten.
 
 ## 10. Billing boundary
 
@@ -336,24 +336,22 @@ Scanned PDF pages without a reliable text layer remain gaps until an independent
 1. **Freeze v1 feature work.** Only emergency production fixes are allowed. Record v1 as a historical reader and rollback engine.
 2. **Build the v2 contract offline.** Add schemas, manifest fixtures, deterministic assembly tests, and English/Chinese/mixed/long/parser-gap corpora without changing production behavior.
 3. **Expand persistence.** Add v2 request/artifact/join storage and the minimum billing adapter. Verify RLS, retention, idempotency, and owner-scoped reuse before routing users.
-4. **Dual-read first.** Teach the Guide loader, search extraction, Quick Check target collection, and status projection to read v1 or v2 by schema/version. Historical rows are untouched.
+4. **Dual-read first.** The Guide loader, search extraction, Quick Check target collection, Library association, and status projection now read v1 or v2 by schema/version. Historical rows are untouched.
 5. **Internal gate.** Run v2 only for explicit internal/test sessions and dedicated fixture provider calls. Do not shadow every real-user request, double-charge, or make a second provider call merely for comparison. Existing production v1 telemetry is a baseline; v2 quality evaluation uses a fixed redacted/golden corpus and opt-in test requests.
-6. **Controlled routing.** Enable `GENERATION_V2_RUNTIME_ENABLED` and `GENERATION_V2_PRODUCT_ENABLED` with an allowlist. The formal Generate route selects V2 only when both booleans are true and `GENERATION_V2_ROLLOUT_ALLOWLIST` matches the session ID, owner-user ID, or `*`. No percentage rollout exists. V2 identity is represented by the V2 request table and immutable generation contract hash, not a separate pipeline-version column. Never switch an in-flight request between engines.
+6. **Release cutover.** Before the first real-user launch, apply and verify the V2 schema and complete an isolated real-provider check. Then enable the single `GENERATION_V2_RUNTIME_ENABLED` switch so all new generation uses V2. V2 identity is represented by the request table and immutable generation contract hash, not a separate pipeline-version column. Never switch an in-flight request between engines; turning the switch off routes only new requests back to V1.
 7. **Observe and compare.** Track Guide delivery, complete-with-gaps rate, calls/Guide, provider duration, total latency, reuse rate, anchor failures, parser gaps, and post-Quick-Check return actions.
 8. **Default and rollback.** Make v2 default only after all gates below pass. Rollback means set new-request routing to v1 and leave v2 rows readable; it does not automatically fall back after a v2 provider call, which would duplicate cost and make billing ambiguous.
 9. **Retire later.** After a measured rollback window, stop creating v1 runs, keep v1 reads and historical attempts for retention, then remove v1 machinery in a separately approved cleanup task.
 
 Current flags:
 
-- `GENERATION_V2_RUNTIME_ENABLED`: global V2 runtime gate; default `false`.
-- `GENERATION_V2_PRODUCT_ENABLED`: enables V2 selection from the formal Generate route; default `false`.
-- `GENERATION_V2_ROLLOUT_ALLOWLIST`: comma-separated session IDs or owner-user IDs; `*` matches all; default empty.
-- V2 write routing requires both booleans and an allowlist match.
-- There is no percentage-rollout variable and no V2 read flag. Existing V2 rows are read independently of write admission.
+- `GENERATION_V2_RUNTIME_ENABLED`: the single V2 release and rollback switch; default `false`.
+- When `true`, every new formal Guide generation uses V2. When `false`, new requests use V1 while historical V2 reads remain available.
+- There is no V2 read flag. Existing V2 rows are read independently of write admission.
 
 ## 15. Outstanding acceptance gates before Production enablement/default cutover
 
-The repository implementation is not ready for Production enablement or default routing until these are executable tests or measured reports:
+Repository-local contract and fixture gates are executable. Production enablement still requires applying the migrations and completing the isolated database/real-provider checks below:
 
 ### Reliability and delivery
 
@@ -368,7 +366,7 @@ The repository implementation is not ready for Production enablement or default 
 - Small/medium bounded fixtures use exactly one normal Guide provider call; one permitted retry yields at most two attempts.
 - Long/multi-file calls equal `readable partitions + optional synthesis + explicit extraction calls`; no hidden planner or verifier calls exist.
 - On the release corpus, median calls/Guide are at least 50% below the v1 baseline for bounded inputs and at least 40% below the sampled long/multi-file baseline, measured with the same parser and model contract.
-- p95 fixture/test-service wall time is <=120 seconds for bounded inputs and <=300 seconds for long/multi-file inputs; Production rollout thresholds must be confirmed from a statistically meaningful sample before changing the flag percentage.
+- Release-check wall time is recorded for bounded and long/multi-file inputs without treating a handful of pre-launch samples as a statistical p95. User-facing latency targets should be set after real traffic exists.
 - Token usage and provider status are recorded without source text, prompts, or raw provider bodies in logs.
 
 ### Quality and contract
@@ -415,7 +413,7 @@ The first four slices are implemented in the repository:
 
 **Slice 4: runtime integration.** Implemented. The thin V2 Workflow runtime is integrated with both the internal entry and the formal session Generate route. Formal status and Guide rendering read V2 independently of write gates. The runtime reserves and settles V2 billing through dedicated database RPCs.
 
-**Slice 5: controlled production cohort.** Repository-level allowlist routing is implemented. Production deployment, cohort enablement, acceptance evidence, and percentage rollout are unverified.
+**Slice 5: release candidate.** Implemented in the repository. Provider artifacts now carry multiple distinct topics, V2 renders every instructional block, parser/source-coverage gaps derive terminal status, source changes abort safely, the public demo exercises V2, and one server-only switch controls all new writes. Production migration application, isolated provider verification, deployment, and switch enablement remain explicitly separate.
 
 ## 18. Decision log
 
@@ -448,14 +446,14 @@ The executor is intentionally a development/test integration surface. It uses th
 
 ## 20. Slice 4 runtime integration decision
 
-Slice 4 retains Vercel Workflow only as a thin, at-least-once wakeup shell. The internal `generation-v2` entry is gated by `GENERATION_V2_RUNTIME_ENABLED` (default false), requires an owned session, and creates or joins the canonical request before starting the Workflow. The formal `/api/sessions/[sessionId]/generate` route also selects V2 behind the runtime, product, and allowlist gates. Formal status and Guide rendering read V2 independently of write gates.
+Slice 4 retains Vercel Workflow only as a thin, at-least-once wakeup shell. The internal `generation-v2` entry is gated by `GENERATION_V2_RUNTIME_ENABLED` (default false), requires an owned session, and creates or joins the canonical request before starting the Workflow. The formal `/api/sessions/[sessionId]/generate` route uses the same single switch. Formal status and Guide rendering read V2 independently of write admission.
 
-Each Workflow turn runs one server-side request-runner step. The step reads the request and artifact rows from Supabase, claims at most one eligible artifact with the existing 210-second lease, invokes the Slice 3 provider, and durably settles that artifact. A retryable settlement records `retry_at`; the Workflow sleeps until the persisted retry or active-lease expiry, then re-enters. No Workflow-local business state, DAG, dispatch epoch, shared retry credit, or acknowledgement layer is introduced.
+Each Workflow turn runs one server-side request-runner step. The step reads the request and artifact rows from Supabase, claims at most one eligible artifact with the existing 210-second lease, invokes the Slice 3 provider, and durably settles that artifact. A retryable settlement records `retry_at`; the Workflow sleeps until the persisted retry or active-lease expiry, then re-enters. The signed minute reconciler can reclaim V2 requests that remain nonterminal without progress for five minutes. No Workflow-local business state, DAG, dispatch epoch, shared retry credit, or acknowledgement layer is introduced.
 
 The assembly RPC locks the request, verifies every required artifact is terminal, derives `complete`, `complete_with_gaps`, or `failed_no_guide` from durable artifact facts, and inserts at most one immutable Guide snapshot. `complete_with_gaps` is therefore a delivery result, while `failed_no_guide` writes no Guide. The internal status projection exposes only `preparing`, `generating`, `ready`, `ready_with_gaps`, or `unable_to_generate`, together with completed/total/gap counts; it does not project leases or retry mechanics as user-facing states.
 
-Runtime logs contain only request ID, artifact status counts, persisted/provider attempt counts, duration, runner outcome, and final status. The first terminal transition to `complete` or `complete_with_gaps` is followed by `billing_settle_generation_v2`; V2 billing mutations are implemented. Direct Paddle API calls are not part of the runner.
+Runtime logs contain only request ID, artifact status counts, persisted/provider attempt counts, duration, runner outcome, and final status. Manifest artifacts are linked before billing admission. The first terminal transition calls `finalize_generation_v2_request`, which assembles the immutable Guide and settles or releases its reservation in one database transaction. The existing signed minute reconciler also repairs legacy terminal reservations and claims stale non-terminal V2 requests for redispatch. Direct Paddle API calls are not part of the runner.
 
 ## 21. Final recommendation
 
-Continue Generation v2 as the small, owner-scoped, artifact-persisting engine already implemented behind runtime, product, and allowlist gates. Preserve the proven ingestion, ownership, historical Guide reads, Quick Check, billing concepts, and thin Workflow shell. Production enablement, measured acceptance, missing V2 read integrations, and any default-routing or V1-retirement decision remain separate work.
+Continue Generation v2 as the small, owner-scoped, artifact-persisting engine behind one release switch. Preserve the proven ingestion, ownership, historical Guide reads, Quick Check, billing concepts, and thin Workflow shell. Apply/verify its schema and run an isolated provider check before formal enablement; deployment and V1 retirement remain separate operational decisions.

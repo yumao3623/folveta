@@ -1,9 +1,9 @@
 import { createHash, randomUUID } from "node:crypto";
-import { canonicalizeV2Artifact, detectV2Language, sourceSnapshotSchema, v2ContractHash, v2GuideSchema, type V2Guide, type V2SourceSnapshot } from "@/lib/ai/generation-v2";
+import { approximateV2TokenCount, assembleV2Sections, canonicalizeV2Artifact, detectV2Language, sourceSnapshotSchema, v2ArtifactResultSchema, v2ContractHash, v2GuideSchema, type V2Guide, type V2SourceSnapshot } from "@/lib/ai/generation-v2";
 import { ModelGatewayV2Provider, v2ArtifactFailure, type V2ArtifactProvider } from "@/lib/ai/generation-v2-provider";
 import { v2ArtifactContentKey, v2RequestContentKey, type V2OutputLanguage } from "@/lib/ai/generation-v2-persistence";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
-import { createOrJoinGenerationV2Request, reserveGenerationV2Billing, settleGenerationV2Billing, upsertGenerationV2Artifact, linkGenerationV2Artifact, claimGenerationV2Artifact, settleGenerationV2Artifact, assembleGenerationV2Request, readGenerationV2Request, readGenerationV2Artifacts, markGenerationV2RequestWorking } from "@/lib/server/generation-v2-persistence";
+import { abortGenerationV2Request, createOrJoinGenerationV2Request, reserveGenerationV2Billing, upsertGenerationV2Artifact, linkGenerationV2Artifact, claimGenerationV2Artifact, settleGenerationV2Artifact, finalizeGenerationV2Request, readGenerationV2Request, readGenerationV2Artifacts, markGenerationV2RequestWorking } from "@/lib/server/generation-v2-persistence";
 import { getBillingEnvironment } from "@/lib/server/billing-environment";
 import type { Json, Database } from "@/lib/server/database.types";
 import type { V2Partition } from "@/lib/ai/generation-v2";
@@ -46,21 +46,21 @@ export async function loadV2SourceSnapshot(sessionId: string): Promise<V2SourceS
 
 function partitionFromManifest(snapshot: V2SourceSnapshot, partitionKey: string, index: number, spanIds: string[]): V2Partition {
   const spans = spanIds.map((id) => snapshot.spans.find((span) => span.id === id)).filter(Boolean) as V2SourceSnapshot["spans"];
-  return { id: partitionKey, index, span_ids: spans.map((span) => span.id), source_ids: [...new Set(spans.map((span) => span.source_id))], character_count: spans.reduce((sum, span) => sum + span.text.length, 0), token_count: spans.length };
+  return { id: partitionKey, index, span_ids: spans.map((span) => span.id), source_ids: [...new Set(spans.map((span) => span.source_id))], character_count: spans.reduce((sum, span) => sum + span.text.length, 0), token_count: approximateV2TokenCount(spans.map((span) => span.text).join("\n")) };
 }
 
 export async function createOrJoinV2RuntimeRequest(sessionId: string, outputLanguage: V2OutputLanguage = "match_materials") {
   const snapshot = await loadV2SourceSnapshot(sessionId);
   const { v2ManifestForSnapshot } = await import("@/lib/ai/generation-v2-execution");
-  const contract = hash({ runtime: "slice-4", artifactContract: v2ContractHash(), provider: "model-gateway-responses-structured-v1" });
+  const contract = hash({ runtime: "release-candidate-1", artifactContract: v2ContractHash(), provider: "model-gateway-responses-structured-v1" });
   const manifest = v2ManifestForSnapshot(snapshot);
   const request = await createOrJoinGenerationV2Request({ session_id: sessionId, source_snapshot_hash: snapshot.snapshot_hash, generation_contract_hash: contract, output_language: outputLanguage, request_content_key: v2RequestContentKey({ sourceSnapshotHash: snapshot.snapshot_hash, generationContractHash: contract, outputLanguage }), manifest_json: manifest as unknown as Json });
-  await reserveGenerationV2Billing(request.id, getBillingEnvironment());
   for (const entry of manifest) {
     const kind = entry.partitionKey === "guide" ? "guide" : "section";
     const artifact = await upsertGenerationV2Artifact({ session_id: sessionId, source_snapshot_hash: snapshot.snapshot_hash, generation_contract_hash: contract, output_language: outputLanguage, artifact_kind: kind, partition_key: entry.partitionKey, artifact_content_key: v2ArtifactContentKey({ sourceSnapshotHash: snapshot.snapshot_hash, generationContractHash: contract, outputLanguage, kind, partitionKey: entry.partitionKey, spanContentHashes: entry.spanContentHashes }), span_identity_json: { span_ids: entry.spanIds ?? partitionFromManifest(snapshot, entry.partitionKey, entry.partitionOrder, snapshot.spans.filter((span) => entry.spanContentHashes.includes(span.content_hash)).map((span) => span.id)).span_ids } });
     await linkGenerationV2Artifact({ request_id: request.id, artifact_id: artifact.id, session_id: sessionId, partition_key: entry.partitionKey, partition_order: entry.partitionOrder, required: entry.required });
   }
+  await reserveGenerationV2Billing(request.id, getBillingEnvironment());
   return { request, snapshot };
 }
 
@@ -77,6 +77,30 @@ export function v2ReadModelStatus(requestStatus: string, artifacts: Array<{ stat
     : "preparing";
 }
 
+export async function resolveV2SourceSnapshotForRequest(
+  input: { requestId: string; sessionId: string; sourceSnapshotHash: string },
+  dependencies: {
+    loadSnapshot?: (sessionId: string) => Promise<V2SourceSnapshot>;
+    abortRequest?: typeof abortGenerationV2Request;
+  } = {},
+): Promise<{ snapshot: V2SourceSnapshot; errorCode: null } | { snapshot: null; errorCode: "source_snapshot_unavailable" | "source_snapshot_changed" }> {
+  const loadSnapshot = dependencies.loadSnapshot ?? loadV2SourceSnapshot;
+  const abortRequest = dependencies.abortRequest ?? abortGenerationV2Request;
+  let snapshot: V2SourceSnapshot;
+  try {
+    snapshot = await loadSnapshot(input.sessionId);
+  } catch (error) {
+    if (!(error instanceof Error) || error.message !== "NO_USABLE_SOURCES") throw error;
+    await abortRequest({ requestId: input.requestId, code: "source_snapshot_unavailable", message: "The source materials are no longer available for this generation request." });
+    return { snapshot: null, errorCode: "source_snapshot_unavailable" };
+  }
+  if (snapshot.snapshot_hash !== input.sourceSnapshotHash) {
+    await abortRequest({ requestId: input.requestId, code: "source_snapshot_changed", message: "The source materials changed after this generation request started." });
+    return { snapshot: null, errorCode: "source_snapshot_changed" };
+  }
+  return { snapshot, errorCode: null };
+}
+
 export async function runV2Request(requestId: string, provider: V2ArtifactProvider = new ModelGatewayV2Provider()): Promise<V2RuntimeResult> {
   const startedAt = Date.now();
   const request = await readGenerationV2Request(requestId); if (!request) throw new Error("V2_REQUEST_NOT_FOUND");
@@ -85,8 +109,12 @@ export async function runV2Request(requestId: string, provider: V2ArtifactProvid
     return { requestId, status: request.status, guide: null, nextRetryAt: null, metrics: [] };
   }
   await markGenerationV2RequestWorking(requestId);
-  const snapshot = await loadV2SourceSnapshot(request.session_id);
-  if (snapshot.snapshot_hash !== request.source_snapshot_hash) throw new Error("V2_SOURCE_SNAPSHOT_CHANGED");
+  const sourceResolution = await resolveV2SourceSnapshotForRequest({ requestId, sessionId: request.session_id, sourceSnapshotHash: request.source_snapshot_hash });
+  if (!sourceResolution.snapshot) {
+    logRuntime({ requestId, status: "failed_no_guide", artifacts: [], providerAttempts: 0, durationMs: Date.now() - startedAt, outcome: sourceResolution.errorCode });
+    return { requestId, status: "failed_no_guide", guide: null, nextRetryAt: null, metrics: [{ outcome: "aborted", error_code: sourceResolution.errorCode }] };
+  }
+  const snapshot = sourceResolution.snapshot;
   const rows = await readGenerationV2Artifacts(requestId);
   const metrics: Array<Record<string, unknown>> = [];
   let nextRetryAt: string | null = null;
@@ -133,15 +161,45 @@ export async function runV2Request(requestId: string, provider: V2ArtifactProvid
   let status = request.status;
   let guide: V2Guide | null = null;
   if (terminal) {
-    status = completed.length === 0 ? "failed_no_guide" : completed.length === required.length ? "complete" : "complete_with_gaps";
     if (completed.length) {
-      const sections = completed.map((artifact) => artifact.result_json as unknown as V2Guide["sections"][number]);
-      const gaps = required.filter((artifact) => artifact.status === "gap").map((artifact) => ({ code: artifact.gap_code ?? "provider_transient_exhausted", message: artifact.gap_message ?? "Artifact unavailable.", source_id: null, locator: null, partition_id: artifact.partition_key }));
+      const resultByArtifactId = new Map(completed.map((artifact) => [artifact.id, v2ArtifactResultSchema.parse(artifact.result_json)]));
+      const sections = assembleV2Sections(completed.flatMap((artifact) => resultByArtifactId.get(artifact.id)!.sections));
+      const gaps = [
+        ...snapshot.warnings.map((warning) => ({
+          code: warning.code,
+          message: warning.message,
+          source_id: warning.source_id,
+          locator: warning.locator === null ? null : { kind: "file" as const, number: warning.locator },
+          partition_id: null,
+        })),
+        ...required.filter((artifact) => artifact.status === "gap").map((artifact) => ({
+          code: artifact.gap_code ?? "provider_transient_exhausted",
+          message: artifact.gap_message ?? "Artifact unavailable.",
+          source_id: null,
+          locator: null,
+          partition_id: artifact.partition_key,
+        })),
+        ...completed.flatMap((artifact) => {
+          const identity = artifact.span_identity_json && !Array.isArray(artifact.span_identity_json) ? (artifact.span_identity_json as { span_ids?: unknown }) : null;
+          const expected = Array.isArray(identity?.span_ids) ? identity.span_ids.filter((id): id is string => typeof id === "string") : [];
+          const cited = new Set(resultByArtifactId.get(artifact.id)!.sections.flatMap((section) => section.source_refs.map((reference) => reference.span_id)));
+          const missing = expected.filter((id) => !cited.has(id));
+          return missing.length ? [{
+            code: "source_coverage",
+            message: `${missing.length} readable source span${missing.length === 1 ? " was" : "s were"} not represented in the delivered sections.`,
+            source_id: null,
+            locator: null,
+            partition_id: artifact.partition_key,
+          }] : [];
+        }),
+      ];
+      status = completed.length === required.length && gaps.length === 0 ? "complete" : "complete_with_gaps";
       const coveredUnits = new Set(sections.flatMap((section) => section.source_refs.map((ref) => `${ref.source_id}:${ref.locator.kind}:${ref.locator.number}`))).size;
       guide = v2GuideSchema.parse({ schema_version: "2.0", id: `v2-guide-${requestId}`, session_id: request.session_id, title: snapshot.title, source_snapshot_hash: request.source_snapshot_hash, generation_status: status, coverage: { readable_units: snapshot.sources.reduce((sum, source) => sum + source.readable_unit_count, 0), covered_units: coveredUnits, total_units: snapshot.sources.reduce((sum, source) => sum + source.unit_count, 0), gaps }, study_map: sections.map((section) => ({ section_id: section.id, priority: section.priority, why_this_matters: section.focus_reason, source_refs: section.source_refs })), sections, generated_at: new Date().toISOString() });
+    } else {
+      status = "failed_no_guide";
     }
-    await assembleGenerationV2Request({ requestId, deliveryStatus: status as "complete" | "complete_with_gaps" | "failed_no_guide", guide: guide as unknown as Json });
-    await settleGenerationV2Billing(requestId, status as "complete" | "complete_with_gaps" | "failed_no_guide");
+    await finalizeGenerationV2Request({ requestId, deliveryStatus: status as "complete" | "complete_with_gaps" | "failed_no_guide", guide: guide as unknown as Json });
   }
   logRuntime({ requestId, status, artifacts, providerAttempts: metrics.length, durationMs: Date.now() - startedAt, outcome: terminal ? "assembled" : metrics.length ? "artifact_settled" : "waiting" });
   return { requestId, status, guide, nextRetryAt, metrics };

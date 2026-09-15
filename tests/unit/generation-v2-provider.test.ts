@@ -20,18 +20,17 @@ function snapshot(texts = ["ATP synthase uses a proton gradient to make ATP in c
 }
 
 function artifactFor(partition: ReturnType<typeof partitionV2Snapshot>[number], language: "en" | "zh" = "en"): V2Artifact {
-  return {
-    section_id: "ignored-by-canonicalizer",
+  return { sections: [{
     title: language === "zh" ? "核心概念" : "Core concept",
     priority: "study_first",
     focus_reason: language === "zh" ? "材料直接说明这个关系。" : "The evidence directly explains this relationship.",
     explanation: [{ id: "model-claim", text: language === "zh" ? "质子梯度驱动 ATP 合成。" : "The proton gradient drives ATP synthesis.", span_ids: [partition.span_ids[0]], support_status: "direct" }],
-  };
+  }] };
 }
 
 function structuredArtifactFor(partition: ReturnType<typeof partitionV2Snapshot>[number]) {
-  return {
-    ...artifactFor(partition),
+  return { sections: [{
+    ...artifactFor(partition).sections[0],
     review_targets: null,
     gaps: [],
     key_concepts: null,
@@ -39,7 +38,7 @@ function structuredArtifactFor(partition: ReturnType<typeof partitionV2Snapshot>
     processes_relationships: null,
     common_confusions: null,
     practice_prompts: null,
-  };
+  }] };
 }
 
 function setup(inputSnapshot = snapshot()) {
@@ -54,9 +53,9 @@ describe("Generation v2 provider adapter and artifact execution", () => {
     const partition = partitionV2Snapshot(input)[0];
     const schema = v2ArtifactSchemaForSpanIds(partition.span_ids);
     expect(schema.safeParse(structuredArtifactFor(partition)).success).toBe(true);
-    expect(schema.safeParse({ ...structuredArtifactFor(partition), explanation: [{ ...artifactFor(partition).explanation[0], span_ids: ["unknown-span"] }] }).success).toBe(false);
+    expect(schema.safeParse({ sections: [{ ...structuredArtifactFor(partition).sections[0], explanation: [{ ...artifactFor(partition).sections[0].explanation[0], span_ids: ["unknown-span"] }] }] }).success).toBe(false);
     const canonical = canonicalizeV2Artifact(artifactFor(partition), partition, input);
-    expect(canonical.source_refs).toEqual([expect.objectContaining({ span_id: partition.span_ids[0], source_name: "private-notes.pdf", locator: { kind: "page", number: 1 } })]);
+    expect(canonical.sections[0].source_refs).toEqual([expect.objectContaining({ span_id: partition.span_ids[0], source_name: "private-notes.pdf", locator: { kind: "page", number: 1 } })]);
   });
 
   it("converts the scoped artifact schema to a Responses structured-output format", () => {
@@ -104,7 +103,7 @@ describe("Generation v2 provider adapter and artifact execution", () => {
     let calls = 0;
     const provider: V2ArtifactProvider = { generate: async () => {
       calls += 1;
-      return calls === 1 ? ({ ...artifactFor(partition), explanation: [] } as unknown as V2Artifact) : artifactFor(partition);
+      return calls === 1 ? ({ sections: [{ ...artifactFor(partition).sections[0], explanation: [] }] } as unknown as V2Artifact) : artifactFor(partition);
     } };
     const repaired = await executePersistedGenerationV2({ ...state, title: "Provider fixture", provider, sleep: async () => {} });
     expect(calls).toBe(2);
@@ -114,7 +113,7 @@ describe("Generation v2 provider adapter and artifact execution", () => {
     let terminalCalls = 0;
     const invalidReference: V2ArtifactProvider = { generate: async () => {
       terminalCalls += 1;
-      return { ...artifactFor(partition), explanation: [{ ...artifactFor(partition).explanation[0], span_ids: ["foreign-span"] }] };
+      return { sections: [{ ...artifactFor(partition).sections[0], explanation: [{ ...artifactFor(partition).sections[0].explanation[0], span_ids: ["foreign-span"] }] }] };
     } };
     const failed = await executePersistedGenerationV2({ ...terminal, title: "Provider fixture", provider: invalidReference });
     expect(terminalCalls).toBe(1);
@@ -124,7 +123,6 @@ describe("Generation v2 provider adapter and artifact execution", () => {
 
   it("keeps completed siblings while an exhausted partition becomes a visible gap", async () => {
     const state = setup(snapshot(["A".repeat(30_000), "B".repeat(30_000)]));
-    const partitions = partitionV2Snapshot(state.snapshot);
     const calls = new Map<number, number>();
     const provider: V2ArtifactProvider = { generate: async ({ partition }) => {
       calls.set(partition.index, (calls.get(partition.index) ?? 0) + 1);

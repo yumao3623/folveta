@@ -1,8 +1,33 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { v2ReadModelStatus } from "@/lib/ai/generation-v2-runtime";
+import { buildSourceSnapshot } from "@/lib/ai/generation-v2";
+import { resolveV2SourceSnapshotForRequest, v2ReadModelStatus } from "@/lib/ai/generation-v2-runtime";
+
+const runtimeSnapshot = () => buildSourceSnapshot({
+  sessionId: "runtime-source-session",
+  ownerScope: "runtime-source-owner",
+  title: "Runtime source",
+  sources: [{
+    id: "runtime-source",
+    displayName: "runtime.pdf",
+    parsed: {
+      units: [{
+        locatorKind: "page",
+        locatorNumber: 1,
+        title: null,
+        rawText: "A stable source span with enough readable material for the runtime test.",
+        normalizedText: "A stable source span with enough readable material for the runtime test.",
+        readable: true,
+        warnings: [],
+        contentHash: "runtime-source-content-hash-123456789",
+        blocks: ["A stable source span with enough readable material for the runtime test."],
+      }],
+      warnings: [],
+    },
+  }],
+});
 
 function localSql(sql: string) {
   return execFileSync("docker", ["exec", "-i", "supabase_db_study_guide_maker", "psql", "-X", "-q", "-U", "postgres", "-d", "postgres", "-tA", "-v", "ON_ERROR_STOP=1"], { input: sql, encoding: "utf8" }).trim();
@@ -17,13 +42,54 @@ describe("Generation v2 runtime contract", () => {
     expect(v2ReadModelStatus("failed_no_guide", [])).toBe("unable_to_generate");
   });
 
+  it("continues only when the persisted source snapshot still matches", async () => {
+    const snapshot = runtimeSnapshot();
+    const abortRequest = vi.fn();
+    await expect(resolveV2SourceSnapshotForRequest({
+      requestId: "runtime-request",
+      sessionId: snapshot.session_id,
+      sourceSnapshotHash: snapshot.snapshot_hash,
+    }, { loadSnapshot: async () => snapshot, abortRequest })).resolves.toEqual({ snapshot, errorCode: null });
+    expect(abortRequest).not.toHaveBeenCalled();
+  });
+
+  it("atomically aborts a request when its source snapshot changed or disappeared", async () => {
+    const snapshot = runtimeSnapshot();
+    const changedAbort = vi.fn().mockResolvedValue(undefined);
+    await expect(resolveV2SourceSnapshotForRequest({
+      requestId: "changed-request",
+      sessionId: snapshot.session_id,
+      sourceSnapshotHash: "different-source-snapshot",
+    }, { loadSnapshot: async () => snapshot, abortRequest: changedAbort })).resolves.toEqual({ snapshot: null, errorCode: "source_snapshot_changed" });
+    expect(changedAbort).toHaveBeenCalledWith(expect.objectContaining({ requestId: "changed-request", code: "source_snapshot_changed" }));
+
+    const missingAbort = vi.fn().mockResolvedValue(undefined);
+    await expect(resolveV2SourceSnapshotForRequest({
+      requestId: "missing-request",
+      sessionId: snapshot.session_id,
+      sourceSnapshotHash: snapshot.snapshot_hash,
+    }, { loadSnapshot: async () => { throw new Error("NO_USABLE_SOURCES"); }, abortRequest: missingAbort })).resolves.toEqual({ snapshot: null, errorCode: "source_snapshot_unavailable" });
+    expect(missingAbort).toHaveBeenCalledWith(expect.objectContaining({ requestId: "missing-request", code: "source_snapshot_unavailable" }));
+  });
+
+  it("does not misclassify infrastructure failures as a removed source", async () => {
+    const snapshot = runtimeSnapshot();
+    const abortRequest = vi.fn();
+    await expect(resolveV2SourceSnapshotForRequest({
+      requestId: "failed-read-request",
+      sessionId: snapshot.session_id,
+      sourceSnapshotHash: snapshot.snapshot_hash,
+    }, { loadSnapshot: async () => { throw new Error("DATABASE_UNAVAILABLE"); }, abortRequest })).rejects.toThrow("DATABASE_UNAVAILABLE");
+    expect(abortRequest).not.toHaveBeenCalled();
+  });
+
   it("keeps v2 workflow execution separate from the v1 DAG", () => {
     const route = readFileSync("app/api/internal/generation-v2/route.ts", "utf8");
-    expect(route).toContain("GENERATION_V2_RUNTIME_ENABLED");
+    expect(route).toContain("isGenerationV2WriteEnabled");
     expect(route).toContain("generateStudyGuideV2Workflow");
     expect(route).not.toContain("/api/sessions/");
     const productRoute = readFileSync("app/api/sessions/[sessionId]/generate/route.ts", "utf8");
-    expect(productRoute).toContain("GENERATION_V2_PRODUCT_ENABLED");
+    expect(productRoute).toContain("isGenerationV2WriteEnabled");
     expect(productRoute).toContain("generateStudyGuideV2Workflow");
     expect(readFileSync("app/workflows/generation.ts", "utf8")).not.toContain("generation-v2");
   });
@@ -32,6 +98,20 @@ describe("Generation v2 runtime contract", () => {
     const migration = readFileSync("supabase/migrations/20260903040000_generation_v2_runtime.sql", "utf8");
     expect(migration).toContain("from public, anon, authenticated");
     expect(migration.match(/grant execute on function public\.(claim_generation_v2_artifact|settle_generation_v2_artifact|assemble_generation_v2_request)/g)).toHaveLength(3);
+    const releaseCandidate = readFileSync("supabase/migrations/20260910010911_generation_v2_release_candidate_state.sql", "utf8");
+    expect(releaseCandidate).toContain("revoke all on function public.abort_generation_v2_request(uuid, text, text) from public, anon, authenticated");
+    expect(releaseCandidate).toContain("grant execute on function public.abort_generation_v2_request(uuid, text, text) to service_role");
+    const runtime = readFileSync("lib/ai/generation-v2-runtime.ts", "utf8");
+    expect(runtime).toContain("abortGenerationV2Request");
+    expect(runtime).toContain('code: "source_snapshot_changed"');
+  });
+
+  it("lets the signed minute reconciler resume stale v2 work", () => {
+    const route = readFileSync("app/api/internal/generation-reconcile/route.ts", "utf8");
+    expect(route).toContain("GENERATION_V2_RUNTIME_ENABLED");
+    expect(route).toContain('rpc("reconcile_generation_v2_billing"');
+    expect(route).toContain('rpc("claim_stale_generation_v2_requests"');
+    expect(route).toContain("generateStudyGuideV2Workflow");
   });
 });
 
@@ -104,6 +184,20 @@ describe.skipIf(process.env.RUN_LOCAL_V2_DB_TEST !== "1")("Generation v2 runtime
     expect(localSql(`select status from public.assemble_generation_v2_request('${failed.requestId}', 'failed_no_guide', null);`)).toBe("failed_no_guide");
     expect(localSql(`select count(*) from public.generation_v2_guides where request_id = '${failed.requestId}';`)).toBe("0");
     localSql(`delete from public.preparation_sessions where id = '${failed.sessionId}';`);
+  }, 30_000);
+
+  it("derives complete_with_gaps from Guide coverage and aborts changed snapshots", () => {
+    const coveredWithParserGap = makeFixture();
+    const lease = randomUUID();
+    localSql(`select id from public.claim_generation_v2_artifact('${coveredWithParserGap.artifactId}', '${lease}', 210);`);
+    localSql(`select id from public.settle_generation_v2_artifact('${coveredWithParserGap.artifactId}', '${lease}', 'complete', '{}'::jsonb, 'result', null, null, false, 1);`);
+    expect(localSql(`select status from public.assemble_generation_v2_request('${coveredWithParserGap.requestId}', 'complete_with_gaps', '{"schema_version":"2.0","coverage":{"gaps":[{"code":"UNREADABLE_UNIT"}]}}'::jsonb);`)).toBe("complete_with_gaps");
+    localSql(`delete from public.preparation_sessions where id = '${coveredWithParserGap.sessionId}';`);
+
+    const changed = makeFixture();
+    expect(localSql(`select status from public.abort_generation_v2_request('${changed.requestId}', 'source_snapshot_changed', 'The source materials changed.');`)).toBe("failed_no_guide");
+    expect(localSql(`select status || '|' || gap_code from public.generation_v2_artifacts where id = '${changed.artifactId}';`)).toBe("gap|source_snapshot_changed");
+    localSql(`delete from public.preparation_sessions where id = '${changed.sessionId}';`);
   }, 30_000);
 
   it("reclaims an expired lease, rejects the stale worker, and gaps an interrupted final attempt", () => {

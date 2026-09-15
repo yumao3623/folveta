@@ -215,7 +215,7 @@ async function setup() {
 
   const state = { users, password, fixtures, quickCheckId, attemptId };
   writeFileSync(statePath, JSON.stringify(state), { encoding: "utf8", mode: 0o600 });
-  console.log(JSON.stringify({ statePath, accounts: users.map((user) => ({ email: user.email })), password, fixtures: fixtures.map(({ title, guideId, sessionId, owner }) => ({ title, guideId, sessionId, owner: owner.email })), attemptId }, null, 2));
+  console.log(JSON.stringify({ statePath, accounts: users.map((user) => ({ email: user.email })), fixtures: fixtures.map(({ title, guideId, sessionId, owner }) => ({ title, guideId, sessionId, owner: owner.email })), attemptId }, null, 2));
 }
 
 async function cleanup() {

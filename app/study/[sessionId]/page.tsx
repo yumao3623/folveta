@@ -47,7 +47,7 @@ export default async function StudyWorkspacePage({ params, searchParams }: PageP
         .eq("request_id", request.id)
         .maybeSingle();
       if (guideError && !isGenerationV2SchemaUnavailable(guideError)) throw guideError;
-      if (guideRow) return <V2GuideWorkspace guide={v2GuideSchema.parse(guideRow.guide_json)} displayTitle={session.title} />;
+      if (guideRow) return <V2GuideWorkspace guide={v2GuideSchema.parse(guideRow.guide_json)} displayTitle={session.title} quickCheckHref={`/study/${sessionId}/quick-check`} />;
   }
   const [{ data: sources, error: sourcesError }, { data: guideRow, error: guideError }] = await Promise.all([
     admin.from("sources").select("id, display_name, kind, status, unit_count, readable_unit_count, warnings, error_code, error_message").eq("session_id", sessionId).order("created_at"),

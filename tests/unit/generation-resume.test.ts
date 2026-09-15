@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GENERATION_STEP_REQUEST_TIMEOUT_MS, checkpointMatches, type GenerationCheckpoint } from "@/lib/ai/pipeline";
-import { isGenerationClaimable } from "@/app/api/sessions/[sessionId]/generate/route";
+import { isGenerationClaimable } from "@/lib/ai/generation-state";
 
 const checkpoint: GenerationCheckpoint = {
   source_checksum: "source-a",
