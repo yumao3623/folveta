@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Archive, BookOpen, Plus } from "lucide-react";
 import { GuideSummaryCard } from "@/components/guide-summary-card";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { EmptyState } from "@/components/ui/feedback";
 import { buttonClassName, cn } from "@/components/ui/styles";
+import { CartoonIcon } from "@/components/ui/cartoon-icon";
+import { AssetIllustration } from "@/components/ui/asset-illustration";
 import { guideListOptionsSchema } from "@/lib/schemas/guide-management";
 import { getCurrentUser } from "@/lib/server/auth";
 import { listOwnedGuides } from "@/lib/server/guides";
@@ -56,7 +57,7 @@ export default async function MyGuidesPage({ searchParams }: { searchParams: Pro
                 options.view === view ? "bg-[var(--primary-soft)] text-[var(--primary)]" : "text-[var(--muted)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]",
               )}
             >
-              {view === "active" ? <BookOpen className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+              <CartoonIcon name={view === "active" ? "guide" : "locked"} size={21} />
               {view === "active" ? "Active" : "Archived"}
             </Link>
           ))}
@@ -69,10 +70,10 @@ export default async function MyGuidesPage({ searchParams }: { searchParams: Pro
             </div>
           ) : (
             <EmptyState
-              icon={options.view === "active" ? <BookOpen className="h-5 w-5" /> : <Archive className="h-5 w-5" />}
+              icon={<AssetIllustration asset={options.view === "active" ? "guide" : "locked"} sizes="96px" />}
               title={options.view === "active" ? "No active Guides" : "No archived Guides"}
               description={options.view === "active" ? "Create a Guide from your course materials to start this workspace." : "Guides you archive will remain available here until you restore or delete them."}
-              action={options.view === "active" ? <Link href="/#upload" className={buttonClassName({ size: "sm" })}><Plus className="h-4 w-4" /> Create Guide</Link> : undefined}
+              action={options.view === "active" ? <Link href="/#upload" className={buttonClassName({ size: "sm" })}><CartoonIcon name="upload" size={20} /> Create Guide</Link> : undefined}
             />
           )}
         </section>

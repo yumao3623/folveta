@@ -1,24 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import {
-  ArrowRight,
-  ArrowDown,
-  BarChart3,
-  BookOpen,
-  BookmarkCheck,
-  CheckCircle2,
-  Circle,
-  FileText,
-  FlaskConical,
-  GitBranch,
-  Lightbulb,
-  NotebookText,
-  Sparkles,
-  Target,
-  TriangleAlert,
-  Upload,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight, ArrowDown } from "lucide-react";
 import {
   guideSectionAnchor,
   type GroundedClaim,
@@ -28,8 +10,10 @@ import {
   type SourceReference,
 } from "@/lib/schemas";
 import { SourceReference as SourceReferenceView } from "@/components/source-reference";
+import { BrandMark } from "@/components/brand-mark";
 import { Badge } from "@/components/ui/badge";
-import { IconFrame } from "@/components/ui/icon-frame";
+import { CartoonIcon, type CartoonIconName } from "@/components/ui/cartoon-icon";
+import { AssetIllustration } from "@/components/ui/asset-illustration";
 import { buttonClassName } from "@/components/ui/styles";
 import { AuthNavigation } from "@/lib/auth-navigation";
 
@@ -39,22 +23,21 @@ const priorityMeta: Record<Priority, { label: string; icon: string }> = {
   review_if_time: { label: "Review if time", icon: "radio_button_unchecked" },
 };
 
-const iconGlyphs: Record<string, LucideIcon> = {
-  menu_book: BookOpen,
-  target: Target,
-  science: FlaskConical,
-  analytics: BarChart3,
-  lightbulb: Lightbulb,
-  check_circle: CheckCircle2,
-  radio_button_unchecked: Circle,
-  upload_file: Upload,
-  bookmark_star: BookmarkCheck,
-  notes: NotebookText,
-  account_tree: GitBranch,
-  warning: TriangleAlert,
-  source: FileText,
-  sparkle: Sparkles,
-  arrow_right: ArrowRight,
+const iconGlyphs: Record<string, CartoonIconName> = {
+  menu_book: "guide",
+  target: "target",
+  science: "lightbulb",
+  analytics: "source",
+  lightbulb: "lightbulb",
+  check_circle: "success",
+  radio_button_unchecked: "history",
+  upload_file: "upload",
+  bookmark_star: "guide",
+  notes: "material",
+  account_tree: "source",
+  warning: "help",
+  source: "source",
+  sparkle: "check",
 };
 
 function Icon({
@@ -67,12 +50,12 @@ function Icon({
   className?: string;
 }) {
   const icon = name ?? children ?? "circle";
-  const Glyph = iconGlyphs[icon] ?? Circle;
+  if (icon === "arrow_right") return <ArrowRight aria-hidden="true" className={`h-[1em] w-[1em] shrink-0 ${className}`} />;
   return (
-    <Glyph
-      aria-hidden="true"
-      className={`h-[1em] w-[1em] shrink-0 ${className}`}
-      strokeWidth={1.8}
+    <CartoonIcon
+      name={iconGlyphs[icon] ?? "guide"}
+      className={`h-[1.6em] w-[1.6em] shrink-0 ${className}`}
+      animated
     />
   );
 }
@@ -119,9 +102,7 @@ function SourceChip({ reference }: { reference: SourceReference }) {
 function SectionHeading({ title, icon }: { title: string; icon: string }) {
   return (
     <div className="mb-6 flex items-center gap-3 border-b border-[var(--border-soft)] pb-4">
-      <IconFrame tone="primary">
-        <Icon className="text-[18px]" name={icon} />
-      </IconFrame>
+      <Icon className="text-[26px]" name={icon} />
       <h2 className="font-headline-md text-[24px] font-semibold leading-[1.3] text-[var(--foreground)]">
         {title}
       </h2>
@@ -168,9 +149,9 @@ function ConceptCard({
   reference?: SourceReference;
 }) {
   return (
-    <div className="ui-surface ui-surface--interactive flex h-full flex-col p-5 sm:p-6">
+    <div className="study-block flex h-full flex-col border-t-2 border-[var(--border-soft)] py-5 sm:py-6">
       <div className="flex items-start gap-3">
-        <IconFrame size="sm" tone="primary"><Lightbulb className="h-4 w-4" strokeWidth={1.8} /></IconFrame>
+        <CartoonIcon name="lightbulb" size={38} animated className="shrink-0" />
         <h3 className="font-headline-md text-[18px] font-semibold leading-[1.35] text-[var(--foreground)]">{name}</h3>
       </div>
       <div className="mt-3 flex-1">
@@ -283,7 +264,7 @@ function TopicDetails({
       {topic.common_confusions.length > 0 && (
         <section className="ui-surface ui-surface--warning mb-12 p-6 sm:p-8">
           <div className="mb-5 flex items-center gap-3">
-            <IconFrame tone="warning"><Icon className="text-[20px]" name="warning" /></IconFrame>
+            <Icon className="text-[26px]" name="warning" />
             <h3 className="font-headline-md text-[19px] font-semibold text-[var(--foreground)]">
               Common Confusions
             </h3>
@@ -360,32 +341,25 @@ export function GuideWorkspace({
   );
   const priorities = Object.keys(priorityMeta) as Priority[];
   return (
-    <main className="min-h-screen bg-[var(--background)] text-[var(--text-secondary)]">
-      <aside className="fixed left-0 top-0 z-50 hidden h-full w-72 flex-col border-r border-[var(--line)] bg-[var(--surface-container-low)] lg:flex">
+    <main className="learning-shell min-h-screen bg-[var(--background)] text-[var(--text-secondary)]">
+      <aside className="learning-sidebar fixed left-0 top-0 z-50 hidden h-full w-72 flex-col border-r border-[var(--line)] bg-[var(--surface)] xl:flex">
         <div className="mb-7 flex items-center bg-transparent px-6 pb-5 pt-8">
-          <Link
-            href="/"
-            className="font-headline-md text-[24px] font-semibold text-[var(--accent-bright)]"
-          >
-            Folveta
-          </Link>
+          <BrandMark />
         </div>
         <div className="mb-3 px-6 text-label-sm uppercase tracking-[0.15em] text-[var(--text-muted)]">
           Study Topics
         </div>
         <nav
-          className="flex-1 space-y-1.5 px-3"
+          className="flex-1 space-y-1.5 overflow-y-auto px-3"
           aria-label="Study guide topics"
         >
           <a
             href="#overview"
             aria-current="page"
-            className="group flex cursor-pointer items-center justify-between rounded-lg bg-[var(--accent-soft)]/60 px-3 py-3 text-[14px] font-medium text-[var(--foreground)] transition-[background-color,color,transform] hover:bg-[var(--accent-soft)] active:translate-y-px"
+            className="learning-nav-item group flex cursor-pointer items-center justify-between rounded-2xl bg-[var(--accent-soft)] px-3 py-3 text-[14px] font-bold text-[var(--foreground)] transition-[background-color,color,transform] hover:bg-[var(--accent-soft)] active:translate-y-px"
           >
             <span className="flex items-center gap-3">
-              <IconFrame size="sm" active>
-                <Icon className="text-[17px]" name="menu_book" />
-              </IconFrame>
+              <Icon className="text-[24px]" name="menu_book" />
               Overview
             </span>
             <Icon className="text-[18px] text-[var(--accent)]" name="target" />
@@ -397,12 +371,11 @@ export function GuideWorkspace({
                 <a
                   key={topic.id}
                   href={`#${guideSectionAnchor(topic.id)}`}
-                  className="group flex cursor-pointer items-center justify-between rounded-lg px-3 py-3 text-[14px] text-[var(--text-secondary)] transition-[background-color,color,transform] hover:bg-[var(--surface-container-high)] hover:text-[var(--foreground)] active:translate-y-px"
+                  className="learning-nav-item group flex cursor-pointer items-center justify-between rounded-2xl px-3 py-3 text-[14px] font-semibold text-[var(--text-secondary)] transition-[background-color,color,transform] hover:bg-[var(--surface-container-high)] hover:text-[var(--foreground)] active:translate-y-px"
                 >
                   <span className="flex min-w-0 items-center gap-3">
-                    <IconFrame size="sm" className="bg-white/70 group-hover:bg-[var(--primary-soft)] group-hover:text-[var(--primary-hover)]">
                       <Icon
-                        className="text-[17px]"
+                        className="text-[24px]"
                         name={
                           priority === "study_first"
                             ? "science"
@@ -411,7 +384,6 @@ export function GuideWorkspace({
                               : "lightbulb"
                         }
                       />
-                    </IconFrame>
                     <span className="truncate">{topic.title}</span>
                   </span>
                   <Icon
@@ -432,14 +404,9 @@ export function GuideWorkspace({
           </Link>
         </div>
       </aside>
-      <div className="lg:pl-72">
-        <header className="fixed left-0 right-0 top-0 z-40 flex h-20 items-center justify-between gap-3 border-b border-[var(--line)]/70 bg-[var(--surface)]/90 px-4 backdrop-blur-xl sm:px-6 lg:left-72 lg:px-6">
-          <Link
-            href="/"
-            className="font-headline-md text-[22px] font-semibold text-[var(--primary)] lg:hidden"
-          >
-            Folveta
-          </Link>
+      <div className="learning-main xl:pl-72">
+        <header className="learning-header fixed left-0 right-0 top-0 z-40 flex h-20 items-center justify-between gap-3 border-b border-[var(--line)] bg-[var(--surface)] px-4 sm:px-6 xl:left-72 xl:px-6">
+          <BrandMark compact className="xl:hidden" />
           <nav
             className="ml-auto flex items-center gap-1 sm:gap-2"
             aria-label="Workspace navigation"
@@ -473,7 +440,7 @@ export function GuideWorkspace({
           </nav>
         </header>
         <nav
-          className="ui-mobile-nav fixed left-0 right-0 top-20 z-30 flex gap-2 overflow-x-auto border-b border-[var(--border-soft)] bg-[var(--surface)] px-4 py-2 lg:hidden"
+          className="learning-mobile-nav ui-mobile-nav fixed left-0 right-0 top-20 z-30 flex gap-2 overflow-x-auto border-b border-[var(--border-soft)] bg-[var(--surface)] px-4 py-2 xl:hidden"
           aria-label="Study guide topics"
         >
           <a href="#overview" className={buttonClassName({ variant: "soft", size: "sm", className: "shrink-0" })}>
@@ -481,7 +448,7 @@ export function GuideWorkspace({
           </a>
           {quickCheckHref && (
             <Link href={quickCheckHref} className={buttonClassName({ variant: "secondary", size: "sm", className: "shrink-0" })}>
-              <Sparkles className="h-4 w-4" strokeWidth={1.8} /> Quick Check
+              <CartoonIcon name="check" size={24} /> Quick Check
             </Link>
           )}
           {guide.topics.map((topic) => (
@@ -494,12 +461,13 @@ export function GuideWorkspace({
             </a>
           ))}
         </nav>
-        <main className="min-h-screen bg-[var(--background)] pt-[8.25rem] lg:pt-20">
+        <div className="min-h-screen bg-[var(--background)] pt-[8.25rem] xl:pt-20">
           <div
             id="overview"
             className="mx-auto flex w-full max-w-[1140px] flex-col px-6"
           >
-            <div className="pb-7 pt-10 sm:pt-12">
+            <div className="study-intro grid items-center gap-5 pb-7 pt-8 sm:grid-cols-[minmax(0,1fr)_180px] sm:pt-10">
+              <div>
               <div className="mb-3 flex flex-wrap items-center gap-3">
                 <Badge tone="source">
                   Study Guide
@@ -512,17 +480,19 @@ export function GuideWorkspace({
                   {guide.source_count === 1 ? "" : "s"}
                 </span>
               </div>
-              <h1 className="max-w-4xl font-display text-[38px] font-extrabold leading-[1.1] text-[var(--foreground)] sm:text-[48px]">
+              <h1 className="max-w-4xl font-display text-[34px] font-extrabold leading-[1.12] text-[var(--foreground)] sm:text-[42px]">
                 {displayTitle ?? guide.title}
               </h1>
               <p className="mt-4 max-w-3xl font-body-lg text-[18px] leading-[1.6] text-[var(--text-secondary)]">
                 {guide.priority_method_summary}
               </p>
               <dl className="mt-6 flex flex-wrap gap-x-7 gap-y-3 text-[13px]">
-                <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-[var(--source-blue-strong)]" /><dt className="sr-only">Sources</dt><dd><strong className="text-[var(--foreground)]">{guide.source_count}</strong> sources</dd></div>
-                <div className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-[var(--primary)]" /><dt className="sr-only">Topics</dt><dd><strong className="text-[var(--foreground)]">{guide.topics.length}</strong> study topics</dd></div>
-                <div className="flex items-center gap-2"><Target className="h-4 w-4 text-[var(--warning)]" /><dt className="sr-only">Priority</dt><dd>Priority is a <strong className="text-[var(--foreground)]">study suggestion</strong></dd></div>
+                <div className="flex items-center gap-2"><CartoonIcon name="source" size={28} /><dt className="sr-only">Sources</dt><dd><strong className="text-[var(--foreground)]">{guide.source_count}</strong> sources</dd></div>
+                <div className="flex items-center gap-2"><CartoonIcon name="guide" size={28} /><dt className="sr-only">Topics</dt><dd><strong className="text-[var(--foreground)]">{guide.topics.length}</strong> study topics</dd></div>
+                <div className="flex items-center gap-2"><CartoonIcon name="target" size={28} /><dt className="sr-only">Priority</dt><dd>Priority is a <strong className="text-[var(--foreground)]">study suggestion</strong></dd></div>
               </dl>
+              </div>
+              <AssetIllustration asset="guide" className="study-intro__art mx-auto h-40 w-40 sm:h-48 sm:w-48" priority sizes="(max-width: 640px) 160px, 192px" />
             </div>
             <div className="border-t border-[var(--line)]/70" />
             {reviewQuestion && (
@@ -534,14 +504,13 @@ export function GuideWorkspace({
                 related section is highlighted below.
               </section>
             )}
-            <div className="grid gap-12 pb-20 pt-10 lg:grid-cols-[minmax(0,1fr)_240px] lg:gap-16">
+            <div className="grid gap-10 pb-20 pt-10 xl:grid-cols-[minmax(0,1fr)_220px] xl:gap-10">
               <div className="min-w-0">
                 <section className="relative mb-16">
-                  <div className="absolute -bottom-5 -left-1 top-5 w-1 rounded-full bg-[var(--primary)]" />
-                  <div className="ui-surface ui-surface--elevated relative overflow-hidden p-6 sm:p-8">
+                  <div className="study-first relative rounded-3xl bg-[var(--primary-soft)] p-6 sm:p-8">
                     <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <IconFrame size="lg" tone="primary"><Icon className="text-[22px]" name="bookmark_star" /></IconFrame>
+                        <Icon className="text-[30px]" name="bookmark_star" />
                         <div><p className="text-[11px] font-semibold text-[var(--primary)]"><span className="sm:hidden">Start here</span><span className="hidden sm:inline">Recommended starting point</span></p><h2 className="font-headline-md text-[25px] font-semibold">Study First</h2></div>
                       </div>
                       <Badge tone="primary">Priority 01</Badge>
@@ -587,16 +556,16 @@ export function GuideWorkspace({
                 {stageTopics.length > 1 && (
                   <section className="mb-16">
                     <SectionHeading title="Study Path" icon="account_tree" />
-                    <div className="ui-surface ui-surface--subtle relative flex flex-col items-stretch justify-between gap-2 p-5 md:flex-row md:items-center md:gap-3 lg:p-6">
+                    <div className="study-map relative flex flex-col items-stretch justify-between gap-3">
                       {stageTopics.map((topic, index) => (
                         <div key={topic.id} className="contents">
-                          <div className="relative flex flex-1 items-center gap-3 rounded-md bg-white p-3 shadow-[var(--shadow-xs)] md:flex-col md:px-2 md:py-4 md:text-center">
+                          <div className="study-map__item relative flex flex-1 items-center gap-4 rounded-2xl border-2 border-[var(--border)] bg-white p-4">
                             <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg font-headline-md text-[18px] font-semibold ${index === 0 ? "bg-[var(--primary)] text-white" : index === 1 ? "bg-[var(--source-blue)] text-[var(--source-blue-strong)]" : "bg-[var(--warning-soft)] text-[var(--warning)]"}`}>
                               {index + 1}
                             </div>
                             <div className="min-w-0"><h3 className="text-label-sm text-[var(--foreground)]">{topic.title}</h3><p className="mt-1 text-[12px] text-[var(--muted)]">{priorityMeta[topic.priority].label}</p></div>
                           </div>
-                          {index < stageTopics.length - 1 && <><ArrowDown className="mx-auto h-4 w-4 text-[var(--border-strong)] md:hidden" /><ArrowRight className="hidden h-4 w-4 shrink-0 text-[var(--border-strong)] md:block" /></>}
+                          {index < stageTopics.length - 1 && <ArrowDown className="mx-auto h-4 w-4 text-[var(--border-strong)]" />}
                         </div>
                       ))}
                     </div>
@@ -622,8 +591,8 @@ export function GuideWorkspace({
                   </section>
                 )}
               </div>
-              <div className="hidden lg:block">
-                <div className="ui-surface ui-surface--subtle sticky top-24 px-4 py-1">
+              <div className="hidden xl:block">
+                <div className="sticky top-24 border-l-2 border-[var(--border-soft)] px-4 py-1">
                   <p className="border-b border-[var(--border-soft)] py-4 font-headline-md text-[16px] font-semibold text-[var(--foreground)]">Guide context</p>
                   <MarginNote label="Study cue">
                     {firstTopic.focus_reason}
@@ -677,7 +646,7 @@ export function GuideWorkspace({
               </div>
             )}
           </div>
-        </main>
+        </div>
       </div>
     </main>
   );

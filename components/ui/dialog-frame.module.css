@@ -1,0 +1,53 @@
+.frame {
+  position: fixed;
+  inset: 0;
+  width: min(28rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 2px solid var(--border);
+  border-bottom-width: 5px;
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  color: var(--foreground);
+  box-shadow: 0 16px 0 rgb(21 45 31 / 0.06), 0 30px 80px rgb(21 45 31 / 0.2);
+}
+
+.frame::backdrop {
+  background: rgb(22 42 31 / 0.4);
+  animation: backdrop-enter 160ms ease-out both;
+}
+
+.frame[open] {
+  animation: dialog-enter 320ms var(--ease-spring) both;
+}
+
+.frame[data-state="closing"] {
+  animation: dialog-exit 180ms ease-in both;
+  pointer-events: none;
+}
+
+.frame[data-state="closing"]::backdrop {
+  animation: backdrop-exit 180ms ease-in both;
+}
+
+@keyframes dialog-enter {
+  from { opacity: 0; transform: translateY(22px) scale(.93); }
+  65% { opacity: 1; transform: translateY(-4px) scale(1.015); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes dialog-exit {
+  to { opacity: 0; transform: translateY(16px) scale(.97); }
+}
+
+@keyframes backdrop-enter { from { opacity: 0; } to { opacity: 1; } }
+@keyframes backdrop-exit { from { opacity: 1; } to { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .frame[open], .frame[data-state="closing"], .frame::backdrop, .frame[data-state="closing"]::backdrop {
+    animation: none;
+  }
+}

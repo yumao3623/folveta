@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, LockKeyhole } from "lucide-react";
 import { Alert } from "@/components/ui/feedback";
 import { Input } from "@/components/ui/field";
 import { buttonClassName } from "@/components/ui/styles";
 import { updatePassword } from "@/app/auth/actions";
 import { getCurrentUser } from "@/lib/server/auth";
+import { AuthPageLayout } from "@/components/auth-page-layout";
 
 export const metadata: Metadata = {
   title: "Choose a new password",
@@ -20,20 +20,7 @@ export default async function ResetPasswordPage({ searchParams }: ResetPasswordP
   const user = await getCurrentUser();
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[var(--background)] px-5 py-12">
-      <section className="w-full max-w-[440px]">
-        <Link href="/auth" className="inline-flex items-center gap-2 text-[14px] font-medium text-[var(--text-secondary)] hover:text-[var(--foreground)]">
-          <ArrowLeft className="h-4 w-4" strokeWidth={1.8} />
-          Back to sign in
-        </Link>
-        <div className="ui-surface ui-surface--elevated mt-6 p-6 sm:p-8">
-          <div className="flex items-start gap-4">
-            <span className="ui-icon-frame ui-icon-frame--primary ui-icon-frame--lg"><LockKeyhole className="h-5 w-5" strokeWidth={1.8} /></span>
-            <div>
-              <p className="text-label-sm text-[var(--primary)]">Folveta account</p>
-              <h1 className="mt-1 font-headline-md text-[26px] font-semibold text-[var(--foreground)]">Choose a new password</h1>
-            </div>
-          </div>
+    <AuthPageLayout title="Choose a new password" asset="locked">
           {!user ? (
             <>
               <Alert tone="destructive" className="mt-6">This password reset link is invalid or expired. Request a new link to continue.</Alert>
@@ -55,8 +42,6 @@ export default async function ResetPasswordPage({ searchParams }: ResetPasswordP
               </form>
             </>
           )}
-        </div>
-      </section>
-    </main>
+    </AuthPageLayout>
   );
 }

@@ -2,18 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, Progress } from "@/components/ui/feedback";
-import { IconFrame } from "@/components/ui/icon-frame";
+import { AssetIllustration } from "@/components/ui/asset-illustration";
+import { CartoonIcon } from "@/components/ui/cartoon-icon";
 
 const stageLabels: Record<string, string> = {
-  extracting_topics: "Extracting topics from your materials",
-  merging_topics: "Organizing related topics",
-  planning: "Organizing topics from your materials",
+  extracting_topics: "Reading your course material",
+  merging_topics: "Building your study map",
+  planning: "Building your study map",
   generating_guide: "Writing your Study Guide",
-  verifying_guide: "Checking the Guide against your materials",
-  checking_grounding: "Checking the Guide against your materials",
+  verifying_guide: "Checking the Guide against your sources",
+  checking_grounding: "Checking the Guide against your sources",
   finalizing: "Finishing your Study Guide",
 };
 
@@ -181,9 +181,10 @@ export function GenerationPanel({
   const retryAllowed = generation?.retry_allowed ?? state === "failed_retryable";
   const buttonDisabled = !canGenerate || generating || (failed && !retryAllowed);
 
-  return <section className="ui-surface ui-surface--elevated p-6 sm:p-8">
-    <div className="flex items-center gap-3"><IconFrame tone="primary" size="lg"><Sparkles className="h-6 w-6" strokeWidth={1.8} /></IconFrame><div><p className="text-label-sm text-[var(--primary)]">Generation</p><h2 className="font-headline-md text-2xl font-semibold text-[var(--foreground)]">Build your Study Guide</h2></div></div>
-    <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">The pipeline extracts topics source by source, merges them, writes structured sections, then validates grounding and references.</p>
+  return <section className="generation-studio grid items-center gap-5 rounded-3xl border-2 border-[var(--border)] bg-[var(--surface)] p-6 sm:grid-cols-[minmax(0,1fr)_150px] sm:p-8" data-state={generating ? "loading" : failed ? "error" : "ready"}>
+    <div className="min-w-0">
+    <div className="flex items-center gap-3"><div><p className="text-label-sm text-[var(--primary)]">Generation</p><h2 className="font-headline-md text-2xl font-semibold text-[var(--foreground)]">Build your Study Guide</h2></div></div>
+    <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">We read your sources, map the topics worth reviewing, and check every section against the material you uploaded.</p>
     {generating && <Alert tone="success" className="mt-5" aria-live="polite">
       <p className="font-semibold">{generationStatusLabel(generation, state)}</p>
       <p className="mt-1 text-sm">You can leave this page. Your Study Guide will continue building, and progress will be here when you return.</p>
@@ -195,9 +196,11 @@ export function GenerationPanel({
       {generation?.support_id && <p className="mt-1 text-sm">Support ID: {generation.support_id}</p>}
     </Alert>}
     <Button onClick={generate} disabled={buttonDisabled} loading={generating} loadingLabel="Generating Study Guide..." size="lg" className="mt-5">
-      <Sparkles aria-hidden="true" className="h-[18px] w-[18px]" strokeWidth={1.8} />
+      <CartoonIcon name={failed ? "history" : "guide"} size={26} />
       {failed && retryAllowed ? "Retry Study Guide generation" : "Generate Study Guide"}
     </Button>
     {!canGenerate && <p className="mt-3 text-sm text-[var(--danger)]">At least one source with readable text is required.</p>}
+    </div>
+    <AssetIllustration asset={failed ? "locked" : "guide"} className="generation-studio__art mx-auto h-36 w-36" sizes="144px" />
   </section>;
 }

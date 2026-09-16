@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">Folveta mark</title>
+  <desc id="desc">An open study book with a bright bookmark and a clear path through its pages</desc>
+  <path d="M16 25Q32 17 48 25Q65 17 81 25V76Q64 70 48 79Q32 70 16 76Z" fill="#08783a" stroke="#20332b" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M21 19Q35 14 48 24V69Q35 60 21 65Z" fill="#fffdf8" stroke="#20332b" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M48 24Q61 14 76 19V65Q62 60 48 69Z" fill="#e3f8d9" stroke="#20332b" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M27 30Q34 28 41 33V43Q34 39 27 40Z" fill="#3ab8f2"/>
+  <path d="M57 20V42L64 37L71 41V16Q64 17 57 20Z" fill="#ffcf3e" stroke="#20332b" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M28 52Q35 49 41 54M56 53Q63 49 69 51" fill="none" stroke="#0a9e4a" stroke-width="5" stroke-linecap="round"/>
+  <rect x="79" y="35" width="7" height="13" rx="3" fill="#ff6b6b"/>
+  <rect x="79" y="51" width="7" height="12" rx="3" fill="#3ab8f2"/>
+</svg>

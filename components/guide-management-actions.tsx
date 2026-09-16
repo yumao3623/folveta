@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Archive, Pencil, RotateCcw, Trash2, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FieldLabel, FieldMessage, Input } from "@/components/ui/field";
 import { GUIDE_TITLE_MAX_LENGTH } from "@/lib/schemas/guide-management";
+import { CartoonIcon } from "@/components/ui/cartoon-icon";
+import { DialogFrame } from "@/components/ui/dialog-frame";
 
 type Action = "rename" | "archive" | "restore" | "delete";
 
@@ -25,46 +27,18 @@ export function GuideManagementActions({
 }) {
   const router = useRouter();
   const [action, setAction] = useState<Action | null>(null);
+  const [dialogAction, setDialogAction] = useState<Action>("rename");
   const [draftTitle, setDraftTitle] = useState(title);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const firstControlRef = useRef<HTMLInputElement | HTMLButtonElement>(null);
-  const modalRef = useRef<HTMLElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (!action) return;
-    previousFocusRef.current = document.activeElement as HTMLElement | null;
-    const frame = window.requestAnimationFrame(() => firstControlRef.current?.focus());
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !pending) setAction(null);
-      if (event.key === "Tab") {
-        const controls = modalRef.current?.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
-        );
-        if (!controls?.length) return;
-        const first = controls[0];
-        const last = controls[controls.length - 1];
-        if (event.shiftKey && document.activeElement === first) {
-          event.preventDefault();
-          last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first.focus();
-        }
-      }
-    };
-    document.addEventListener("keydown", closeOnEscape);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      document.removeEventListener("keydown", closeOnEscape);
-      previousFocusRef.current?.focus();
-    };
-  }, [action, pending]);
+  const titleId = useId();
+  const descriptionId = useId();
 
   function open(nextAction: Action) {
     setDraftTitle(title);
     setError(null);
+    setDialogAction(nextAction);
     setAction(nextAction);
   }
 
@@ -100,7 +74,7 @@ export function GuideManagementActions({
       <div className="flex shrink-0 items-center gap-1" aria-label={`Manage ${title}`}>
         {!archived && (
           <Button variant="ghost" size="icon-sm" aria-label={`Rename ${title}`} title="Rename Guide" onClick={() => open("rename")}>
-            <Pencil className="h-4 w-4" strokeWidth={1.8} />
+            <CartoonIcon name="edit" size={20} />
           </Button>
         )}
         <Button
@@ -110,30 +84,27 @@ export function GuideManagementActions({
           title={archived ? "Restore Guide" : "Archive Guide"}
           onClick={() => open(archived ? "restore" : "archive")}
         >
-          {archived ? <RotateCcw className="h-4 w-4" strokeWidth={1.8} /> : <Archive className="h-4 w-4" strokeWidth={1.8} />}
+          {archived ? <CartoonIcon name="history" size={20} /> : <CartoonIcon name="archive" size={20} />}
         </Button>
         <Button variant="ghost" size="icon-sm" aria-label={`Delete ${title}`} title="Delete Guide" onClick={() => open("delete")}>
-          <Trash2 className="h-4 w-4 text-[var(--destructive)]" strokeWidth={1.8} />
+          <CartoonIcon name="trash" size={20} />
         </Button>
       </div>
 
-      {action && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/35 px-4" role="presentation" onMouseDown={(event) => {
-          if (event.currentTarget === event.target && !pending) setAction(null);
-        }}>
-          <section
-            ref={modalRef}
-            role={action === "delete" ? "alertdialog" : "dialog"}
-            aria-modal="true"
-            aria-labelledby="guide-action-title"
-            aria-describedby={action === "rename" ? undefined : "guide-action-description"}
-            className="ui-surface ui-surface--elevated w-full max-w-md p-5 shadow-[var(--shadow-md)] sm:p-6"
-          >
+      <DialogFrame
+        open={action !== null}
+        onClose={() => setAction(null)}
+        pending={pending}
+        initialFocusRef={firstControlRef}
+        role={dialogAction === "delete" ? "alertdialog" : "dialog"}
+        labelledBy={titleId}
+        describedBy={dialogAction === "rename" ? undefined : descriptionId}
+      >
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-label-sm text-[var(--primary)]">Guide management</p>
-                <h2 id="guide-action-title" className="mt-1 font-headline-md text-[22px] font-semibold text-[var(--foreground)]">
-                  {action === "rename" ? "Rename Guide" : action === "archive" ? "Archive Guide?" : action === "restore" ? "Restore Guide?" : "Delete Guide?"}
+                <h2 id={titleId} className="mt-1 font-headline-md text-[22px] font-semibold text-[var(--foreground)]">
+                  {dialogAction === "rename" ? "Rename Guide" : dialogAction === "archive" ? "Archive Guide?" : dialogAction === "restore" ? "Restore Guide?" : "Delete Guide?"}
                 </h2>
               </div>
               <Button variant="ghost" size="icon-sm" aria-label="Close dialog" title="Close" onClick={() => setAction(null)} disabled={pending}>
@@ -141,7 +112,7 @@ export function GuideManagementActions({
               </Button>
             </div>
 
-            {action === "rename" ? (
+            {dialogAction === "rename" ? (
               <div className="mt-5">
                 <FieldLabel htmlFor={`guide-title-${guideId}`}>Guide title</FieldLabel>
                 <Input
@@ -161,31 +132,29 @@ export function GuideManagementActions({
                 </FieldMessage>
               </div>
             ) : (
-              <p id="guide-action-description" className="mt-4 text-[14px] leading-6 text-[var(--text-secondary)]">
-                {action === "archive"
+              <p id={descriptionId} className="mt-4 text-[14px] leading-6 text-[var(--text-secondary)]">
+                {dialogAction === "archive"
                   ? `"${title}" will leave My Guides and Recent Guides. You can restore it from Archived.`
-                  : action === "restore"
+                  : dialogAction === "restore"
                     ? `"${title}" will return to My Guides.`
                     : `"${title}" will become unavailable immediately. Its files and records become eligible for permanent cleanup after 30 days.`}
               </p>
             )}
-            {action !== "rename" && error && <FieldMessage tone="error" className="mt-3">{error}</FieldMessage>}
+            {dialogAction !== "rename" && error && <FieldMessage tone="error" className="mt-3">{error}</FieldMessage>}
 
             <div className="mt-6 flex flex-wrap justify-end gap-2">
               <Button variant="secondary" onClick={() => setAction(null)} disabled={pending}>Cancel</Button>
               <Button
-                ref={action === "rename" ? undefined : firstControlRef as React.Ref<HTMLButtonElement>}
-                variant={action === "delete" ? "destructive" : "primary"}
+                ref={dialogAction === "rename" ? undefined : firstControlRef as React.Ref<HTMLButtonElement>}
+                variant={dialogAction === "delete" ? "destructive" : "primary"}
                 loading={pending}
                 loadingLabel="Saving"
                 onClick={() => void submit()}
               >
-                {action === "rename" ? "Save title" : action === "archive" ? "Archive" : action === "restore" ? "Restore" : "Delete Guide"}
+                {dialogAction === "rename" ? "Save title" : dialogAction === "archive" ? "Archive" : dialogAction === "restore" ? "Restore" : "Delete Guide"}
               </Button>
             </div>
-          </section>
-        </div>
-      )}
+      </DialogFrame>
     </>
   );
 }

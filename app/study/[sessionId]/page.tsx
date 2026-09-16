@@ -1,13 +1,15 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, FileCheck2, FileText, Presentation } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { GenerationPanel } from "@/components/generation-panel";
 import { GuideWorkspace } from "@/components/guide-workspace";
 import { V2GuideWorkspace } from "@/components/v2-guide-workspace";
 import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/feedback";
-import { IconFrame } from "@/components/ui/icon-frame";
+import { CartoonIcon } from "@/components/ui/cartoon-icon";
+import { AssetIllustration } from "@/components/ui/asset-illustration";
 import { buttonClassName } from "@/components/ui/styles";
+import { BrandMark } from "@/components/brand-mark";
 import { guideSchema } from "@/lib/schemas";
 import { requireOwnedSession } from "@/lib/server/auth";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
@@ -68,14 +70,15 @@ export default async function StudyWorkspacePage({ params, searchParams }: PageP
   const usableCount = sourceRows.filter((source) => source.status === "ready" || source.status === "ready_with_gaps").length;
   const failedCount = sourceRows.filter((source) => source.status === "cannot_use").length;
   return <main className="min-h-screen bg-[var(--background)]">
-    <header className="border-b border-[var(--border-soft)] bg-white/90 backdrop-blur-xl">
+    <header className="border-b-2 border-[var(--border-soft)] bg-[var(--surface)]">
       <div className="editorial-page flex h-20 items-center justify-between gap-4">
-        <Link href="/" className="font-headline-md text-[22px] font-semibold text-[var(--primary)]">Folveta</Link>
+        <BrandMark compact />
         <Link href="/" className={buttonClassName({ variant: "ghost", size: "sm" })}><ArrowLeft className="h-4 w-4" />New upload</Link>
       </div>
     </header>
     <div className="editorial-page max-w-5xl py-9 sm:py-12">
-      <section className="border-b border-[var(--border)] pb-8">
+      <section className="study-intro grid items-center gap-5 border-b-2 border-[var(--border)] pb-8 sm:grid-cols-[minmax(0,1fr)_180px]">
+        <div className="min-w-0">
         <Badge tone="primary">Preparation workspace</Badge>
         <h1 className="mt-4 text-4xl font-bold text-[var(--foreground)] sm:text-5xl">{session.title}</h1>
         <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[var(--muted)]">
@@ -83,10 +86,12 @@ export default async function StudyWorkspacePage({ params, searchParams }: PageP
           <span><strong className="text-[var(--primary)]">{usableCount}</strong> usable</span>
           {failedCount > 0 && <span><strong className="text-[var(--destructive)]">{failedCount}</strong> excluded</span>}
         </div>
+        </div>
+        <AssetIllustration asset="material" className="study-intro__art mx-auto" priority sizes="(max-width: 640px) 160px, 192px" />
       </section>
       <section className="py-9 sm:py-10">
         <div className="flex items-center gap-3">
-          <IconFrame tone="source"><FileCheck2 className="h-5 w-5" strokeWidth={1.8} /></IconFrame>
+          <CartoonIcon name="material" size={48} animated />
           <div><p className="text-label-sm text-[var(--source-blue-strong)]">Materials</p><h2 className="font-headline-md text-2xl font-semibold text-[var(--foreground)]">Parsing status</h2></div>
         </div>
         <div className="mt-6 space-y-3">{sourceRows.map((source) => {
@@ -96,8 +101,8 @@ export default async function StudyWorkspacePage({ params, searchParams }: PageP
           const warningCount = warnings.length;
           const failed = source.status === "cannot_use";
           const tone = failed ? "destructive" : source.status === "ready_with_gaps" ? "warning" : "success";
-          return <article key={source.id} className={`ui-surface flex gap-4 p-4 sm:p-5 ${failed ? "border-[#efc8c5] bg-[var(--danger-soft)]" : source.status === "ready_with_gaps" ? "border-[#ead695] bg-[var(--warning-soft)]" : ""}`}>
-            <IconFrame size="lg" tone={failed ? "destructive" : ["ppt", "pptx"].includes(source.kind) ? "source" : "neutral"}>{["ppt", "pptx"].includes(source.kind) ? <Presentation className="h-5 w-5" strokeWidth={1.8} /> : <FileText className="h-5 w-5" strokeWidth={1.8} />}</IconFrame>
+          return <article key={source.id} data-state={source.status} className={`ui-surface flex gap-4 p-4 sm:p-5 ${failed ? "border-[#efc8c5] bg-[var(--danger-soft)]" : source.status === "ready_with_gaps" ? "border-[#ead695] bg-[var(--warning-soft)]" : ""}`}>
+            <CartoonIcon name={failed ? "error" : ["uploading", "uploaded", "parsing"].includes(source.status) ? "loading" : "material"} size={48} animated className="shrink-0" />
             <div className="min-w-0 flex-1"><div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0"><h3 className="truncate font-semibold text-[var(--foreground)]">{source.display_name}</h3><p className="mt-1 text-sm text-[var(--muted)]">{source.kind.toUpperCase()} · {source.unit_count} source records · {source.readable_unit_count} readable</p></div>
               <Badge tone={tone}>{statusLabels[source.status] ?? source.status}</Badge>

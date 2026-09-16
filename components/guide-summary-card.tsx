@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { BookOpen, CalendarDays, Clock3, Files, History } from "lucide-react";
+import { CalendarDays, Clock3, History } from "lucide-react";
 import { GuideManagementActions } from "@/components/guide-management-actions";
 import { Badge } from "@/components/ui/badge";
 import { buttonClassName } from "@/components/ui/styles";
 import type { GuideSummary } from "@/lib/server/guides";
+import { CartoonIcon } from "@/components/ui/cartoon-icon";
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
@@ -27,7 +28,7 @@ export function GuideSummaryCard({ guide, manage = true }: { guide: GuideSummary
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone={guide.archivedAt ? "neutral" : "success"}>{guide.archivedAt ? "Archived" : stateLabel(guide.state)}</Badge>
             <span className="flex items-center gap-1.5 text-[12px] text-[var(--muted)]">
-              <Files className="h-3.5 w-3.5" strokeWidth={1.8} />
+              <CartoonIcon name="material" size={18} />
               {guide.sourceCount} source{guide.sourceCount === 1 ? "" : "s"}
             </span>
           </div>
@@ -51,7 +52,7 @@ export function GuideSummaryCard({ guide, manage = true }: { guide: GuideSummary
       {!guide.archivedAt && (
         <div className="mt-auto pt-5">
           <Link href={`/api/guides/${guide.id}/reopen`} className={buttonClassName({ variant: "secondary", size: "sm" })}>
-            <BookOpen className="h-4 w-4" strokeWidth={1.8} /> Open Guide
+            <CartoonIcon name="guide" size={20} /> Open Guide
           </Link>
         </div>
       )}

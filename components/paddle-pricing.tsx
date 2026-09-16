@@ -3,8 +3,8 @@
 import { initializePaddle, type Paddle } from "@paddle/paddle-js";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, LockKeyhole, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CartoonIcon } from "@/components/ui/cartoon-icon";
 
 export function PaddlePricing({ userId, userEmail, priceId }: { userId: string | null; userEmail?: string | null; priceId: string }) {
   const router = useRouter();
@@ -43,18 +43,18 @@ export function PaddlePricing({ userId, userEmail, priceId }: { userId: string |
         <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Core Study Guide creation with a monthly limit.</p>
         <p className="mt-6 text-[34px] font-semibold leading-none">$0<span className="ml-1 text-sm font-normal text-[var(--muted)]">/ month</span></p>
         <ul className="mt-6 space-y-3 text-sm text-[var(--muted)]">
-          {["2 successful Study Guides per month", "Up to 3 files and 75 source units", "Quick Check included"].map((item) => <li key={item} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />{item}</li>)}
+          {["2 successful Study Guides per month", "Up to 3 files and 75 source units", "Quick Check included"].map((item) => <li key={item} className="flex items-start gap-2"><CartoonIcon name="success" size={20} />{item}</li>)}
         </ul>
       </article>
       <article className="ui-surface ui-surface--elevated border-[var(--primary)] p-6 sm:p-7">
-        <div className="flex items-center justify-between gap-3"><p className="text-label-sm text-[var(--primary)]">Folveta Pro</p><Sparkles className="h-5 w-5 text-[var(--primary)]" /></div>
+        <div className="flex items-center justify-between gap-3"><p className="text-label-sm text-[var(--primary)]">Folveta Pro</p><CartoonIcon name="lightbulb" size={28} animated /></div>
         <h2 className="mt-2 text-[26px] font-semibold">More room for exam season</h2>
         <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Higher limits for focused, source-grounded study.</p>
         <p className="mt-6 text-[34px] font-semibold leading-none">$12<span className="ml-1 text-sm font-normal text-[var(--muted)]">/ month</span></p>
         <ul className="mt-6 space-y-3 text-sm text-[var(--muted)]">
-          {["10 successful Study Guides per month", "Up to 10 files and 300 source units", "Up to 600k extracted characters", "Quick Check included"].map((item) => <li key={item} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />{item}</li>)}
+          {["10 successful Study Guides per month", "Up to 10 files and 300 source units", "Up to 600k extracted characters", "Quick Check included"].map((item) => <li key={item} className="flex items-start gap-2"><CartoonIcon name="success" size={20} />{item}</li>)}
         </ul>
-        <Button onClick={subscribe} disabled={Boolean(userId) && !paddle} className="mt-7 w-full"><LockKeyhole className="h-4 w-4" />{userId ? `Subscribe in ${isLive ? "Folveta Pro" : "Sandbox"}` : "Sign in to subscribe"}</Button>
+        <Button onClick={subscribe} disabled={Boolean(userId) && !paddle} className="mt-7 w-full"><CartoonIcon name="locked" size={20} />{userId ? `Subscribe in ${isLive ? "Folveta Pro" : "Sandbox"}` : "Sign in to subscribe"}</Button>
         {error && <p className="mt-3 text-xs text-[var(--danger)]">{error}</p>}
         <p className="mt-3 text-center text-xs text-[var(--muted)]">{isLive ? "Secure checkout powered by Paddle." : "Sandbox only. No real charge is created."}</p>
       </article>

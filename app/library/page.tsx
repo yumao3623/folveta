@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { FileText, FolderOpen, Presentation } from "lucide-react";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/feedback";
 import { buttonClassName } from "@/components/ui/styles";
+import { CartoonIcon } from "@/components/ui/cartoon-icon";
+import { AssetIllustration } from "@/components/ui/asset-illustration";
 import { libraryListOptionsSchema, type LibraryListOptions } from "@/lib/schemas/library-search";
 import { getCurrentUser } from "@/lib/server/auth";
 import { listOwnedSources, type LibraryItem } from "@/lib/server/library";
@@ -25,11 +26,11 @@ function statusLabel(status: string) {
 }
 
 function SourceRow({ source }: { source: LibraryItem }) {
-  const SourceIcon = source.kind === "pdf" ? FileText : Presentation;
+  const sourceIcon = source.kind === "pdf" ? "material" : "guide";
   return (
     <article className="border-b border-[var(--border-soft)] py-5 first:pt-0 last:border-0 last:pb-0">
       <div className="flex min-w-0 items-start gap-4">
-        <span className="ui-icon-frame ui-icon-frame--md ui-icon-frame--source shrink-0"><SourceIcon className="h-5 w-5" strokeWidth={1.8} /></span>
+        <span className="ui-icon-frame ui-icon-frame--md ui-icon-frame--source shrink-0"><CartoonIcon name={sourceIcon} size={24} /></span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="min-w-0 break-words text-[16px] font-semibold text-[var(--foreground)]">{source.filename}</h2>
@@ -77,7 +78,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
         </form>
         <section className="mt-7 ui-surface ui-surface--base p-5 sm:p-6" aria-label="Uploaded source materials">
           {result.sources.length ? result.sources.map((source) => <SourceRow key={source.id} source={source} />) : (
-          <EmptyState icon={<FolderOpen className="h-5 w-5" />} title="No source materials" description={options.type === "all" ? "Upload course material while creating a Guide and it will appear here." : `No ${options.type.toUpperCase()} files match this Library filter.`} action={<Link href="/#upload" className={buttonClassName({ size: "sm" })}>Upload material</Link>} />
+          <EmptyState icon={<AssetIllustration asset="source" sizes="96px" />} title="No source materials" description={options.type === "all" ? "Upload course material while creating a Guide and it will appear here." : `No ${options.type.toUpperCase()} files match this Library filter.`} action={<Link href="/#upload" className={buttonClassName({ size: "sm" })}><CartoonIcon name="upload" size={20} /> Upload material</Link>} />
           )}
         </section>
         {(result.hasPreviousPage || result.hasNextPage) && <nav className="mt-5 flex items-center justify-between" aria-label="Library pages">{result.hasPreviousPage ? <Link href={libraryHref(options, result.page - 1)} className={buttonClassName({ variant: "secondary", size: "sm" })}>Previous</Link> : <span />}<span className="text-[12px] text-[var(--muted)]">Page {result.page}</span>{result.hasNextPage ? <Link href={libraryHref(options, result.page + 1)} className={buttonClassName({ variant: "secondary", size: "sm" })}>Next</Link> : <span />}</nav>}

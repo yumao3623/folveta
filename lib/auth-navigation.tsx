@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { BookOpen, LogIn, UserRound } from "lucide-react";
+import { LogIn } from "lucide-react";
+import { CartoonIcon } from "@/components/ui/cartoon-icon";
 import { buttonClassName } from "@/components/ui/styles";
 import { getCurrentUser } from "@/lib/server/auth";
 
@@ -12,7 +13,7 @@ export async function AuthNavigation({ nextPath }: { nextPath?: string } = {}) {
         className={buttonClassName({ variant: "ghost", size: "sm" })}
         aria-label="Open My Guides"
       >
-        <BookOpen className="h-[17px] w-[17px]" strokeWidth={1.8} />
+        <CartoonIcon name="guide" size={24} />
         <span className="hidden md:inline">My Guides</span>
       </Link>
       <Link
@@ -21,7 +22,7 @@ export async function AuthNavigation({ nextPath }: { nextPath?: string } = {}) {
         aria-label="Open Profile"
         title="Profile"
       >
-        <UserRound className="h-[17px] w-[17px]" strokeWidth={1.8} />
+        <CartoonIcon name="profile" size={24} />
         <span className="hidden md:inline">Profile</span>
       </Link>
     </>
@@ -30,7 +31,7 @@ export async function AuthNavigation({ nextPath }: { nextPath?: string } = {}) {
       href={nextPath ? `/auth?next=${encodeURIComponent(nextPath)}` : "/auth"}
       className={buttonClassName({ variant: "ghost", size: "sm" })}
     >
-      <LogIn className="h-[17px] w-[17px]" strokeWidth={1.8} />
+      <LogIn className="h-[18px] w-[18px]" strokeWidth={2.5} />
       Sign in
     </Link>
   );

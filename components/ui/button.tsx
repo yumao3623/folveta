@@ -33,15 +33,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       disabled={disabled || loading}
       {...props}
       aria-busy={loading || ariaBusy || undefined}
+      aria-label={loading ? (loadingLabel ?? "Loading") : props["aria-label"]}
     >
-      {loading && (
-        <LoaderCircle
-          aria-hidden="true"
-          className="ui-button__spinner h-[1.15em] w-[1.15em]"
-          strokeWidth={1.9}
-        />
-      )}
-      {loading && loadingLabel ? loadingLabel : children}
+      <span className="ui-button__content" style={loading ? { visibility: "hidden" } : undefined}>{children}</span>
+      {loading && <span className="ui-button__loading" aria-hidden="true"><LoaderCircle className="ui-button__spinner h-[1.15em] w-[1.15em]" strokeWidth={2.5} />{loadingLabel}</span>}
     </button>
   );
 });

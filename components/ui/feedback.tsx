@@ -1,20 +1,15 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import {
-  AlertCircle,
-  CheckCircle2,
-  CircleAlert,
-  Info,
-} from "lucide-react";
 import { cn } from "@/components/ui/styles";
+import { CartoonIcon, type CartoonIconName } from "@/components/ui/cartoon-icon";
 
 type FeedbackTone = "info" | "success" | "warning" | "destructive";
 
 const alertIcons = {
-  info: Info,
-  success: CheckCircle2,
-  warning: CircleAlert,
-  destructive: AlertCircle,
-};
+  info: "help",
+  success: "success",
+  warning: "lightbulb",
+  destructive: "error",
+} as const satisfies Record<FeedbackTone, CartoonIconName>;
 
 export function Alert({
   children,
@@ -27,19 +22,15 @@ export function Alert({
   icon?: boolean;
   tone?: FeedbackTone;
 }) {
-  const AlertIcon = alertIcons[tone];
+  const alertIcon = alertIcons[tone];
   return (
     <div
-      className={cn("ui-alert", `ui-alert--${tone}`, className)}
+      className={cn("ui-alert motion-pop", `ui-alert--${tone}`, className)}
       {...props}
       role={tone === "destructive" ? "alert" : role}
     >
       {icon && (
-        <AlertIcon
-          aria-hidden="true"
-          className="mt-0.5 h-[18px] w-[18px] shrink-0"
-          strokeWidth={1.9}
-        />
+        <CartoonIcon name={alertIcon} size={24} animated={tone === "success" || tone === "destructive"} />
       )}
       <div className="min-w-0 flex-1">{children}</div>
     </div>
@@ -88,9 +79,9 @@ export function EmptyState({
 }) {
   return (
     <div className="ui-surface ui-surface--subtle px-6 py-10 text-center">
-      <span className="ui-icon-frame ui-icon-frame--lg ui-icon-frame--primary mx-auto">
+      <div className="ui-empty-state__art" aria-hidden="true">
         {icon}
-      </span>
+      </div>
       <h3 className="mt-4 text-lg font-semibold">{title}</h3>
       <p className="mx-auto mt-2 max-w-md text-sm text-[var(--muted)]">
         {description}

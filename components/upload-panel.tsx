@@ -3,21 +3,14 @@
 import { useRef, useState, type DragEvent, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import {
-  AlertCircle,
-  CheckCircle2,
-  FileText,
-  LoaderCircle,
-  Presentation,
-  UploadCloud,
-  X,
-} from "lucide-react";
+import { X } from "lucide-react";
 import { MVP_LIMITS, sourceKindFromFilename, SUPPORTED_FILE_ACCEPT } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import { FieldLabel, Input } from "@/components/ui/field";
 import { Alert, Progress } from "@/components/ui/feedback";
 import { IconFrame } from "@/components/ui/icon-frame";
 import { Badge } from "@/components/ui/badge";
+import { CartoonIcon } from "@/components/ui/cartoon-icon";
 
 type FileState = {
   name: string;
@@ -147,6 +140,7 @@ export function UploadPanel() {
         auth: { persistSession: false, autoRefreshToken: false },
       });
 
+      let failedCount = 0;
       for (let index = 0; index < files.length; index += 1) {
         const file = files[index];
         let sourceId: string | null = null;
@@ -188,6 +182,7 @@ export function UploadPanel() {
               : `Ready with ${parsed.source.warnings.length} warning(s)`,
           );
         } catch (error) {
+          failedCount += 1;
           const message = errorMessage(error);
           update(index, "failed", message);
           if (sourceId && !uploadCompleted) {
@@ -198,6 +193,10 @@ export function UploadPanel() {
             }).catch(() => undefined);
           }
         }
+      }
+      if (failedCount === files.length) {
+        setFormError("None of the selected files could be prepared. Fix the file errors above and try again.");
+        return;
       }
       router.push(`/study/${sessionId}`);
     } catch (error) {
@@ -256,7 +255,7 @@ export function UploadPanel() {
           tone={dragging ? "primary" : "neutral"}
           className="mb-5 transition-transform group-hover:-translate-y-0.5 group-hover:bg-[var(--primary-soft)] group-hover:text-[var(--primary-hover)]"
         >
-          <UploadCloud className="h-8 w-8" strokeWidth={1.7} />
+          <CartoonIcon name="upload" size={42} animated={dragging} />
         </IconFrame>
         <span className="font-headline-md text-[20px] font-semibold text-[var(--foreground)]">
           {dragging ? "Drop files to add them" : files.length > 0 ? "Add different files" : "Drop course files here"}
@@ -312,7 +311,7 @@ export function UploadPanel() {
         size="lg"
         className="mt-5 w-full"
       >
-        <UploadCloud aria-hidden="true" className="h-[18px] w-[18px]" strokeWidth={1.8} />
+        <CartoonIcon name="upload" size={20} />
         Upload and continue
       </Button>
       <p className="mt-3 text-center text-[12px] leading-5 text-[var(--faint)]">You will review parsing status before generating the Study Guide.</p>
@@ -339,11 +338,11 @@ function QueueItem({
     <li className="ui-surface flex items-center gap-3 p-3 sm:gap-4">
       <IconFrame size="lg" tone={isPdf ? "destructive" : isImage ? "neutral" : "source"}>
         {isPdf ? (
-          <FileText className="h-5 w-5" strokeWidth={1.8} />
+          <CartoonIcon name="material" size={24} />
         ) : isImage ? (
-          <FileText className="h-5 w-5" strokeWidth={1.8} />
+          <CartoonIcon name="material" size={24} />
         ) : (
-          <Presentation className="h-5 w-5" strokeWidth={1.8} />
+          <CartoonIcon name="guide" size={24} />
         )}
       </IconFrame>
       <div className="min-w-0 flex-1">
@@ -368,20 +367,11 @@ function QueueItem({
         )}
       </div>
       {working ? (
-        <LoaderCircle
-          className="h-5 w-5 shrink-0 animate-spin text-[var(--accent)]"
-          strokeWidth={1.8}
-        />
+        <CartoonIcon name="loading" size={25} animated />
       ) : ready ? (
-        <CheckCircle2
-          className="h-5 w-5 shrink-0 text-[var(--accent)]"
-          strokeWidth={1.8}
-        />
+        <CartoonIcon name="success" size={25} animated />
       ) : state.status === "failed" ? (
-        <AlertCircle
-          className="h-5 w-5 shrink-0 text-[var(--danger)]"
-          strokeWidth={1.8}
-        />
+        <CartoonIcon name="error" size={25} animated />
       ) : (
         <Button
           onClick={onRemove}

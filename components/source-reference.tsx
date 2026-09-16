@@ -1,6 +1,7 @@
 import type { SourceReference as SourceReferenceType } from "@/lib/schemas";
-import { ChevronDown, FileText } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { IconFrame } from "@/components/ui/icon-frame";
+import { CartoonIcon } from "@/components/ui/cartoon-icon";
 
 export function SourceReference({
   reference,
@@ -21,11 +22,7 @@ export function SourceReference({
     <details className="ui-surface ui-surface--source group px-3 py-2.5 transition-[background-color,border-color,box-shadow] hover:border-[#a9cae7] hover:bg-[#dcecff] hover:shadow-[var(--shadow-xs)]">
       <summary className="flex list-none items-center gap-2 text-sm font-semibold text-[var(--source-blue-strong)] transition-colors hover:text-[#19476c]">
         <IconFrame tone="source" size="sm">
-          <FileText
-            aria-hidden="true"
-            className="h-4 w-4"
-            strokeWidth={1.8}
-          />
+          <CartoonIcon name="source" size={23} />
         </IconFrame>
         <span className="min-w-0 flex-1">
           {reference.source_name} · {locator}
