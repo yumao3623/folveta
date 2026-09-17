@@ -58,10 +58,20 @@ describe("Public SEO routes", () => {
   });
 
   it("defines a metadata base and canonical homepage metadata", () => {
-    expect(getSiteUrl().toString()).toBe("http://localhost:3000/");
+    expect(getSiteUrl({}).toString()).toBe("http://localhost:3000/");
+    expect(getSiteUrl({ NEXT_PUBLIC_SITE_URL: "https://folveta.com" }).toString()).toBe("https://folveta.com/");
     expect(homeMetadata.alternates).toEqual(expect.objectContaining({ canonical: "/" }));
     expect(homeMetadata.openGraph).toEqual(expect.objectContaining({ type: "website", url: "/" }));
     expect(homeMetadata.twitter).toEqual(expect.objectContaining({ card: "summary_large_image" }));
+  });
+
+  it("refuses to emit localhost URLs for production or public indexing", () => {
+    expect(() => getSiteUrl({ VERCEL_ENV: "production" })).toThrow(
+      "NEXT_PUBLIC_SITE_URL is required",
+    );
+    expect(() => getSiteUrl({ PRELAUNCH: "false" })).toThrow(
+      "NEXT_PUBLIC_SITE_URL is required",
+    );
   });
 
   it("gives every public trust page its own canonical", () => {
@@ -84,8 +94,13 @@ describe("Public SEO routes", () => {
     }));
     expect(output.sitemap).toBeUndefined();
 
-    const launchOutput = buildRobots({ PRELAUNCH: "false", VERCEL_ENV: "production" });
-    expect(launchOutput.sitemap).toBe("http://localhost:3000/sitemap.xml");
+    const launchEnvironment = {
+      PRELAUNCH: "false",
+      VERCEL_ENV: "production",
+      NEXT_PUBLIC_SITE_URL: "https://folveta.com",
+    };
+    const launchOutput = buildRobots(launchEnvironment);
+    expect(launchOutput.sitemap).toBe("https://folveta.com/sitemap.xml");
   });
 
   it("publishes no discovery URLs before launch", () => {
@@ -93,9 +108,15 @@ describe("Public SEO routes", () => {
   });
 
   it("lists only public, indexable pages after launch", () => {
-    const paths = buildSitemap({ PRELAUNCH: "false", VERCEL_ENV: "production" })
-      .map((entry) => new URL(entry.url).pathname);
+    const launchEnvironment = {
+      PRELAUNCH: "false",
+      VERCEL_ENV: "production",
+      NEXT_PUBLIC_SITE_URL: "https://folveta.com",
+    };
+    const entries = buildSitemap(launchEnvironment);
+    const paths = entries.map((entry) => new URL(entry.url).pathname);
     expect(paths).toEqual(["/", "/about", "/privacy", "/terms", "/pricing", "/study-guide-maker-from-pdf", "/how-to-make-a-study-guide", "/refunds", "/contact"]);
+    expect(entries.every((entry) => entry.url.startsWith("https://folveta.com/"))).toBe(true);
     expect(paths.some((path) => path.startsWith("/study/") || path.startsWith("/api/"))).toBe(false);
   });
 });

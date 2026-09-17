@@ -11,7 +11,7 @@ export function buildRobots(
       disallow: ["/api/", "/study/"],
     },
     ...(!isPrelaunch(environment) && {
-      sitemap: absoluteUrl("/sitemap.xml"),
+      sitemap: absoluteUrl("/sitemap.xml", environment),
     }),
   };
 }

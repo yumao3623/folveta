@@ -8,47 +8,47 @@ export function buildSitemap(
 
   return [
     {
-      url: absoluteUrl("/"),
+      url: absoluteUrl("/", environment),
       changeFrequency: "weekly",
       priority: 1,
     },
     {
-      url: absoluteUrl("/about"),
+      url: absoluteUrl("/about", environment),
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
-      url: absoluteUrl("/privacy"),
+      url: absoluteUrl("/privacy", environment),
       changeFrequency: "monthly",
       priority: 0.4,
     },
     {
-      url: absoluteUrl("/terms"),
+      url: absoluteUrl("/terms", environment),
       changeFrequency: "monthly",
       priority: 0.4,
     },
     {
-      url: absoluteUrl("/pricing"),
+      url: absoluteUrl("/pricing", environment),
       changeFrequency: "monthly",
       priority: 0.5,
     },
     {
-      url: absoluteUrl("/study-guide-maker-from-pdf"),
+      url: absoluteUrl("/study-guide-maker-from-pdf", environment),
       changeFrequency: "monthly",
       priority: 0.8,
     },
     {
-      url: absoluteUrl("/how-to-make-a-study-guide"),
+      url: absoluteUrl("/how-to-make-a-study-guide", environment),
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
-      url: absoluteUrl("/refunds"),
+      url: absoluteUrl("/refunds", environment),
       changeFrequency: "monthly",
       priority: 0.4,
     },
     {
-      url: absoluteUrl("/contact"),
+      url: absoluteUrl("/contact", environment),
       changeFrequency: "monthly",
       priority: 0.3,
     },

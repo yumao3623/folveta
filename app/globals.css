@@ -842,6 +842,8 @@ svg.lucide { stroke-width: 2; }
 .upload-support > p { margin-top: 16px; font-size: 14px; line-height: 1.7; }
 .upload-support__formats { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
 .upload-support__formats span, .upload-support__note { display: flex; gap: 6px; align-items: center; font-size: 13px; font-weight: 600; }
+.upload-support__note a { color: var(--primary-active); text-decoration: underline; text-underline-offset: 3px; }
+.upload-support__note a:hover { color: var(--primary); }
 .upload-support svg { width: 18px; height: 18px; flex-shrink: 0; }
 .upload-support dl { display: flex; gap: 22px; margin-block: 24px; padding-top: 22px; border-top: 2px solid var(--border-soft); font-size: 12px; }
 .upload-support dd { font-size: 14px; font-weight: 700; margin-top: 5px; color: var(--foreground); }

@@ -21,7 +21,7 @@ const FAQ_ITEMS = [
   ["What files can I use with this study guide maker?", `Use PDF, Word, Excel, PowerPoint, and common image files, up to ${formatMegabytes(MVP_LIMITS.maxFileBytes)} each. Free allows ${BILLING_PLANS.free.maxFiles} files and ${BILLING_PLANS.free.maxUnits} source units per Guide; Pro has higher limits. For PDFs, one page is one source unit.`],
   ["Can I try Folveta for free?", `You can begin with the upload workspace or explore the example Guide. The Free account plan includes ${BILLING_PLANS.free.monthlyStudyGuides} successful Study Guides per month. Compare plans and limits on the Pricing page before starting a larger set of files.`],
   ["What does the generated Study Guide include?", "The guide organizes topics into study-priority bands and can include concise explanations, key concepts, definitions, processes, relationships, common confusions, material gaps, and page or slide references when supported."],
-  ["Does the product add facts from the open web?", "No. Guide claims and Quick Check questions are built from the uploaded course material. Unsupported evidence stays visible."],
+  ["How does this AI study guide maker use my files?", "Folveta works as a study guide generator for the course files you choose. It organizes uploaded material into source-linked sections and review priorities without pulling in open-web facts. Verify important claims against the cited page or slide."],
   ["Can it read scanned PDFs or handwriting?", "Common image files are supported through a constrained visual-text extraction step. Scanned or image-only pages inside PDFs, and visual-only charts or diagrams, may still be shown as material gaps when reliable text cannot be extracted."],
   ["What is Quick Check?", "Quick Check is an optional five-question multiple-choice check based on the current Study Guide. Mistakes link back to the relevant guide section for review."],
 ] as const;
@@ -46,7 +46,12 @@ function UploadSupport({ limits }: { limits: BillingLimits }) {
         <span><StudyIcon name="guide" size={24} /> Office</span>
         <span><StudyIcon name="upload" size={24} /> Images</span>
       </div>
-      <p className="upload-support__note"><StudyIcon name="locked" size={24} /> Uploads use private signed storage.</p>
+      <p className="upload-support__note">
+        <StudyIcon name="locked" size={24} />
+        <span>
+          Uploads use private signed storage. <Link href="/privacy">Privacy and retention details</Link>
+        </span>
+      </p>
       <dl>
         <div><dt>{limits.label} files / Guide</dt><dd>Up to {limits.maxFiles}</dd></div>
         <div><dt>Per file</dt><dd>{formatMegabytes(MVP_LIMITS.maxFileBytes)}</dd></div>
