@@ -53,7 +53,8 @@
 ## 2.0 待办
 
 - [x] 读取 GSC 当前可见 sitemap、概况、搜索效果与链接报告，保留报表延迟和样本量限制。
-- [ ] 逐页刷新 Google 选择的 canonical 和收录状态，区分旧电商遗留地址与现有内容；链接报告处理完成后读取引用域名。
+- [x] 检查首页、PDF 页和方法页的 Google 收录及 canonical 状态；结果见当前观测起点。
+- [ ] 继续核对其余公共页与旧电商遗留地址；链接报告处理完成后读取引用域名。
 - [x] 检查三类主要页面的关键词归属与正文内链，确认“方法 → PDF → 示例/上传”路径；补充可引用模板及相关正文入口。
 - [ ] 根据真实查询改进标题、说明、FAQ 和有用的示例，不仅替换关键词。
 - [ ] 核验并推进 [外链清单](外链清单.md) 中相关机会，记录实际提交和落地 URL。
@@ -70,6 +71,9 @@
 | --- | --- |
 | GSC sitemap | 本次读取：成功，最后读取 9 月 17 日，发现 9 页；未重复提交已有成功的 sitemap |
 | 索引概况 | 本次概述仍显示 3 页已收录、38 页未收录；未逐项复查。旧记录截至 9 月 14 日且多数为旧电商地址，不能当作现有 9 页全部失败 |
+| 首页 URL 检查 | 已收录；用户声明与 Google 选择的 canonical 均为 `https://folveta.com/`。Google 显示上次抓取 9 月 3 日 04:12:34，来源仍有旧电商 URL，因此不是当前页面内容的最新抓取证明 |
+| PDF 页 URL 检查 | 已发现、尚未编入索引；发现自 sitemap 和首页，尚无抓取时间，Google canonical 不适用 |
+| 方法页 URL 检查 | 已抓取、尚未编入索引；Googlebot 智能手机版于 9 月 17 日 23:30:18 抓取成功，允许抓取，Google canonical 不适用。该记录早于本次内容更新 |
 | 搜索效果 | 本次读取默认近 3 个月：3 次点击、13 次曝光、CTR 23.1%、平均排名 15.6；图表显示数据范围 8 月 30 日至 9 月 15 日。样本太少，不能作为稳定排名结论 |
 | 可见查询 | `voluta` 2 次曝光、`volixta` 1 次曝光，均 0 点击；未观察到足以指导改写页面的学习工具非品牌词，不围绕这些无关词优化 |
 | 外部链接 | 本次报告提示“正在处理数据，请过 1 天左右再来查看”，导出不可用；这是暂无报告，不等于零反链 |
@@ -78,6 +82,8 @@
 | 实验室性能 | 旧记录：移动端性能 99、LCP 2.1 秒、CLS 0；桌面性能 100，本次未重跑。见 [PageSpeed 报告](https://pagespeed.web.dev/analysis/https-folveta-com/i8t7uw78vb?form_factor=mobile) |
 | 真实用户性能 | 本次概况移动和桌面核心网页指标均显示无数据，不能认定通过或失败 |
 | 线上响应 | 本次 `SEO_BASE_URL=https://folveta.com npm run test:seo:responses` 通过：9 个公共页、元数据、缓存隔离、私有 API、404、重定向、sitemap 与 robots |
+
+本批页面改动在提交 `b2703d5` 发布，已核对远程 main、对应 Vercel 成功状态与线上新内容。`npm run check`（253 项单元测试、3 项 Workflow 测试）、33 项浏览器测试及独立公开构建 SEO 检查通过；11 项需额外环境的测试和 3 项按设备跳过的浏览器测试不计作通过。Chrome 实测 PDF 正文链接可到达模板片段；这些检查不代表已被 Google 重新抓取或收录。
 
 入口：[GSC sitemap](https://search.google.com/search-console/sitemaps?resource_id=https%3A%2F%2Ffolveta.com%2F)、[索引覆盖](https://search.google.com/search-console/index?resource_id=https%3A%2F%2Ffolveta.com%2F)。
 
