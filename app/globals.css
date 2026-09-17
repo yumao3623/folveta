@@ -1567,7 +1567,7 @@ a.study-map__item:active { box-shadow: 0 1px 0 var(--border); }
 
 .public-page .public-page__art > .asset-illustration {
   max-width: 225px;
-  animation: public-art-in 650ms var(--ease-emphasized) both;
+  animation: none;
 }
 
 .public-page .public-page__content {
@@ -1661,7 +1661,8 @@ a.study-map__item:active { box-shadow: 0 1px 0 var(--border); }
 
 .duo-hero__illustration {
   width: min(420px, 88%);
-  animation: public-art-in 650ms var(--ease-emphasized) both;
+  /* The LCP illustration is visible immediately; interaction motion stays below. */
+  animation: none;
 }
 
 .duo-orbit {

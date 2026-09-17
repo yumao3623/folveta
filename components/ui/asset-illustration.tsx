@@ -56,8 +56,8 @@ export function AssetIllustration({
         width={800}
         height={540}
         sizes={sizes}
-        loading={priority ? "eager" : "lazy"}
-        fetchPriority={priority ? "high" : undefined}
+        preload={priority}
+        loading={priority ? undefined : "lazy"}
         className="asset-illustration__image"
       />
     </span>
