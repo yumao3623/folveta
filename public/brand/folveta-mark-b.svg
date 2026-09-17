@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
-  <title id="title">Folveta mark B</title>
-  <desc id="desc">A focused study guide with a bookmark</desc>
-  <rect width="96" height="96" rx="24" fill="#F0F6F1"/>
-  <path d="M18 27c10-5.8 20.7-5.5 30 1v43c-9.3-6.5-20-6.8-30-1V27Z" fill="#172019"/>
-  <path d="M78 27c-10-5.8-20.7-5.5-30 1v43c9.3-6.5 20-6.8 30-1V27Z" fill="#08783E"/>
-  <path d="M59 25h10v24l-5-4-5 4V25Z" fill="#E8A07D"/>
-  <path d="M25 38h16M25 46h13M55 38h15M55 46h11" stroke="#F7FAF7" stroke-linecap="round" stroke-width="3"/>
-</svg>

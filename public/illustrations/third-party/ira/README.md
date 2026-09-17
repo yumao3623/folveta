@@ -1,45 +1,11 @@
-# [Ira Design - Build your own amazing illustrations](https://www.creative-tim.com/ira-design)
+# IRA Design 素材来源
 
-![alt text](https://raw.githubusercontent.com/creativetimofficial/public-assets/master/ira-design/ira-design.gif)
+Folveta 的学生场景插画使用 [IRA Design](https://github.com/ira-design/ira-illustrations) 的轮廓人物组件，并组合 Folveta 自有学习物件与配色。
 
-With IRA Design, you can create amazing illustrations by using hand-drawn sketch components. We proudly offer a cool selection of 5 gradients and the ability to use ai., svg. or png. formats.
-IRA Design helps you scale your final illustrations and bring them to life. Download it for free under MIT license and use it on commercial or personal projects. Choose your colors, objects, formats and scale your images without any quality change.
+- 授权：MIT，见同目录 [LICENSE.md](LICENSE.md)；保留完整版权与许可原文。
+- 使用的源组件：`scripts/assets/vendor/ira/outline/characters/`。
+- 构建脚本：`scripts/assets/build-student-illustrations.mjs`。
+- 生成文件及替代文本清单：`public/illustrations/student-illustrations.json`。
+- 页面使用入口：`components/ui/asset-illustration.tsx`。
 
-## Components:
-
-+ 36 characters (19 Gradient + 17 Outline)
-+ 52 objects (26 Gradient + 26 Outline)
-+ 15 backgrounds
-
-## Links:
-
-+ [Live Preview](https://iradesign.io/)
-
-## Download:
-
-+ [Download PNG](https://github.com/ira-design/ira-illustrations/blob/PNG/PNG.zip?raw=true)
-+ [Download SVG](https://github.com/ira-design/ira-illustrations/blob/SVG/SVG.zip?raw=true)
-+ [Download PNG+SVG](https://github.com/ira-design/ira-illustrations/blob/ALL/PNG%2BSVG.zip/?raw=true)
-
-
-## Useful Links
-
-More products from Creative Tim: <http://www.creative-tim.com/products>
-
-Tutorials: <https://www.youtube.com/channel/UCVyTG4sCw-rOvB9oHkzZD1w>
-
-Freebies: <http://www.creative-tim.com/products>
-
-Affiliate Program (earn money): <http://www.creative-tim.com/affiliates/new>
-
-Social Media:
-
-Twitter: <https://twitter.com/CreativeTim>
-
-Facebook: <https://www.facebook.com/CreativeTim>
-
-Dribbble: <https://dribbble.com/creativetim>
-
-Google+: <https://plus.google.com/+CreativetimPage>
-
-Instagram: <https://instagram.com/creativetimofficial>
+调整插画时保留授权信息并同步生成清单。仓库保留所用源组件，以便在本地重新生成素材。

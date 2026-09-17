@@ -1,87 +1,64 @@
 # Folveta
 
-Status: **Current repository overview; production-specific claims defer to dated deployment records.**
-Last updated: 2026-09-11
+Folveta 是面向学生的 AI 学习指南网站，将课程资料整理为有来源引用、学习重点和覆盖缺口的 Study Guide，并提供可选的五题 Quick Check。
 
-Folveta is a Study Guide Maker that turns supported course materials into a structured, source-grounded Study Guide with an optional five-question Quick Check.
+网站：[folveta.com](https://folveta.com) · 当前版本：**1.0.0** · 基线日期：**2026-09-18**
 
-Current implemented loop:
+## 版本约定
 
-`Upload PDF/Word/Excel/PowerPoint/image -> parse -> generate Study Guide -> optional Quick Check -> return to relevant Guide sections`
+截至本次整理的全部功能、界面和既有 SEO 实现，统一归入 **1.0**。后续内链、外链、内容与其他 SEO 优化，从 **2.0 阶段**开始；当前版本号仍为 1.0.0。
 
-The repository is now governed by the v5 documents. Start with [docs/README.md](docs/README.md), then read:
+仓库只维护当前说明和接下来要做的事。旧阶段计划、研究稿和逐次验收记录不再单独保存；需要追溯时使用 Git 历史。代码中的 `generation-v2`、数据库迁移编号和数据结构版本属于内部兼容标识，与网站版本分开。
 
-- [Product decisions](docs/product/decisions.md)
-- [Current product context](docs/product/product-context.md)
-- [v5 master roadmap](docs/product/v5-master-roadmap.md)
-- [V2 release baseline](docs/product/release-baseline.md)
-- [Current technical architecture](docs/architecture/technical-architecture.md)
-- [Repository structure](docs/architecture/repository-structure.md)
-- [Folveta SEO architecture](docs/architecture/seo-architecture.md)
+## 从这里开始
 
-## Current status
+| 文档 | 用途 |
+| --- | --- |
+| [版本基线](docs/版本基线.md) | 1.0 包含什么、产品边界、2.0 范围 |
+| [开发维护](docs/开发维护.md) | 本地运行、配置、数据流程、测试、部署与回滚 |
+| [SEO 优化](docs/SEO优化.md) | 当前 SEO 配置、关键词归属、内链与后续工作 |
+| [外链清单](docs/外链清单.md) | 已有候选、提交材料与实际进展 |
+| [设计规范](DESIGN.md) | 页面风格、组件、图标和素材来源 |
 
-Implemented:
+## 本地运行
 
-- Landing/upload, private multi-format parsing, source-grounded Guide generation, Study Guide workspace, Quick Check, and Results/Learning Loop.
-- Durable Generation v1 plus a release-candidate Generation v2 path with multi-topic artifacts, partial-delivery support, dual reads, billing admission, and one release switch.
-- Anonymous seven-day session access plus Supabase email/password Auth, anonymous claim, password recovery, persistent My Guides, Library, Search, Profile, and account deletion.
-- Paddle Live Checkout, signed/idempotent webhooks, Customer Portal, Free/Pro entitlements, and server-side usage enforcement.
-- Daily retention cleanup, distributed rate limiting, private-route `noindex`, and eight approved public sitemap routes including the PDF-focused landing page.
-- Supabase Postgres/private Storage, an OpenAI-compatible structured model pipeline, and automated parser, schema, workflow, billing, ownership, UI, and SEO coverage.
-
-Open work:
-
-- Apply and verify the pending Generation v2 migrations, run an isolated real-provider release check, then enable V2 for all new generation at formal launch; retire Generation v1 only after a rollback window.
-- Expand reusable browser E2E, visual regression, cross-browser, accessibility, and performance coverage.
-- Complete the post-launch 24-hour/7-day monitoring review; backup/PITR remains an accepted operator risk.
-- Google indexing and field Core Web Vitals remain external, asynchronous signals rather than repository-complete work.
-
-## Run locally
-
-Requirements: Node.js 22+ and a Supabase project for real upload/generation. The fixture Guide at `/study/demo` works without Supabase/model credentials.
+需要 Node.js 22 或更高版本，以及 npm。
 
 ```bash
-npm install
+npm ci
+# 仅首次配置时执行；已有 .env.local 时不要覆盖
 cp .env.example .env.local
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+打开 [本地网站](http://localhost:3000)。`/study/demo` 和 `/study/demo/quick-check` 使用演示数据；真实上传、生成、账户和支付需要对应服务配置，见 [开发维护](docs/开发维护.md)。
 
-Apply every ordered migration under `supabase/migrations/` through the latest filename with the official Supabase CLI. Do not execute repository migrations ad hoc through the service-role client or dashboard SQL editor.
-
-## Environment
-
-See `.env.example` for:
-
-- canonical site origin;
-- Supabase public/server credentials and private Storage bucket;
-- OpenAI-compatible endpoint/key and task model aliases;
-- prompt/schema versions and anonymous session retention;
-- Workflow and Generation v2 rollout controls;
-- Paddle environment, catalog, webhook, and entitlement settings;
-- production indexing, retention, reconciliation, and internal-job controls.
-
-Model names remain configuration, not business-logic literals. Do not expose the Supabase service-role key or model API key to the browser.
-
-## Current input limits
-
-Limits are split between `lib/config.ts` and `lib/billing/config.ts`:
-
-- 25 MB per file;
-- Free: 3 files, 75 combined source units, and 150,000 normalized extracted characters per Guide;
-- Folveta Pro server policy: 10 files, 300 combined source units, and 600,000 normalized extracted characters per Guide; the current upload UI still caps a Guide at 5 files, so the effective file limit through that UI is currently 5;
-- PDF, DOCX, XLSX, PPTX, legacy Office, and common image inputs; `.ppt` uses local slide-text extraction, while legacy `.doc/.xls` use controlled file-input extraction when local structural parsing is unavailable.
-
-Common image files are accepted through constrained visual-text extraction. Scanned PDF pages, handwriting, and visual-only charts/diagrams may remain visible gaps when reliable text cannot be extracted. Audio/video/URL input, pasted text, and open-web research are not currently supported.
-
-## Verification
+## 常用检查
 
 ```bash
 npm run check
+npm run start -- --hostname 127.0.0.1 --port 3122
 ```
 
-`npm run check` runs lint, typecheck, ordinary tests, Workflow tests, and the production build in sequence.
+`check` 依次执行 lint、类型检查、单元/契约测试、Workflow 测试和生产构建。启动上面的生产模式服务后，在另一个终端执行桌面与移动端浏览器回归：
 
-Read `AGENTS.md` and the relevant Next.js 16 documentation under `node_modules/next/dist/docs/` before changing application code.
+```bash
+PLAYWRIGHT_BASE_URL=http://127.0.0.1:3122 npm run test:browser
+```
+
+不指定地址时，浏览器测试会自动启动 3100 端口开发服务；开发模式可能产生额外身份请求，完整回归使用生产模式。真实模型和数据库测试需要另行配置，不能把默认测试通过视为线上服务已验收。
+
+## 仓库结构
+
+| 位置 | 内容 |
+| --- | --- |
+| `app/` | 网站页面、API、SEO 文件和全局样式 |
+| `components/` | 上传、阅读、测验、工作区及通用组件 |
+| `lib/` | 生成、解析、账户、支付、SEO 与演示数据 |
+| `public/` | 正在维护的品牌素材、插画、图标及站点验证文件 |
+| `supabase/` | 数据库迁移与本地配置 |
+| `scripts/` | 素材构建、测试数据和验收工具 |
+| `tests/` | 单元、契约、工作流和浏览器测试 |
+| `docs/` | 四份中文维护与优化文档 |
+
+依赖版本以 `package-lock.json` 为准。修改前阅读 [AGENTS.md](AGENTS.md)；说明文档使用中文，面向网站用户的内容保持英文。
