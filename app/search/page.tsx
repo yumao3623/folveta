@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/feedback";
 import { Input } from "@/components/ui/field";
 import { buttonClassName } from "@/components/ui/styles";
-import { CartoonIcon } from "@/components/ui/cartoon-icon";
+import { StudyIcon } from "@/components/ui/study-icon";
 import { AssetIllustration } from "@/components/ui/asset-illustration";
 import { SEARCH_QUERY_MAX_LENGTH, SEARCH_QUERY_MIN_LENGTH, searchOptionsSchema } from "@/lib/schemas/library-search";
 import { getCurrentUser } from "@/lib/server/auth";
@@ -16,9 +16,9 @@ export const metadata: Metadata = { title: "Search your knowledge", robots: { in
 
 function firstValue(value: string | string[] | undefined) { return Array.isArray(value) ? value[0] : value; }
 function resultIcon(type: KnowledgeSearchResult["type"]) {
-  if (type === "guide") return <CartoonIcon name="guide" size={25} />;
-  if (type === "topic") return <CartoonIcon name="lightbulb" size={25} />;
-  return <CartoonIcon name="source" size={25} />;
+  if (type === "guide") return <StudyIcon name="guide" size={25} />;
+  if (type === "topic") return <StudyIcon name="lightbulb" size={25} />;
+  return <StudyIcon name="source" size={25} />;
 }
 function resultLabel(type: KnowledgeSearchResult["type"]) { return type[0].toUpperCase() + type.slice(1); }
 function searchHref(q: string, page: number) { return `/search?${new URLSearchParams({ q, page: String(page) }).toString()}`; }
@@ -52,21 +52,21 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       <div className="mx-auto w-full max-w-[880px]">
         <header className="border-b border-[var(--border)] pb-7">
           <p className="text-label-sm text-[var(--primary)]">Private workspace search</p>
-          <h1 className="mt-2 font-display text-[36px] font-extrabold leading-tight text-[var(--foreground)] sm:text-[44px]">Search your knowledge</h1>
+          <h1 className="mt-2 font-display text-[36px] font-bold leading-tight text-[var(--foreground)] sm:text-[44px]">Search your knowledge</h1>
           <p className="mt-3 max-w-2xl text-[15px] leading-6 text-[var(--muted)]">Find Guides, topics, filenames, and source text owned by your account.</p>
         </header>
         <form action="/search" className="mt-6" role="search">
           <label htmlFor="knowledge-query" className="sr-only">Search your Guides and source materials</label>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <div className="relative min-w-0 flex-1"><CartoonIcon name="search" size={22} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2" /><Input id="knowledge-query" name="q" type="search" defaultValue={rawQuery} minLength={SEARCH_QUERY_MIN_LENGTH} maxLength={SEARCH_QUERY_MAX_LENGTH} placeholder="Search Guides, topics, and sources" className="pl-11" state={validationMessage ? "error" : "default"} aria-describedby={validationMessage ? "search-error" : undefined} /></div>
-            <button type="submit" className={buttonClassName()}><CartoonIcon name="search" size={20} /> Search</button>
+            <div className="relative min-w-0 flex-1"><StudyIcon name="search" size={22} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2" /><Input id="knowledge-query" name="q" type="search" defaultValue={rawQuery} minLength={SEARCH_QUERY_MIN_LENGTH} maxLength={SEARCH_QUERY_MAX_LENGTH} placeholder="Search Guides, topics, and sources" className="pl-11" state={validationMessage ? "error" : "default"} aria-describedby={validationMessage ? "search-error" : undefined} /></div>
+            <button type="submit" className={buttonClassName()}><StudyIcon name="search" size={20} /> Search</button>
           </div>
           {validationMessage && <p id="search-error" role="alert" className="mt-2 text-[13px] text-[var(--destructive)]">{validationMessage}</p>}
         </form>
 
         <section className="mt-7" aria-live="polite" aria-label="Knowledge search results">
           {!rawQuery ? (
-            <EmptyState icon={<CartoonIcon name="search" size={36} />} title="Search your workspace" description="Use a Guide title, topic, concept, source filename, or phrase from your uploaded materials." />
+            <EmptyState icon={<StudyIcon name="search" size={22} />} title="Search your workspace" description="Use a Guide title, topic, concept, source filename, or phrase from your uploaded materials." />
           ) : validationMessage ? null : result?.results.length ? (
             <><div className="mb-4 flex items-center justify-between gap-4"><p className="text-[13px] text-[var(--muted)]">{result.total} result{result.total === 1 ? "" : "s"}</p><p className="text-[12px] text-[var(--muted)]">Page {result.page}</p></div><div className="ui-surface ui-surface--base p-5 sm:p-6">{result.results.map((item) => <SearchResultRow key={`${item.type}-${item.id}`} result={item} />)}</div></>
           ) : (

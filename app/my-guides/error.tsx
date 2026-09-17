@@ -1,6 +1,6 @@
 "use client";
 
-import { CartoonIcon } from "@/components/ui/cartoon-icon";
+import { StudyIcon } from "@/components/ui/study-icon";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
@@ -11,7 +11,7 @@ export default function MyGuidesError({ reset }: { error: Error & { digest?: str
       <div className="mx-auto max-w-xl py-12">
         <Alert tone="destructive" icon={false}>
           <div className="flex items-start gap-4">
-            <CartoonIcon name="error" size={48} animated />
+            <StudyIcon name="error" size={24} animated />
             <div><h1 className="text-xl font-bold">My Guides could not load</h1><p className="mt-2 text-sm leading-6">Your data was not changed. Retry the private list request.</p></div>
           </div>
         </Alert>

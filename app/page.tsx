@@ -1,22 +1,25 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Check, ChevronDown, Play } from "lucide-react";
 import { AssetIllustration } from "@/components/ui/asset-illustration";
-import { CartoonIcon } from "@/components/ui/cartoon-icon";
+import { StudyIcon } from "@/components/ui/study-icon";
 import { SiteFooter } from "@/components/site-footer";
 import { UploadPanel } from "@/components/upload-panel";
 import { StudyLoopPreview } from "@/components/study-loop-preview";
 import { RecentGuides } from "@/components/recent-guides";
-import { BrandMark } from "@/components/brand-mark";
-import { AuthNavigation } from "@/lib/auth-navigation";
+import { SiteHeader } from "@/components/site-header";
 import { MVP_LIMITS, formatMegabytes } from "@/lib/config";
 import { absoluteUrl, SITE_NAME } from "@/lib/site";
+import { publicPageMetadata } from "@/lib/seo";
+import { StructuredData } from "@/components/structured-data";
+import { BILLING_PLANS } from "@/lib/billing/config";
+import { getCurrentUser } from "@/lib/server/auth";
+import { getBillingLimitsForUser, type BillingLimits } from "@/lib/server/billing";
 
-const title = "Folveta | Study Guide Maker";
-const description = "Turn course PDFs, Word, Excel, PowerPoint, and image materials into a clear, source-grounded study guide with priorities, key concepts, and an optional Quick Check.";
-export const metadata: Metadata = { title: { absolute: title }, description, alternates: { canonical: "/" }, openGraph: { type: "website", url: "/", siteName: SITE_NAME, title, description }, twitter: { card: "summary_large_image", title, description } };
+const description = "Make a study guide from PDFs, notes, and slides. Organize key concepts, check source references, and review with an optional Quick Check.";
+export const metadata = publicPageMetadata({ title: "Study Guide Maker for Course Files", description, path: "/" });
 const FAQ_ITEMS = [
-  ["What files can I use with this study guide maker?", `The current MVP accepts up to ${MVP_LIMITS.maxFiles} course files, up to ${formatMegabytes(MVP_LIMITS.maxFileBytes)} each and ${MVP_LIMITS.maxTotalUnits} source units combined.`],
+  ["What files can I use with this study guide maker?", `Use PDF, Word, Excel, PowerPoint, and common image files, up to ${formatMegabytes(MVP_LIMITS.maxFileBytes)} each. Free allows ${BILLING_PLANS.free.maxFiles} files and ${BILLING_PLANS.free.maxUnits} source units per Guide; Pro has higher limits. For PDFs, one page is one source unit.`],
+  ["Can I try Folveta for free?", `You can begin with the upload workspace or explore the example Guide. The Free account plan includes ${BILLING_PLANS.free.monthlyStudyGuides} successful Study Guides per month. Compare plans and limits on the Pricing page before starting a larger set of files.`],
   ["What does the generated Study Guide include?", "The guide organizes topics into study-priority bands and can include concise explanations, key concepts, definitions, processes, relationships, common confusions, material gaps, and page or slide references when supported."],
   ["Does the product add facts from the open web?", "No. Guide claims and Quick Check questions are built from the uploaded course material. Unsupported evidence stays visible."],
   ["Can it read scanned PDFs or handwriting?", "Common image files are supported through a constrained visual-text extraction step. Scanned or image-only pages inside PDFs, and visual-only charts or diagrams, may still be shown as material gaps when reliable text cannot be extracted."],
@@ -25,62 +28,52 @@ const FAQ_ITEMS = [
 
 function JsonLd() {
   const jsonLd = { "@context": "https://schema.org", "@graph": [
-    { "@type": "WebApplication", name: SITE_NAME, url: absoluteUrl("/"), description, applicationCategory: "EducationalApplication", operatingSystem: "Web" },
-    { "@type": "FAQPage", mainEntity: FAQ_ITEMS.map(([question, answer]) => ({ "@type": "Question", name: question, acceptedAnswer: { "@type": "Answer", text: answer } })) },
+    { "@type": "WebSite", "@id": absoluteUrl("/#website"), name: SITE_NAME, url: absoluteUrl("/"), inLanguage: "en" },
+    { "@type": "WebApplication", "@id": absoluteUrl("/#application"), name: SITE_NAME, url: absoluteUrl("/"), description, applicationCategory: "EducationalApplication", operatingSystem: "Web" },
+    { "@type": "WebPage", "@id": absoluteUrl("/#webpage"), name: "Study Guide Maker for Course Files", url: absoluteUrl("/"), description, isPartOf: { "@id": absoluteUrl("/#website") }, mainEntity: { "@id": absoluteUrl("/#application") } },
   ] };
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />;
+  return <StructuredData data={jsonLd} />;
 }
 
-function Topbar() {
-  return (
-    <header className="duo-topbar">
-      <BrandMark />
-      <span className="duo-topbar__center">Study Guide Maker</span>
-      <nav className="duo-topbar__nav" aria-label="Primary navigation">
-        <Link href="/study/demo" className="ui-button ui-button--secondary ui-button--sm">Example guide</Link>
-        <Link href="/about" className="duo-topbar__link">About</Link>
-        <AuthNavigation />
-      </nav>
-    </header>
-  );
-}
-
-function UploadSupport() {
+function UploadSupport({ limits }: { limits: BillingLimits }) {
   return (
     <aside className="upload-support">
       <AssetIllustration asset="source" sizes="160px" />
       <h3>The materials remain the source of truth.</h3>
       <p>Folveta does not silently supplement your guide with open-web facts or predict your exam.</p>
       <div className="upload-support__formats">
-        <span><CartoonIcon name="material" size={24} /> PDF</span>
-        <span><CartoonIcon name="guide" size={24} /> Office</span>
-        <span><CartoonIcon name="upload" size={24} /> Images</span>
+        <span><StudyIcon name="material" size={24} /> PDF</span>
+        <span><StudyIcon name="guide" size={24} /> Office</span>
+        <span><StudyIcon name="upload" size={24} /> Images</span>
       </div>
-      <p className="upload-support__note"><CartoonIcon name="locked" size={24} /> Uploads use private signed storage.</p>
+      <p className="upload-support__note"><StudyIcon name="locked" size={24} /> Uploads use private signed storage.</p>
       <dl>
-        <div><dt>Files</dt><dd>Up to {MVP_LIMITS.maxFiles}</dd></div>
+        <div><dt>{limits.label} files / Guide</dt><dd>Up to {limits.maxFiles}</dd></div>
         <div><dt>Per file</dt><dd>{formatMegabytes(MVP_LIMITS.maxFileBytes)}</dd></div>
-        <div><dt>Combined</dt><dd>{MVP_LIMITS.maxTotalUnits} units</dd></div>
+        <div><dt>Combined</dt><dd>{limits.maxUnits} units</dd></div>
       </dl>
+      <Link href="/pricing" className="text-link">Compare plans and limits <ArrowRight /></Link>
       <Link href="/study-guide-maker-from-pdf" className="text-link">See the PDF study guide workflow <ArrowRight /></Link>
     </aside>
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const user = await getCurrentUser();
+  const limits = await getBillingLimitsForUser(user?.id ?? null);
   return (
     <>
       <JsonLd />
-      <Topbar />
+      <SiteHeader />
       <main className="landing-main">
         <section className="duo-hero" id="overview">
           <div className="duo-hero__copy">
             <p className="eyebrow">Study Guide Maker for real course material</p>
-            <h1>Make your notes<br className="hero-desktop-break" /> easier to study.</h1>
-            <p className="duo-hero__lede">Upload course files and get a clear, source-linked Study Guide with the topics worth reviewing first.</p>
+            <h1>Study Guide Maker<br className="hero-desktop-break" /> for your course files.</h1>
+            <p className="duo-hero__lede">Turn PDFs, lecture notes, and slides into a clear, source-linked Study Guide with the topics worth reviewing first.</p>
             <div className="duo-hero__actions">
               <a href="#upload" className="ui-button ui-button--primary ui-button--lg">
-                <CartoonIcon name="upload" size={24} /> Build my Guide
+                <StudyIcon name="upload" size={24} /> Build my Guide
               </a>
               <Link href="/study/demo" className="ui-button ui-button--secondary ui-button--lg">
                 <Play aria-hidden="true" /> See how it works
@@ -96,8 +89,6 @@ export default function HomePage() {
             <div className="duo-orbit duo-orbit--one" />
             <div className="duo-orbit duo-orbit--two" />
             <AssetIllustration asset="material" priority sizes="(max-width: 767px) 75vw, 440px" className="duo-hero__illustration" />
-            <span className="hero-doodle hero-doodle--star" aria-hidden="true">✦</span>
-            <span className="hero-doodle hero-doodle--plus" aria-hidden="true">+</span>
           </div>
         </section>
         <section className="landing-section landing-section--preview">
@@ -109,11 +100,22 @@ export default function HomePage() {
             <p>Add readable course files, review the queue, then continue to generation.</p>
           </div>
           <div className="upload-layout">
-            <UploadPanel />
-            <UploadSupport />
+            <UploadPanel maxFiles={limits.maxFiles} />
+            <UploadSupport limits={limits} />
           </div>
         </section>
         <div className="landing-section"><RecentGuides /></div>
+        <section className="landing-section landing-section--workflow">
+          <div className="section-heading">
+            <div><p className="eyebrow">From material to review</p><h2>Build a guide you can check.</h2></div>
+            <p>Keep the original material close as you organize, review, and practise.</p>
+          </div>
+          <ol className="mt-7 grid gap-8 md:grid-cols-3">
+            <li><h3 className="text-xl font-bold">1. Start with your sources</h3><p className="mt-3 leading-7 text-[var(--text-secondary)]">Add the files for the topic you are studying. For a handout or reading, follow the <Link href="/study-guide-maker-from-pdf" className="text-link">PDF to Study Guide workflow</Link>.</p></li>
+            <li><h3 className="text-xl font-bold">2. Review the structure</h3><p className="mt-3 leading-7 text-[var(--text-secondary)]">Check key concepts, priorities, and source references. Our guide to <Link href="/how-to-make-a-study-guide" className="text-link">making a useful study guide</Link> shows what to keep and what to verify.</p></li>
+            <li><h3 className="text-xl font-bold">3. Find your next review task</h3><p className="mt-3 leading-7 text-[var(--text-secondary)]">Try the optional Quick Check and return to the section behind a mistake. Read <Link href="/about" className="text-link">Folveta&apos;s product boundaries</Link> before relying on the result.</p></li>
+          </ol>
+        </section>
         <section className="landing-section landing-section--faq">
           <div className="section-heading">
             <div><p className="eyebrow">Questions before you upload</p><h2>A few useful boundaries.</h2></div>

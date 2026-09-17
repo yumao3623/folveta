@@ -1,9 +1,11 @@
 # Folveta SEO v2 Architecture
 
 Status: **Current project-specific SEO architecture**  
-Last updated: 2026-09-02
+Last updated: 2026-09-17
 Reusable standard: `docs/architecture/SEO_GUIDE.md`
 Canonical production origin: `https://folveta.com`
+
+Current status is recorded in [`../operations/seo-gsc-review-2026-09-17.md`](../operations/seo-gsc-review-2026-09-17.md): authenticated property verification and sitemap success rechecked; 8 live sitemap URLs / 3 indexed; no manual actions or security issues; Terms and PDF pass GSC Live Test. The approved method page is local pending publication (9 intended public URLs after deploy). The cutover statements below are historical, not a claim that all URLs are indexed.
 
 ## 0. Public launch cutover record (2026-09-02)
 
@@ -42,10 +44,12 @@ Do not turn the homepage into a generic workspace dashboard. Persistent workspac
 | --- | --- | --- | --- | --- |
 | Study Guide Maker | `/` | Usable product/tool page | Yes | Primary owner; real upload near first viewport |
 | Folveta brand | `/` | Brand/product homepage | Yes | Homepage also owns brand navigation intent |
+| PDF to study guide | `/study-guide-maker-from-pdf` | Focused product task page | Yes | Live; preserve PDF-specific ownership |
+| How to make a study guide | `/how-to-make-a-study-guide` | Practical instructional page | Yes after publication | Approved September 17; steps, synthetic example, checklist; does not own Study Guide Maker |
 | What Folveta does / product boundaries | `/about` | Trust/about page | Yes | Distinct trust intent; not keyword clone |
 | Folveta privacy / data handling | `/privacy` | Legal/trust page | Yes | Must match Auth, model, storage, analytics, billing reality |
 | Folveta terms | `/terms` | Legal page | Yes | Must match paid service and refund/cancellation reality |
-| Folveta pricing | `/pricing` only if Phase 3 approves a stable public offer | Pricing/product page | Conditional | Do not create until real plans/limits exist |
+| Folveta pricing | `/pricing` | Pricing/product page | Yes | Existing public Free/Pro offer |
 | Demo Guide / Quick Check | `/study/demo...` | Product demonstration | No by default | Useful internal proof; retain `noindex` unless a later distinct-public-demo decision changes it |
 | User Guides / Recent / Library | Future authenticated workspace routes | Private product pages | No | Never in sitemap |
 | Knowledge search | Future authenticated search route | Private search results | No | Prevent crawl spaces and private excerpt leakage |
@@ -62,7 +66,7 @@ Implemented:
 - Unique canonical paths for `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/refunds`, and `/contact`.
 - `metadataBase` derived from `NEXT_PUBLIC_SITE_URL` with localhost fallback.
 - Open Graph/Twitter metadata and generated 1200x630 images.
-- Homepage `WebApplication` and visible-content-backed `FAQPage` JSON-LD.
+- Homepage `WebSite`, `WebApplication`, and `WebPage` JSON-LD; supporting page and visible breadcrumb schema. FAQPage was removed in the September 17 local update after Google's FAQ rich-result retirement; visible FAQs remain.
 - `robots.ts` and `sitemap.ts`.
 - Private study and demo routes permanently use `noindex,nofollow`.
 - Fail-closed `PRELAUNCH` handling for public metadata, robots, sitemap, and every Vercel Preview.
@@ -145,7 +149,7 @@ Launch site:
 
 - Keep `WebApplication` only while the homepage visibly presents a usable web application.
 - Use stable Folveta name/URL/description and match visible capability/limit facts.
-- Keep FAQ structured data only for visible FAQs and current eligibility; it is not a ranking entitlement.
+- Keep FAQs visible where they help the task. Google retired FAQ rich results in May 2026; Folveta does not add FAQPage or promise a FAQ search enhancement.
 - Add `Offer`/price data only after billing plans are real, public, and consistent.
 - Never add aggregate ratings, reviews, authors, organization details, or availability claims that are not real.
 - Social images should represent the actual product/output and remain readable when cropped.

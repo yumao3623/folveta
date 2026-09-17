@@ -69,7 +69,7 @@ Implemented UI milestones are UI-1 Study Guide Workspace, UI-2 Landing / Upload,
 
 ## Current UI context
 
-The Academic Editorial direction remains useful: Bricolage Grotesque headings, Geist UI/body type, paper-like surfaces, source-blue references, yellow study highlights, restrained borders, and a document-oriented workspace.
+The Academic Editorial direction remains useful: Source Sans 3 across headings and UI, paper-like surfaces, source-blue references, restrained borders, and a document-oriented workspace. Student illustrations may use the documented Folveta accent palette; functional icons remain single-color Lucide glyphs through `StudyIcon`.
 
 Current strengths:
 

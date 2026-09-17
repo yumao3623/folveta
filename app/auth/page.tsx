@@ -30,7 +30,7 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
       story={(
         <>
           <p className="mt-6 text-label-sm text-[var(--primary)]">A calmer way to study</p>
-          <h2 className="mx-auto mt-3 max-w-[520px] text-[clamp(1.6rem,3.2vw,2.35rem)] font-extrabold leading-[1.12] tracking-[-0.035em] text-[var(--foreground)] lg:mx-0">
+          <h2 className="mx-auto mt-3 max-w-[520px] text-[clamp(1.6rem,3.2vw,2.35rem)] font-bold leading-[1.12] tracking-[-0.022em] text-[var(--foreground)] lg:mx-0">
             Turn course material into a plan you can actually use.
           </h2>
           <p className="mx-auto mt-4 max-w-[460px] text-[15px] leading-7 text-[var(--text-secondary)] lg:mx-0">

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { LogIn } from "lucide-react";
-import { CartoonIcon } from "@/components/ui/cartoon-icon";
+import { StudyIcon } from "@/components/ui/study-icon";
 import { buttonClassName } from "@/components/ui/styles";
 import { getCurrentUser } from "@/lib/server/auth";
 
@@ -13,7 +13,7 @@ export async function AuthNavigation({ nextPath }: { nextPath?: string } = {}) {
         className={buttonClassName({ variant: "ghost", size: "sm" })}
         aria-label="Open My Guides"
       >
-        <CartoonIcon name="guide" size={24} />
+        <StudyIcon name="guide" size={24} />
         <span className="hidden md:inline">My Guides</span>
       </Link>
       <Link
@@ -22,7 +22,7 @@ export async function AuthNavigation({ nextPath }: { nextPath?: string } = {}) {
         aria-label="Open Profile"
         title="Profile"
       >
-        <CartoonIcon name="profile" size={24} />
+        <StudyIcon name="profile" size={24} />
         <span className="hidden md:inline">Profile</span>
       </Link>
     </>

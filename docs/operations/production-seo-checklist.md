@@ -128,6 +128,8 @@ AI Workflow rollout update (2026-08-31): Production `main@613dbeb` is `READY`; t
 
 ## K. Search Console and post-launch monitoring
 
+September 17 authenticated recheck: see [`seo-gsc-review-2026-09-17.md`](seo-gsc-review-2026-09-17.md) for the current 8-URL sitemap, actual 3-URL indexed list, historical commerce exclusions, Terms/PDF Live Tests, and clean manual-action/security reports. The original launch checkboxes below remain a dated cutover record. New method-page publication and post-deploy checks are still outstanding.
+
 - [x] Verify the canonical URL-prefix property `https://folveta.com/` in Google Search Console using the deployed HTML verification file (2026-09-01). The property is verified; Google is still initializing data.
 - [x] Submit the production sitemap after live cutover verification; GSC reports 7 discovered URLs.
 - [x] Inspect/request indexing for approved public pages only: `/`, `/pricing`, and `/about`.

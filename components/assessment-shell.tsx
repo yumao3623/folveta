@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { CartoonIcon, type CartoonIconName } from "@/components/ui/cartoon-icon";
+import { StudyIcon, type StudyIconName } from "@/components/ui/study-icon";
 import { buttonClassName } from "@/components/ui/styles";
 import { BrandMark } from "@/components/brand-mark";
 
@@ -24,7 +24,7 @@ export function AssessmentShell({
 }) {
   return (
     <main className="learning-shell min-h-screen bg-[var(--background)] text-[var(--text-secondary)]">
-      <aside className="learning-sidebar fixed left-0 top-0 z-50 hidden h-full w-72 flex-col border-r border-[var(--line)] bg-[var(--surface)] xl:flex">
+      <aside className="learning-sidebar fixed left-0 top-0 z-50 hidden h-full w-60 flex-col border-r border-[var(--line)] bg-[var(--surface)] lg:flex">
         <div className="mb-7 px-6 pb-5 pt-8">
           <BrandMark />
         </div>
@@ -39,17 +39,17 @@ export function AssessmentShell({
                 key={topic.id}
                 href={topic.href}
                 aria-current={active ? "page" : undefined}
-                className={`learning-nav-item group flex items-center justify-between rounded-2xl px-3 py-3 text-[14px] transition-[background-color,color,transform] active:translate-y-px ${
+                className={`learning-nav-item group flex items-center justify-between rounded-lg px-3 py-2.5 text-[14px] transition-[background-color,color,transform] active:translate-y-px ${
                   active
                     ? "bg-[var(--accent-soft)]/75 font-medium text-[var(--foreground)]"
                     : "text-[var(--text-secondary)] hover:bg-[var(--surface-container-high)] hover:text-[var(--foreground)]"
                 }`}
               >
                 <span className="flex min-w-0 items-center gap-3">
-                  <CartoonIcon name={(["guide", "source", "target"] as CartoonIconName[])[index % 3]} size={40} animated className="shrink-0" />
+                  <StudyIcon name={(["guide", "source", "target"] as StudyIconName[])[index % 3]} size={20} className="shrink-0" />
                   <span className="truncate">{topic.title}</span>
                 </span>
-                {active && <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--primary)]" aria-hidden="true" />}
+                {active && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)]" aria-hidden="true" />}
               </Link>
             );
           })}
@@ -59,15 +59,15 @@ export function AssessmentShell({
             href="/"
             className={buttonClassName({ className: "w-full" })}
           >
-            <CartoonIcon name="upload" size={26} />
+            <StudyIcon name="upload" size={26} />
             Upload Document
           </Link>
         </div>
       </aside>
 
-      <div className="learning-main xl:pl-72">
-        <header className="learning-header fixed left-0 right-0 top-0 z-40 flex h-20 items-center gap-3 border-b border-[var(--line)] bg-[var(--surface)] px-4 sm:px-6 xl:left-72">
-          <BrandMark compact className="xl:hidden" />
+      <div className="learning-main lg:pl-60">
+        <header className="learning-header fixed left-0 right-0 top-0 z-40 flex h-16 items-center gap-3 border-b border-[var(--line)] bg-[var(--surface)] px-4 sm:px-6 lg:left-60">
+          <BrandMark compact className="lg:hidden" />
           <nav className="ml-auto flex items-center gap-2" aria-label="Assessment navigation">
             <Link
               href={guidePath}
@@ -77,37 +77,12 @@ export function AssessmentShell({
               Study Guide
             </Link>
             <span className="hidden items-center gap-1.5 px-2 py-2 text-label-sm font-bold text-[var(--primary)] sm:flex" aria-current="page">
-              <CartoonIcon name="check" size={32} />
+              <StudyIcon name="check" size={20} />
               Quick Check
             </span>
           </nav>
         </header>
-        <nav
-          className="learning-mobile-nav ui-mobile-nav fixed left-0 right-0 top-20 z-30 flex gap-2 overflow-x-auto border-b border-[var(--border-soft)] bg-[var(--surface)] px-4 py-2 xl:hidden"
-          aria-label="Study guide topics"
-        >
-          <span className={buttonClassName({ variant: "soft", size: "sm", className: "shrink-0" })} aria-current="page">
-            Quick Check
-          </span>
-          {topics.map((topic) => {
-            const active = topic.id === activeTopicId;
-            return (
-              <Link
-                key={topic.id}
-                href={topic.href}
-                aria-current={active ? "page" : undefined}
-                className={buttonClassName({
-                  variant: active ? "soft" : "ghost",
-                  size: "sm",
-                  className: "shrink-0",
-                })}
-              >
-                {topic.title}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="min-h-screen pt-[8.25rem] xl:pt-20">{children}</div>
+        <div className="min-h-screen pt-16">{children}</div>
       </div>
     </main>
   );

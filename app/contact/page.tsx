@@ -15,6 +15,7 @@ export default function ContactPage() {
       title="Support for Folveta"
       description="For product help, subscription questions, refund requests, or privacy requests, email our support team."
       asset="heart"
+      heroDensity="compact"
       actions={<a className={buttonClassName({ size: "lg" })} href="mailto:yumao3623@gmail.com">yumao3623@gmail.com</a>}
     >
       <div className="public-page__section max-w-[760px] rounded-[28px] bg-[var(--source-blue)] p-6 sm:p-8">

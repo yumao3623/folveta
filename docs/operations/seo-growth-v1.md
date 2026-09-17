@@ -1,8 +1,10 @@
 # Folveta SEO Growth v1
 
-Status: **Active: first focused page published in code; external submissions pending owner action**
+Status: **Active: September 17 GSC recheck and local SEO acceptance complete; publication pending**
 Started: 2026-09-02
 Canonical production origin: `https://folveta.com`
+
+Latest evidence and current ownership map: [`seo-gsc-review-2026-09-17.md`](seo-gsc-review-2026-09-17.md). The September 2 baseline below is historical. GSC now reads 8 sitemap URLs successfully, with 3 indexed, 4 discovered but not indexed, and Terms excluded on an old prelaunch noindex crawl. Terms and PDF both pass current GSC Live Test. Manual actions and security reports show no issues. The user approved one distinct `/how-to-make-a-study-guide` page; it is local and will make 9 intended public URLs after publication.
 
 This document is the operating record for the SEO growth phase following the public-launch indexing cutover. It is not a target-volume content calendar. The working model is:
 
@@ -45,7 +47,8 @@ The PDF page is grounded in real Folveta behavior rather than generic SEO copy: 
 | Query cluster | Dominant intent | Canonical URL | Page type | Funnel | Audience | Supporting queries | Internal sources | Internal destinations | Publication / index state | Priority |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Study Guide Maker | Transactional / mixed product discovery | `/` | Usable product homepage | Activation | Students organizing course materials | study guide generator, AI study guide maker, study guide maker from notes, study guide maker from lecture notes | Footer, About, Pricing, PDF page | Upload workspace, Pricing, product pages | Live; intended indexable | P0 |
-| Study Guide Maker from PDF | Transactional / task-specific | `/study-guide-maker-from-pdf` | Product task page | Activation | Students with a readable course PDF | PDF to study guide, make a study guide from PDF, PDF study guide generator | Homepage PDF module, footer | Homepage upload, Pricing, About | Added in code; intended indexable after deploy | P1 |
+| Study Guide Maker from PDF | Transactional / task-specific | `/study-guide-maker-from-pdf` | Product task page | Activation | Students with a readable course PDF | PDF to study guide, make a study guide from PDF, PDF study guide generator | Homepage, method page, About, Pricing, footer | Homepage upload, method page, Pricing, About | Live and crawl-eligible; not yet indexed in GSC | P1 |
+| How to make a study guide | Informational / practical method | `/how-to-make-a-study-guide` | Instructional topic page | Education / activation | Students organizing their own course materials | study guide example, what to include in a study guide, study guide review questions | Homepage, PDF, About, Pricing, footer | PDF workflow, example Guide, upload, Pricing | User approved September 17; locally verified, not deployed | P1 |
 | Folveta brand | Navigational | `/` | Homepage | Navigation / activation | Existing users and people who heard about Folveta | Folveta study guide maker | About, Pricing, footer | Homepage | Live; intended indexable | P1 |
 | Folveta pricing | Commercial / transactional | `/pricing` | Pricing page | Conversion | Prospective users comparing limits | Folveta price, Study Guide Maker pricing | Homepage, PDF page, footer | Signup / checkout flow | Live; intended indexable | P1 |
 | Folveta trust and boundaries | Informational / trust | `/about`, `/privacy`, `/terms`, `/refunds`, `/contact` | Trust pages | Evaluation / support | Prospective and existing users | Folveta privacy, refunds, contact | Footer, relevant product pages | Homepage, Pricing, support path | Live; intended indexable | P2 |
@@ -99,4 +102,4 @@ All anchors describe a real task or destination. The footer supports discovery b
 
 ## 6. Next page and link priorities
 
-The next page candidate is **not approved yet**: a PowerPoint task page only after a separate SERP review plus early data from the PDF page. The next link effort is a small, relevant launch/discovery set documented in `docs/operations/seo-growth-backlink-tracker.md`, followed by editorial resource-page discovery from student and study-productivity audiences.
+The September 17 expansion is limited to the approved practical method page and deeper PDF content. A PowerPoint task page remains unapproved and needs its own evidence. External links and promotion are deferred to a subsequent planning phase; the existing `seo-growth-backlink-tracker.md` does not authorize submissions or outreach.

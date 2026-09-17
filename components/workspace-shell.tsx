@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { buttonClassName, cn } from "@/components/ui/styles";
 import { BrandMark } from "@/components/brand-mark";
-import { CartoonIcon, type CartoonIconName } from "@/components/ui/cartoon-icon";
+import { StudyIcon, type StudyIconName } from "@/components/ui/study-icon";
 
 type WorkspaceRoute = "guides" | "library" | "search" | "profile";
 
@@ -33,7 +33,7 @@ function WorkspaceNavigation({ active, mobile = false }: { active: WorkspaceRout
                 : "text-[var(--muted)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]",
             )}
           >
-            <CartoonIcon name={item.icon as CartoonIconName} size={22} animated={active === item.id} />
+            <StudyIcon name={item.icon as StudyIconName} size={22} animated={active === item.id} />
             {mobile && "mobileLabel" in item ? item.mobileLabel : item.label}
           </Link>
         );
@@ -45,7 +45,7 @@ function WorkspaceNavigation({ active, mobile = false }: { active: WorkspaceRout
 export function WorkspaceShell({ active, children }: { active: WorkspaceRoute; children: ReactNode }) {
   return (
     <div className="workspace-shell min-h-screen bg-[var(--background)]">
-      <aside className="workspace-shell__sidebar fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-[var(--border-soft)] bg-[var(--surface-container-low)] xl:flex">
+      <aside className="workspace-shell__sidebar fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-[var(--border-soft)] bg-[var(--surface-container-low)] lg:flex">
         <div className="px-6 pb-7 pt-8">
           <BrandMark />
           <p className="mt-1 text-[12px] text-[var(--muted)]">Private study workspace</p>
@@ -53,17 +53,17 @@ export function WorkspaceShell({ active, children }: { active: WorkspaceRoute; c
         <WorkspaceNavigation active={active} />
         <div className="mt-auto border-t border-[var(--border-soft)] p-5">
           <Link href="/#upload" className={buttonClassName({ className: "w-full" })}>
-            <CartoonIcon name="upload" size={20} /> New Guide
+            <StudyIcon name="upload" size={20} /> New Guide
           </Link>
         </div>
       </aside>
 
       <div className="workspace-shell__main">
-        <header className="workspace-shell__mobile-header border-b border-[var(--border-soft)] bg-[var(--surface)] xl:hidden">
+        <header className="workspace-shell__mobile-header border-b border-[var(--border-soft)] bg-[var(--surface)] lg:hidden">
           <div className="flex h-16 items-center justify-between px-5">
             <BrandMark compact />
             <Link href="/#upload" className={buttonClassName({ size: "sm" })}>
-              <CartoonIcon name="upload" size={18} /> New Guide
+              <StudyIcon name="upload" size={18} /> New Guide
             </Link>
           </div>
           <WorkspaceNavigation active={active} mobile />

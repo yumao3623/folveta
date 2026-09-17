@@ -5,7 +5,7 @@ import { GuideSummaryCard } from "@/components/guide-summary-card";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { EmptyState } from "@/components/ui/feedback";
 import { buttonClassName, cn } from "@/components/ui/styles";
-import { CartoonIcon } from "@/components/ui/cartoon-icon";
+import { StudyIcon } from "@/components/ui/study-icon";
 import { AssetIllustration } from "@/components/ui/asset-illustration";
 import { guideListOptionsSchema } from "@/lib/schemas/guide-management";
 import { getCurrentUser } from "@/lib/server/auth";
@@ -42,7 +42,7 @@ export default async function MyGuidesPage({ searchParams }: { searchParams: Pro
       <div className="mx-auto w-full max-w-[1080px]">
         <section className="border-b border-[var(--border)] pb-7">
           <p className="text-label-sm text-[var(--primary)]">Folveta workspace</p>
-          <h1 className="mt-2 font-display text-[36px] font-extrabold leading-tight text-[var(--foreground)] sm:text-[44px]">My Guides</h1>
+          <h1 className="mt-2 font-display text-[36px] font-bold leading-tight text-[var(--foreground)] sm:text-[44px]">My Guides</h1>
           <p className="mt-3 max-w-2xl text-[15px] leading-6 text-[var(--muted)]">Open and manage the Study Guides owned by your account.</p>
         </section>
 
@@ -57,7 +57,7 @@ export default async function MyGuidesPage({ searchParams }: { searchParams: Pro
                 options.view === view ? "bg-[var(--primary-soft)] text-[var(--primary)]" : "text-[var(--muted)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]",
               )}
             >
-              <CartoonIcon name={view === "active" ? "guide" : "locked"} size={21} />
+              <StudyIcon name={view === "active" ? "guide" : "locked"} size={21} />
               {view === "active" ? "Active" : "Archived"}
             </Link>
           ))}
@@ -73,7 +73,7 @@ export default async function MyGuidesPage({ searchParams }: { searchParams: Pro
               icon={<AssetIllustration asset={options.view === "active" ? "guide" : "locked"} sizes="96px" />}
               title={options.view === "active" ? "No active Guides" : "No archived Guides"}
               description={options.view === "active" ? "Create a Guide from your course materials to start this workspace." : "Guides you archive will remain available here until you restore or delete them."}
-              action={options.view === "active" ? <Link href="/#upload" className={buttonClassName({ size: "sm" })}><CartoonIcon name="upload" size={20} /> Create Guide</Link> : undefined}
+              action={options.view === "active" ? <Link href="/#upload" className={buttonClassName({ size: "sm" })}><StudyIcon name="upload" size={20} /> Create Guide</Link> : undefined}
             />
           )}
         </section>

@@ -14,7 +14,7 @@ test("landing page links to the public example Guide", async ({ page }) => {
 
   await page.goto("/");
   await expect(page).toHaveTitle(/Folveta/);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("study");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(/Study Guide Maker/i);
 
   await page.getByRole("link", { name: /Example guide/i }).first().click();
   await expect(page).toHaveURL(/\/study\/demo$/);
@@ -49,4 +49,52 @@ test("demo Quick Check completes without external writes", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Quick Check complete" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Return to Study Guide" })).toBeVisible();
   expect(errors).toEqual([]);
+});
+
+test("study method leads through PDF and pricing to the correct Free upload limit", async ({ page }) => {
+  const errors = trackBrowserErrors(page);
+  await page.goto("/how-to-make-a-study-guide");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("How to make a study guide");
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toBeVisible();
+  await page.getByRole("link", { name: "PDF to Study Guide workflow", exact: true }).click();
+  await expect(page).toHaveURL(/\/study-guide-maker-from-pdf$/);
+  await page.getByText("What if my PDF is scanned or image-only?", { exact: true }).click();
+  await expect(page.getByText(/run OCR with a tool you trust/)).toBeVisible();
+  await page.getByRole("link", { name: "Free and Pro limits", exact: true }).click();
+  await expect(page).toHaveURL(/\/pricing$/);
+  await page.getByRole("link", { name: "Create a Study Guide", exact: true }).click();
+  await expect(page).toHaveURL(/\/#upload$/);
+  await expect(page.getByText("0/3 files", { exact: true })).toBeVisible();
+  await page.locator('input[type="file"]').setInputFiles(
+    Array.from({ length: 4 }, (_, index) => ({ name: `course-${index}.pdf`, mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4 test-only selection") })),
+  );
+  await expect(page.getByRole("alert").filter({ hasText: "Your plan allows" })).toContainText("at most 3 files");
+  await expect(page.getByRole("button", { name: "Upload and continue" })).toBeDisabled();
+  expect(errors).toEqual([]);
+});
+
+test("public pages share the Source Sans system and avoid horizontal overflow", async ({ page }) => {
+  const routes = [
+    "/",
+    "/about",
+    "/pricing",
+    "/contact",
+    "/privacy",
+    "/refunds",
+    "/terms",
+    "/study-guide-maker-from-pdf",
+    "/how-to-make-a-study-guide",
+  ];
+
+  for (const route of routes) {
+    await page.goto(route);
+    await expect(page.locator(".site-header")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    const layout = await page.evaluate(() => ({
+      fontFamily: getComputedStyle(document.body).fontFamily,
+      fitsViewport: document.documentElement.scrollWidth <= window.innerWidth,
+    }));
+    expect(layout.fontFamily, `font on ${route}`).toContain("Source Sans 3");
+    expect(layout.fitsViewport, `horizontal overflow on ${route}`).toBe(true);
+  }
 });

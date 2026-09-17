@@ -1,6 +1,6 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import { cn } from "@/components/ui/styles";
-import { CartoonIcon, type CartoonIconName } from "@/components/ui/cartoon-icon";
+import { StudyIcon, type StudyIconName } from "@/components/ui/study-icon";
 
 type FeedbackTone = "info" | "success" | "warning" | "destructive";
 
@@ -9,7 +9,7 @@ const alertIcons = {
   success: "success",
   warning: "lightbulb",
   destructive: "error",
-} as const satisfies Record<FeedbackTone, CartoonIconName>;
+} as const satisfies Record<FeedbackTone, StudyIconName>;
 
 export function Alert({
   children,
@@ -30,7 +30,7 @@ export function Alert({
       role={tone === "destructive" ? "alert" : role}
     >
       {icon && (
-        <CartoonIcon name={alertIcon} size={24} animated={tone === "success" || tone === "destructive"} />
+        <StudyIcon name={alertIcon} size={24} animated={tone === "success" || tone === "destructive"} />
       )}
       <div className="min-w-0 flex-1">{children}</div>
     </div>

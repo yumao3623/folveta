@@ -11,23 +11,23 @@ export type FolvetaAsset =
   | "heart";
 
 const ASSET_PATHS: Record<FolvetaAsset, string> = {
-  material: "/illustrations/folveta-material-mascot.png",
-  guide: "/illustrations/folveta-guide-book.png",
-  "quick-check": "/illustrations/folveta-quick-check.png",
-  source: "/illustrations/folveta-source-globe.png",
-  quest: "/illustrations/folveta-quest-lightning.png",
-  locked: "/illustrations/folveta-locked-guide.png",
-  heart: "/illustrations/folveta-heart-recall.png",
+  material: "/illustrations/folveta-material-student.svg",
+  guide: "/illustrations/folveta-guide-student.svg",
+  "quick-check": "/illustrations/folveta-quick-check-student.svg",
+  source: "/illustrations/folveta-source-student.svg",
+  quest: "/illustrations/folveta-progress-student.svg",
+  locked: "/illustrations/folveta-locked-student.svg",
+  heart: "/illustrations/folveta-heart-student.svg",
 };
 
 const ASSET_ALT: Record<FolvetaAsset, string> = {
-  material: "Colorful stack of study materials",
-  guide: "Open study guide book",
-  "quick-check": "Study check card with a confirmation badge",
-  source: "Source reference globe",
-  quest: "Lightning progress badge",
-  locked: "Locked study guide",
-  heart: "Heart recall badge",
+  material: "Student organizing course materials at a study desk",
+  guide: "Student holding a study guide beside organized books",
+  "quick-check": "Student reviewing a checklist and calendar at a laptop",
+  source: "Student checking a source page beside a laptop and notes",
+  quest: "Student tracking a study milestone beside a calendar",
+  locked: "Student pausing beside a private study folder",
+  heart: "Student returning to review cards and notes",
 };
 
 /**
@@ -53,8 +53,8 @@ export function AssetIllustration({
       <Image
         src={ASSET_PATHS[asset]}
         alt={decorative ? "" : ASSET_ALT[asset]}
-        width={1254}
-        height={1254}
+        width={800}
+        height={540}
         sizes={sizes}
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : undefined}

@@ -20,7 +20,7 @@ Classification: **A Keep**, **B Polish**, **C Replace**, **D Missing**.
 | Area | Before v2 | Classification | Foundation decision |
 | --- | --- | --- | --- |
 | Color tokens | Useful green/source/warning concepts, but green dominated large surfaces and names mixed role with appearance | B | Replace with semantic roles and retain compatibility aliases during page migration |
-| Typography | Bricolage + Geist loaded through `next/font`; hierarchy relied on many one-off sizes/weights | A/B | Keep both variable fonts; formalize display, heading, body, label, and metadata roles |
+| Typography | Bricolage + Geist loaded through `next/font`; hierarchy relied on many one-off sizes/weights | C | Consolidate to Source Sans 3 and a 400/500/600/700 weight scale |
 | Radius | 4px to 24px and pills used inconsistently | B | 8px default; 4/6px compact; 12px only for large non-card interaction zones; pills only for badges |
 | Borders | Numerous hard or color-specific borders | B | Neutral soft/default/strong roles; functional color only for state/evidence |
 | Shadow | Many one-off rgba shadows | B | Four restrained roles: xs, sm, md, primary action |
@@ -67,13 +67,12 @@ Tokens live in `app/globals.css`. New code uses semantic names; legacy aliases e
 
 ### Type
 
-- Display and headings: Bricolage Grotesque variable font, generally weight 650-700.
-- Body, controls, labels, and metadata: Geist variable font, generally weight 400-650.
-- Display: 48px desktop / 38px mobile, 1.06 line height.
-- H1: 40px, 1.1 line height. H2: 32px, 1.2. H3: 20px, 1.35.
-- Body large: 17px; body: 15px; small/label: 13px; metadata: 12px.
-- Letter spacing is zero. Uppercase is not a default label treatment; use sentence case unless a content convention requires otherwise.
-- `next/font` self-hosts both fonts, preloads the Latin subset, uses swap display, and supplies metric-adjusted fallbacks. Geist Mono was removed because no product role used it.
+- Headings, body, controls, labels, metadata, and the wordmark use the Source Sans 3 Latin variable font.
+- Use only 400, 500, 600, and 700. Body uses 400; controls use 600; page headings stop at 700.
+- Display: 48px desktop / 38px mobile, 1.06 line height. H1: 40px, 1.1. H2: 32px, 1.2. H3: 20px, 1.35.
+- Body large: 18px; body: 16px; small/label: 13px; metadata: 12px.
+- Preserve natural body spacing. Headings may use `-0.015em` to `-0.022em`; sentence case remains the default.
+- `next/font` self-hosts the font, preloads the Latin subset, uses swap display, and supplies a metric-adjusted fallback.
 
 ### Spacing, radius, elevation, and motion
 
@@ -85,11 +84,11 @@ Tokens live in `app/globals.css`. New code uses semantic names; legacy aliases e
 
 ## 4. Icon system
 
-Lucide remains the only icon library. It is ISC licensed, already shipped, tree-shakeable, and visually consistent. A second outline library would add bundle and maintenance cost without solving the real issue, which was treatment rather than glyph availability.
+`StudyIcon` is the canonical product-semantic icon entry point and maps business meanings to Lucide. Simple directional, disclosure, close, and playback controls may import Lucide directly under the same rules. Lucide is ISC licensed, already shipped, tree-shakeable, and visually consistent. The custom open-book brand mark is the only drawn UI-icon exception.
 
-Use 1.8-1.9 stroke width. Sidebar/navigation icons use 16-18px glyphs in 28-32px neutral or active containers. Feature icons use 20-24px glyphs in 40-48px soft containers. Inline icons use 14-16px without a container when they behave like punctuation. Source icons always use source blue. Status icons use semantic success/warning/destructive tones. CTA icons are 16-18px and inherit button color. Icon buttons use 36/44/48px square hit areas and require an accessible name.
+Icons use `currentColor`, a 2px absolute stroke, and no internal multicolor fill. Metadata is 16px; button glyphs are 18-20px; navigation/status is 20px; emphasized frames stop at 24-28px. Standalone functional glyphs do not exceed 32px. Source state uses file/document semantics rather than a globe. Color belongs to the frame, button, alert, or selected surface. Icon buttons use at least a 44px square hit area and require an accessible name.
 
-Do not use Unicode symbols or manually drawn SVG for UI icons. Filled product character comes from soft containers, active fills, functional tones, hover surfaces, and badge integration.
+Do not use Unicode symbols or manually drawn SVG for UI controls. Only loading may loop indefinitely. Product character comes from semantic containers, active fills, hover surfaces, evidence color, and the source-documented student illustration family.
 
 ## 5. Component policies
 

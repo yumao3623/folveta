@@ -22,13 +22,13 @@ Evidence files:
 
 The screenshots were not treated as an automatic visual pass. Actual image inspection covered Guide at 390/1440px, Auth at 390px, Quick Check at 390px and 1024×600px, About at 1440px, and PDF workflow at 390px. Observed: paper collage is absent; headings and controls remain readable; the Guide uses a visible book illustration and filled topic glyphs; Quick Check uses the same filled visual family; short-height controls remain reachable by scrolling.
 
-Intentional layout changes remain: learning pages reveal the desktop sidebar at 1280px, and Auth changes from a centered form to a two-column composition at 1024px. The adjacent-width checks do not imply that the layouts are identical across these explicit breakpoints.
+Intentional layout changes remain: the September 17 consolidation reveals the compact learning sidebar at 1024px, and Auth changes from a centered form to a two-column composition at the same breakpoint. The adjacent-width checks do not imply that the layouts are identical across these explicit breakpoints.
 
 ## Study UI checks
 
 The public V2 demo Guide and Quick Check were opened in a separate `agent-browser` session. Quick Check was started, an answer was selected, and the selected state was inspected: one selected answer, zero overflow, zero missing images, and no browser errors. No external generation request is made by this demo path.
 
-The study changes remove paper backgrounds, use the shared `CartoonIcon` business-glyph entry point, reserve generated `AssetIllustration` images for larger illustration roles, replace nested V2 content panels with open learning blocks, and align the Quick Check action-region breakpoint with the learning sidebar. Forward/backward direction and selected/loading/error/completed presentation states are bound to existing local or business state.
+The study changes remove paper backgrounds, use the shared `StudyIcon` semantic entry point, reserve source-documented `AssetIllustration` scenes for larger illustration roles, replace nested V2 content panels with open learning blocks, and align the Quick Check action region with the learning shell. Forward/backward direction and selected/loading/error/completed presentation states are bound to existing local or business state.
 
 Additional evidence: `/tmp/folveta-study-rebuild-390.png`, `/tmp/folveta-check-rebuild-390-ready.png`, and `/tmp/folveta-check-rebuild-390-selected.png`. The larger responsive audit directory contains later screenshots after shared visual integration.
 
@@ -91,3 +91,11 @@ An initial replay checker incorrectly treated its full-file HTTP mock as a seeka
 Additional evidence records **94 actual sequential browser screenshots over 8.488 seconds**, including intermediate squash/rotation, button press/release, rapid selection and Quick Check forward/backward. `frame-timestamps.json` records each capture time; `frames/` contains the originals. `interaction-sequence.webm` is a secondary convenience video assembled from those captured frames using the already installed Playwright FFmpeg, not generated or interpolated animation. Its ~11fps sampling does not establish exact frame-by-frame easing performance.
 
 Visual self-review separately inspected desktop/mobile Home, workflow intermediate frames, Guide, Auth, Quick Check, public/short-height pages and the complete icon inventory. Rework included removal of paper collage, enlargement of visible illustration boxes, removal of duplicate homepage workflow content, always-opaque Study Loop cards, finite instead of endless non-loading icon motion, fixed button hit rectangles, consistent empty-state artwork bounds, and semantic edit/archive/delete symbols. No unresolved public-page layout defect was found in those checks; authenticated-data/provider limitations above still apply.
+
+## September 17 typography, icon, and layout follow-up
+
+The current local pass replaces the mixed display/body pairing with self-hosted Source Sans 3, replaces the multicolor control glyph set with `StudyIcon` plus consistent 2px Lucide utility glyphs, and rebuilds the open-book brand SVG, PNG, and favicon. The GitHub-sourced IRA student scenes remain the narrative illustration family; they are not used as button or navigation icons.
+
+Shared public navigation now covers the homepage and public content pages. Legal/contact heroes are compact, the learning sidebar begins at 1024px, generation readiness precedes individual source rows, the mobile upload control uses touch language, and the Quick Check phone layout reserves visible space above its fixed toolbar.
+
+Chrome visual review inspected the desktop homepage, the Guide at an approximately 1100px content width, and 390×844 Home, Guide, Quick Check intro/first-question, method, and Privacy views. The first Quick Check question showed two complete answers above the toolbar. Automated layout checks cover nine public routes on desktop and mobile, explicit 1100px sidebar geometry, and explicit 390px answer/toolbar geometry. This is local presentation verification only; no deployment or provider workflow was performed.

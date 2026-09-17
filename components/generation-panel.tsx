@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Alert, Progress } from "@/components/ui/feedback";
 import { AssetIllustration } from "@/components/ui/asset-illustration";
-import { CartoonIcon } from "@/components/ui/cartoon-icon";
+import { StudyIcon } from "@/components/ui/study-icon";
 
 const stageLabels: Record<string, string> = {
   extracting_topics: "Reading your course material",
@@ -181,7 +181,7 @@ export function GenerationPanel({
   const retryAllowed = generation?.retry_allowed ?? state === "failed_retryable";
   const buttonDisabled = !canGenerate || generating || (failed && !retryAllowed);
 
-  return <section className="generation-studio grid items-center gap-5 rounded-3xl border-2 border-[var(--border)] bg-[var(--surface)] p-6 sm:grid-cols-[minmax(0,1fr)_150px] sm:p-8" data-state={generating ? "loading" : failed ? "error" : "ready"}>
+  return <section className="generation-studio grid items-center gap-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:grid-cols-[minmax(0,1fr)_120px] sm:p-6" data-state={generating ? "loading" : failed ? "error" : "ready"}>
     <div className="min-w-0">
     <div className="flex items-center gap-3"><div><p className="text-label-sm text-[var(--primary)]">Generation</p><h2 className="font-headline-md text-2xl font-semibold text-[var(--foreground)]">Build your Study Guide</h2></div></div>
     <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">We read your sources, map the topics worth reviewing, and check every section against the material you uploaded.</p>
@@ -196,11 +196,11 @@ export function GenerationPanel({
       {generation?.support_id && <p className="mt-1 text-sm">Support ID: {generation.support_id}</p>}
     </Alert>}
     <Button onClick={generate} disabled={buttonDisabled} loading={generating} loadingLabel="Generating Study Guide..." size="lg" className="mt-5">
-      <CartoonIcon name={failed ? "history" : "guide"} size={26} />
+      <StudyIcon name={failed ? "history" : "guide"} size={26} />
       {failed && retryAllowed ? "Retry Study Guide generation" : "Generate Study Guide"}
     </Button>
     {!canGenerate && <p className="mt-3 text-sm text-[var(--danger)]">At least one source with readable text is required.</p>}
     </div>
-    <AssetIllustration asset={failed ? "locked" : "guide"} className="generation-studio__art mx-auto h-36 w-36" sizes="144px" />
+    <AssetIllustration asset={failed ? "locked" : "guide"} className="generation-studio__art mx-auto h-28 w-28" sizes="112px" />
   </section>;
 }

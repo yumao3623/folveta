@@ -2,10 +2,12 @@
 
 2026-09-16. This is a presentation refactor, not a new product or a release claim.
 
+2026-09-17 asset revision: the first generated editorial PNG pass was retired after review. The active illustration family is now source-documented SVG: Folveta composes outline student components from [IRA Design](https://github.com/ira-design/ira-illustrations) under its MIT license, then applies the Folveta palette and checked-in scene primitives. See `scripts/assets/build-student-illustrations.mjs`, `public/illustrations/student-illustrations.json`, and `docs/visual-system-v3-assets.md`.
+
 ## Skills actually used
 
 - `/Users/maoyu/.codex/skills/taste-skill/SKILL.md` (read in full): brief-first hierarchy, image-first asset exploration, cohesive art direction, fixed layout skeletons, existing-stack implementation, and visual self-review. Applied marketing composition rules to the homepage/public pages; did not impose experimental marketing layouts on Study Guide or Quick Check. The user's explicit cartoon/SVG/motion requirements take precedence over generic skill defaults.
-- `/Users/maoyu/.codex/skills/.system/imagegen/SKILL.md`: actual image generation, reference-based asset family, saving and opening outputs, rejecting inconsistent artwork. Generated PNGs are not misrepresented as layered SVG.
+- `/Users/maoyu/.codex/skills/.system/imagegen/SKILL.md`: used only for the rejected 2026-09-17 exploratory PNG pass; those files are no longer active delivery assets. The current source-documented student SVG family does not rely on image generation.
 - `/Users/maoyu/.codex/plugins/cache/openai-curated-remote/vercel/0.21.4/skills/agent-browser/SKILL.md`: real local browser navigation, selection, screenshots, console checks.
 - `/Users/maoyu/.codex/plugins/cache/openai-curated-remote/vercel/0.21.4/skills/react-best-practices/SKILL.md`: stable functional state updates, effect cleanup, media-query subscription, accessibility and component review. Local Next.js image/CSS documentation was checked before implementation.
 
@@ -43,7 +45,7 @@ No dependency was installed, and no Duolingo artwork was copied.
 
 - White surfaces, green actions, blue selection, coral warning/error accents and yellow study illustrations. Rounded filled 2D artwork; no paper texture, glass, neon or photorealistic 3D.
 - Buttons use a moving face and a fixed hit rectangle. Press: 70ms, 2–4px depth. Release: 220ms overshoot curve. Interactive card selection is distinct from hover.
-- Local SVG motion: book right page, upload arrow, source marker, paper corner, confirmation tick, warning mark. Only loading loops indefinitely. PNG assets remain flat artwork with optional finite whole-image motion.
-- Homepage: max-width 1180px; one deliberate 768px column change. Study/Workspace: desktop sidebar at 1280px, accessible mobile navigation below. Auth: form-first below 1024px. Public editorial hero: two columns from 768px. Intermediate widths adjust spacing/wrapping, not content order.
+- Functional icons use the `StudyIcon` semantic mapping, 2px Lucide strokes, and color inherited from their container. Only loading loops indefinitely. Student scenes remain static SVGs with optional finite whole-image motion; interaction semantics stay in real HTML.
+- Homepage: max-width 1140px; one deliberate 768px column change. Study/Workspace: a compact 15rem desktop sidebar begins at 1024px, with accessible mobile navigation below that breakpoint. Auth is form-first below 1024px. Public editorial heroes use two columns from 768px. Intermediate widths adjust spacing and wrapping without changing task order.
 - Study Loop cards never animate opacity. Only internal artwork/markers move; manual selection stops autoplay, reduced-motion changes stop the timer, hidden tabs do not advance.
 - Existing content, API endpoints, authentication, scoring, billing and generation rules are retained. No gamification or invented success data was added.

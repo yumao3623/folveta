@@ -51,8 +51,8 @@ Configured OpenAI-compatible Responses API
 | Layer | Implemented choice |
 | --- | --- |
 | Web | Next.js 16.3.2 App Router, React 19.2.8, TypeScript 5 |
-| Styling | Tailwind CSS 4, Folveta semantic tokens and local UI primitives, Bricolage Grotesque/Geist via `next/font` |
-| Icons | `lucide-react` |
+| Styling | Tailwind CSS 4, Folveta semantic tokens and local UI primitives, Source Sans 3 via `next/font` |
+| Icons | `StudyIcon` semantic mapping over `lucide-react`; custom SVG only for the Folveta brand mark |
 | Identity/database/storage | Supabase Auth, Supabase Postgres, private Storage, `@supabase/ssr` |
 | Validation | Zod 4 strict schemas |
 | Model API | OpenAI SDK Responses structured parsing behind `ModelGateway` |
@@ -74,6 +74,7 @@ There is no ORM, custom queue/worker service, vector database, component framewo
 | `/terms` | Current service terms | Same fail-closed public index policy |
 | `/pricing` | Current Free and Folveta Pro offer | Same fail-closed public index policy |
 | `/study-guide-maker-from-pdf` | Focused public PDF-to-Study-Guide task page | Same fail-closed public index policy |
+| `/how-to-make-a-study-guide` | Practical method, synthetic example, and review checklist | Same fail-closed public index policy; local September 17 addition |
 | `/refunds` | Current refund policy | Same fail-closed public index policy |
 | `/contact` | Current support/contact route | Same fail-closed public index policy |
 | `/study/demo` | Synthetic Guide demonstration | Permanently `noindex,nofollow` |

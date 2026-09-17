@@ -38,6 +38,11 @@ export function buildSitemap(
       priority: 0.8,
     },
     {
+      url: absoluteUrl("/how-to-make-a-study-guide"),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
       url: absoluteUrl("/refunds"),
       changeFrequency: "monthly",
       priority: 0.4,

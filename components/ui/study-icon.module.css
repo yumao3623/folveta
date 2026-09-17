@@ -1,0 +1,38 @@
+.root {
+  display: inline-block;
+  flex: 0 0 auto;
+  vertical-align: middle;
+  color: inherit;
+  transform-origin: 50% 50%;
+}
+
+.animated:not([data-icon="loading"]) {
+  animation: study-icon-confirm 320ms var(--ease-emphasized) both;
+}
+
+.animated[data-icon="loading"] {
+  animation: study-icon-spin 900ms linear infinite;
+}
+
+@keyframes study-icon-confirm {
+  from {
+    opacity: 0.55;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes study-icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animated {
+    animation: none;
+  }
+}

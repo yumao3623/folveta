@@ -19,7 +19,7 @@ export function BrandMark({
         height={compact ? 36 : 42}
         priority
       />
-      <span className="brand-mark__wordmark font-headline-md text-[23px] font-extrabold tracking-[-0.03em] text-[var(--foreground)]">Folveta</span>
+      <span className="brand-mark__wordmark font-headline-md text-[23px] font-bold tracking-[-0.02em] text-[var(--foreground)]">Folveta</span>
     </Link>
   );
 }

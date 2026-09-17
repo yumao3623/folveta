@@ -38,7 +38,7 @@ export function AuthPageLayout({
           </section>
           <section className="auth-page__form order-1 mx-auto w-full max-w-[440px] rounded-[28px] border-2 border-[var(--border-soft)] bg-[var(--surface)] p-6 sm:p-8 lg:order-2">
             <p className="text-label-sm text-[var(--primary)]">Folveta account</p>
-            <h1 className="mt-2 text-[30px] font-extrabold leading-tight tracking-[-0.025em] text-[var(--foreground)]">{title}</h1>
+            <h1 className="mt-2 text-[30px] font-bold leading-tight tracking-[-0.025em] text-[var(--foreground)]">{title}</h1>
             {children}
           </section>
         </div>

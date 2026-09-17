@@ -5,7 +5,7 @@ import { WorkspaceShell } from "@/components/workspace-shell";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/feedback";
 import { buttonClassName } from "@/components/ui/styles";
-import { CartoonIcon } from "@/components/ui/cartoon-icon";
+import { StudyIcon } from "@/components/ui/study-icon";
 import { AssetIllustration } from "@/components/ui/asset-illustration";
 import { libraryListOptionsSchema, type LibraryListOptions } from "@/lib/schemas/library-search";
 import { getCurrentUser } from "@/lib/server/auth";
@@ -30,7 +30,7 @@ function SourceRow({ source }: { source: LibraryItem }) {
   return (
     <article className="border-b border-[var(--border-soft)] py-5 first:pt-0 last:border-0 last:pb-0">
       <div className="flex min-w-0 items-start gap-4">
-        <span className="ui-icon-frame ui-icon-frame--md ui-icon-frame--source shrink-0"><CartoonIcon name={sourceIcon} size={24} /></span>
+        <span className="ui-icon-frame ui-icon-frame--md ui-icon-frame--source shrink-0"><StudyIcon name={sourceIcon} size={24} /></span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="min-w-0 break-words text-[16px] font-semibold text-[var(--foreground)]">{source.filename}</h2>
@@ -68,7 +68,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
       <div className="mx-auto w-full max-w-[960px]">
         <header className="border-b border-[var(--border)] pb-7">
           <p className="text-label-sm text-[var(--primary)]">Your source materials</p>
-          <h1 className="mt-2 font-display text-[36px] font-extrabold leading-tight text-[var(--foreground)] sm:text-[44px]">Library</h1>
+          <h1 className="mt-2 font-display text-[36px] font-bold leading-tight text-[var(--foreground)] sm:text-[44px]">Library</h1>
           <p className="mt-3 max-w-2xl text-[15px] leading-6 text-[var(--muted)]">Browse the PDF, Office, PowerPoint, and image materials already uploaded to your Guides.</p>
         </header>
         <form className="mt-6 grid gap-3 sm:grid-cols-[minmax(0,180px)_minmax(0,200px)_auto]" action="/library">
@@ -78,7 +78,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
         </form>
         <section className="mt-7 ui-surface ui-surface--base p-5 sm:p-6" aria-label="Uploaded source materials">
           {result.sources.length ? result.sources.map((source) => <SourceRow key={source.id} source={source} />) : (
-          <EmptyState icon={<AssetIllustration asset="source" sizes="96px" />} title="No source materials" description={options.type === "all" ? "Upload course material while creating a Guide and it will appear here." : `No ${options.type.toUpperCase()} files match this Library filter.`} action={<Link href="/#upload" className={buttonClassName({ size: "sm" })}><CartoonIcon name="upload" size={20} /> Upload material</Link>} />
+          <EmptyState icon={<AssetIllustration asset="source" sizes="96px" />} title="No source materials" description={options.type === "all" ? "Upload course material while creating a Guide and it will appear here." : `No ${options.type.toUpperCase()} files match this Library filter.`} action={<Link href="/#upload" className={buttonClassName({ size: "sm" })}><StudyIcon name="upload" size={20} /> Upload material</Link>} />
           )}
         </section>
         {(result.hasPreviousPage || result.hasNextPage) && <nav className="mt-5 flex items-center justify-between" aria-label="Library pages">{result.hasPreviousPage ? <Link href={libraryHref(options, result.page - 1)} className={buttonClassName({ variant: "secondary", size: "sm" })}>Previous</Link> : <span />}<span className="text-[12px] text-[var(--muted)]">Page {result.page}</span>{result.hasNextPage ? <Link href={libraryHref(options, result.page + 1)} className={buttonClassName({ variant: "secondary", size: "sm" })}>Next</Link> : <span />}</nav>}

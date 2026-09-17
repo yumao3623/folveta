@@ -12,7 +12,7 @@ import {
 import { SourceReference as SourceReferenceView } from "@/components/source-reference";
 import { BrandMark } from "@/components/brand-mark";
 import { Badge } from "@/components/ui/badge";
-import { CartoonIcon, type CartoonIconName } from "@/components/ui/cartoon-icon";
+import { StudyIcon, type StudyIconName } from "@/components/ui/study-icon";
 import { AssetIllustration } from "@/components/ui/asset-illustration";
 import { buttonClassName } from "@/components/ui/styles";
 import { AuthNavigation } from "@/lib/auth-navigation";
@@ -23,7 +23,7 @@ const priorityMeta: Record<Priority, { label: string; icon: string }> = {
   review_if_time: { label: "Review if time", icon: "radio_button_unchecked" },
 };
 
-const iconGlyphs: Record<string, CartoonIconName> = {
+const iconGlyphs: Record<string, StudyIconName> = {
   menu_book: "guide",
   target: "target",
   science: "lightbulb",
@@ -52,7 +52,7 @@ function Icon({
   const icon = name ?? children ?? "circle";
   if (icon === "arrow_right") return <ArrowRight aria-hidden="true" className={`h-[1em] w-[1em] shrink-0 ${className}`} />;
   return (
-    <CartoonIcon
+    <StudyIcon
       name={iconGlyphs[icon] ?? "guide"}
       className={`h-[1.6em] w-[1.6em] shrink-0 ${className}`}
       animated
@@ -151,7 +151,7 @@ function ConceptCard({
   return (
     <div className="study-block flex h-full flex-col border-t-2 border-[var(--border-soft)] py-5 sm:py-6">
       <div className="flex items-start gap-3">
-        <CartoonIcon name="lightbulb" size={38} animated className="shrink-0" />
+        <StudyIcon name="lightbulb" size={22} animated className="shrink-0" />
         <h3 className="font-headline-md text-[18px] font-semibold leading-[1.35] text-[var(--foreground)]">{name}</h3>
       </div>
       <div className="mt-3 flex-1">
@@ -342,7 +342,7 @@ export function GuideWorkspace({
   const priorities = Object.keys(priorityMeta) as Priority[];
   return (
     <main className="learning-shell min-h-screen bg-[var(--background)] text-[var(--text-secondary)]">
-      <aside className="learning-sidebar fixed left-0 top-0 z-50 hidden h-full w-72 flex-col border-r border-[var(--line)] bg-[var(--surface)] xl:flex">
+      <aside className="learning-sidebar fixed left-0 top-0 z-50 hidden h-full w-60 flex-col border-r border-[var(--line)] bg-[var(--surface)] lg:flex">
         <div className="mb-7 flex items-center bg-transparent px-6 pb-5 pt-8">
           <BrandMark />
         </div>
@@ -356,7 +356,7 @@ export function GuideWorkspace({
           <a
             href="#overview"
             aria-current="page"
-            className="learning-nav-item group flex cursor-pointer items-center justify-between rounded-2xl bg-[var(--accent-soft)] px-3 py-3 text-[14px] font-bold text-[var(--foreground)] transition-[background-color,color,transform] hover:bg-[var(--accent-soft)] active:translate-y-px"
+            className="learning-nav-item group flex cursor-pointer items-center justify-between rounded-lg bg-[var(--accent-soft)] px-3 py-2.5 text-[14px] font-bold text-[var(--foreground)] transition-[background-color,color,transform] hover:bg-[var(--accent-soft)] active:translate-y-px"
           >
             <span className="flex items-center gap-3">
               <Icon className="text-[24px]" name="menu_book" />
@@ -371,7 +371,7 @@ export function GuideWorkspace({
                 <a
                   key={topic.id}
                   href={`#${guideSectionAnchor(topic.id)}`}
-                  className="learning-nav-item group flex cursor-pointer items-center justify-between rounded-2xl px-3 py-3 text-[14px] font-semibold text-[var(--text-secondary)] transition-[background-color,color,transform] hover:bg-[var(--surface-container-high)] hover:text-[var(--foreground)] active:translate-y-px"
+                  className="learning-nav-item group flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-[14px] font-semibold text-[var(--text-secondary)] transition-[background-color,color,transform] hover:bg-[var(--surface-container-high)] hover:text-[var(--foreground)] active:translate-y-px"
                 >
                   <span className="flex min-w-0 items-center gap-3">
                       <Icon
@@ -404,9 +404,9 @@ export function GuideWorkspace({
           </Link>
         </div>
       </aside>
-      <div className="learning-main xl:pl-72">
-        <header className="learning-header fixed left-0 right-0 top-0 z-40 flex h-20 items-center justify-between gap-3 border-b border-[var(--line)] bg-[var(--surface)] px-4 sm:px-6 xl:left-72 xl:px-6">
-          <BrandMark compact className="xl:hidden" />
+      <div className="learning-main lg:pl-60">
+        <header className="learning-header fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between gap-3 border-b border-[var(--line)] bg-[var(--surface)] px-4 sm:px-6 lg:left-60 lg:px-6">
+          <BrandMark compact className="lg:hidden" />
           <nav
             className="ml-auto flex items-center gap-1 sm:gap-2"
             aria-label="Workspace navigation"
@@ -440,7 +440,7 @@ export function GuideWorkspace({
           </nav>
         </header>
         <nav
-          className="learning-mobile-nav ui-mobile-nav fixed left-0 right-0 top-20 z-30 flex gap-2 overflow-x-auto border-b border-[var(--border-soft)] bg-[var(--surface)] px-4 py-2 xl:hidden"
+          className="learning-mobile-nav ui-mobile-nav fixed left-0 right-0 top-16 z-30 flex gap-2 overflow-x-auto border-b border-[var(--border-soft)] bg-[var(--surface)] px-4 py-2 lg:hidden"
           aria-label="Study guide topics"
         >
           <a href="#overview" className={buttonClassName({ variant: "soft", size: "sm", className: "shrink-0" })}>
@@ -448,7 +448,7 @@ export function GuideWorkspace({
           </a>
           {quickCheckHref && (
             <Link href={quickCheckHref} className={buttonClassName({ variant: "secondary", size: "sm", className: "shrink-0" })}>
-              <CartoonIcon name="check" size={24} /> Quick Check
+              <StudyIcon name="check" size={24} /> Quick Check
             </Link>
           )}
           {guide.topics.map((topic) => (
@@ -461,7 +461,7 @@ export function GuideWorkspace({
             </a>
           ))}
         </nav>
-        <div className="min-h-screen bg-[var(--background)] pt-[8.25rem] xl:pt-20">
+        <div className="min-h-screen bg-[var(--background)] pt-[7.25rem] lg:pt-16">
           <div
             id="overview"
             className="mx-auto flex w-full max-w-[1140px] flex-col px-6"
@@ -480,16 +480,16 @@ export function GuideWorkspace({
                   {guide.source_count === 1 ? "" : "s"}
                 </span>
               </div>
-              <h1 className="max-w-4xl font-display text-[34px] font-extrabold leading-[1.12] text-[var(--foreground)] sm:text-[42px]">
+              <h1 className="max-w-4xl font-display text-[34px] font-bold leading-[1.12] text-[var(--foreground)] sm:text-[42px]">
                 {displayTitle ?? guide.title}
               </h1>
               <p className="mt-4 max-w-3xl font-body-lg text-[18px] leading-[1.6] text-[var(--text-secondary)]">
                 {guide.priority_method_summary}
               </p>
               <dl className="mt-6 flex flex-wrap gap-x-7 gap-y-3 text-[13px]">
-                <div className="flex items-center gap-2"><CartoonIcon name="source" size={28} /><dt className="sr-only">Sources</dt><dd><strong className="text-[var(--foreground)]">{guide.source_count}</strong> sources</dd></div>
-                <div className="flex items-center gap-2"><CartoonIcon name="guide" size={28} /><dt className="sr-only">Topics</dt><dd><strong className="text-[var(--foreground)]">{guide.topics.length}</strong> study topics</dd></div>
-                <div className="flex items-center gap-2"><CartoonIcon name="target" size={28} /><dt className="sr-only">Priority</dt><dd>Priority is a <strong className="text-[var(--foreground)]">study suggestion</strong></dd></div>
+                <div className="flex items-center gap-2"><StudyIcon name="source" size={28} /><dt className="sr-only">Sources</dt><dd><strong className="text-[var(--foreground)]">{guide.source_count}</strong> sources</dd></div>
+                <div className="flex items-center gap-2"><StudyIcon name="guide" size={28} /><dt className="sr-only">Topics</dt><dd><strong className="text-[var(--foreground)]">{guide.topics.length}</strong> study topics</dd></div>
+                <div className="flex items-center gap-2"><StudyIcon name="target" size={28} /><dt className="sr-only">Priority</dt><dd>Priority is a <strong className="text-[var(--foreground)]">study suggestion</strong></dd></div>
               </dl>
               </div>
               <AssetIllustration asset="guide" className="study-intro__art mx-auto h-40 w-40 sm:h-48 sm:w-48" priority sizes="(max-width: 640px) 160px, 192px" />

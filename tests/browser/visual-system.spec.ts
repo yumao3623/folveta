@@ -7,11 +7,11 @@ test("pressing a button moves its face, not its hit target", async ({ page, isMo
   const before = (await button.boundingBox())!;
   await page.mouse.move(before.x + before.width / 2, before.y + before.height / 2);
   await page.mouse.down();
-  await expect.poll(() => button.evaluate((element) => getComputedStyle(element, "::before").transform)).toBe("matrix(1, 0, 0, 1, 0, 4)");
+  await expect.poll(() => button.evaluate((element) => getComputedStyle(element, "::before").transform)).toBe("matrix(1, 0, 0, 1, 0, 1)");
   const pressed = (await button.boundingBox())!;
   expect(pressed).toEqual(before);
   await page.mouse.move(5, 90); await page.mouse.up();
-  await expect.poll(() => button.evaluate((element) => getComputedStyle(element, "::before").transform)).toBe("matrix(1, 0, 0, 1, 0, 0)");
+  await expect.poll(() => button.evaluate((element) => getComputedStyle(element, "::before").transform)).toBe("none");
 });
 
 test("workflow keeps all stages visible through autoplay, rapid selection and reduced motion", async ({ page }) => {
@@ -96,4 +96,31 @@ test("upload validation and queue removal stay local until submit", async ({ pag
   await page.getByRole("button", { name: /Remove.*local-preview/ }).click();
   await expect(page.getByRole("button", { name: "Upload and continue" })).toBeDisabled();
   expect(writes).toEqual([]);
+});
+
+test("390px Quick Check keeps a complete answer above the fixed toolbar", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile-chromium", "This is the explicit phone-viewport geometry check.");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/study/demo/quick-check");
+  await page.getByRole("button", { name: "Start Quick Check" }).click();
+
+  const firstAnswer = await page.locator(".quick-answer").first().boundingBox();
+  const toolbar = await page.locator(".assessment-toolbar").boundingBox();
+  const viewportHeight = await page.evaluate(() => window.innerHeight);
+  expect(firstAnswer).not.toBeNull();
+  expect(toolbar).not.toBeNull();
+  expect(firstAnswer!.y + firstAnswer!.height).toBeLessThanOrEqual(toolbar!.y);
+  expect(toolbar!.y + toolbar!.height).toBeLessThanOrEqual(viewportHeight);
+});
+
+test("1100px Guide uses the compact sidebar instead of phone navigation", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "This is the explicit laptop-width shell check.");
+  await page.setViewportSize({ width: 1100, height: 800 });
+  await page.goto("/study/demo");
+  await expect(page.locator(".learning-sidebar")).toBeVisible();
+  await expect(page.locator(".learning-mobile-nav")).toBeHidden();
+  const sidebar = await page.locator(".learning-sidebar").boundingBox();
+  const content = await page.locator("#overview").boundingBox();
+  expect(sidebar?.width).toBe(240);
+  expect(content?.x).toBeGreaterThanOrEqual(240);
 });

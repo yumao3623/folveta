@@ -6,7 +6,7 @@ import { GuideWorkspace } from "@/components/guide-workspace";
 import { V2GuideWorkspace } from "@/components/v2-guide-workspace";
 import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/feedback";
-import { CartoonIcon } from "@/components/ui/cartoon-icon";
+import { StudyIcon } from "@/components/ui/study-icon";
 import { AssetIllustration } from "@/components/ui/asset-illustration";
 import { buttonClassName } from "@/components/ui/styles";
 import { BrandMark } from "@/components/brand-mark";
@@ -89,9 +89,10 @@ export default async function StudyWorkspacePage({ params, searchParams }: PageP
         </div>
         <AssetIllustration asset="material" className="study-intro__art mx-auto" priority sizes="(max-width: 640px) 160px, 192px" />
       </section>
+      <GenerationPanel sessionId={sessionId} canGenerate={usableCount > 0} initialState={session.state} initialError={session.error_message} />
       <section className="py-9 sm:py-10">
         <div className="flex items-center gap-3">
-          <CartoonIcon name="material" size={48} animated />
+          <StudyIcon name="material" size={24} animated />
           <div><p className="text-label-sm text-[var(--source-blue-strong)]">Materials</p><h2 className="font-headline-md text-2xl font-semibold text-[var(--foreground)]">Parsing status</h2></div>
         </div>
         <div className="mt-6 space-y-3">{sourceRows.map((source) => {
@@ -102,7 +103,7 @@ export default async function StudyWorkspacePage({ params, searchParams }: PageP
           const failed = source.status === "cannot_use";
           const tone = failed ? "destructive" : source.status === "ready_with_gaps" ? "warning" : "success";
           return <article key={source.id} data-state={source.status} className={`ui-surface flex gap-4 p-4 sm:p-5 ${failed ? "border-[#efc8c5] bg-[var(--danger-soft)]" : source.status === "ready_with_gaps" ? "border-[#ead695] bg-[var(--warning-soft)]" : ""}`}>
-            <CartoonIcon name={failed ? "error" : ["uploading", "uploaded", "parsing"].includes(source.status) ? "loading" : "material"} size={48} animated className="shrink-0" />
+            <StudyIcon name={failed ? "error" : ["uploading", "uploaded", "parsing"].includes(source.status) ? "loading" : "material"} size={24} animated className="shrink-0" />
             <div className="min-w-0 flex-1"><div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0"><h3 className="truncate font-semibold text-[var(--foreground)]">{source.display_name}</h3><p className="mt-1 text-sm text-[var(--muted)]">{source.kind.toUpperCase()} · {source.unit_count} source records · {source.readable_unit_count} readable</p></div>
               <Badge tone={tone}>{statusLabels[source.status] ?? source.status}</Badge>
@@ -114,7 +115,6 @@ export default async function StudyWorkspacePage({ params, searchParams }: PageP
         })}</div>
         {failedCount > 0 && usableCount > 0 && <Alert tone="warning" className="mt-5">The Guide can continue with partial sources. The {failedCount} excluded source{failedCount === 1 ? "" : "s"} will be listed as material gaps and will not be sent to the model.</Alert>}
       </section>
-      <GenerationPanel sessionId={sessionId} canGenerate={usableCount > 0} initialState={session.state} initialError={session.error_message} />
     </div>
   </main>;
 }

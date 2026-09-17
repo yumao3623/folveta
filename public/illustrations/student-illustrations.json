@@ -1,0 +1,48 @@
+{
+  "source": "https://github.com/ira-design/ira-illustrations",
+  "license": "MIT",
+  "builtBy": "scripts/assets/build-student-illustrations.mjs",
+  "palette": {
+    "ink": "#20332b",
+    "green": "#0a9e4a",
+    "greenDark": "#08783a",
+    "mint": "#bcefd0",
+    "blue": "#3ab8f2",
+    "blueSoft": "#bfeafa",
+    "coral": "#ff6b6b",
+    "coralSoft": "#ffc5bf",
+    "yellow": "#ffcf3e",
+    "paper": "#fffdf8",
+    "paperWarm": "#f8f3e9"
+  },
+  "assets": [
+    {
+      "file": "/illustrations/folveta-material-student.svg",
+      "alt": "Student organizing course materials at a study desk"
+    },
+    {
+      "file": "/illustrations/folveta-guide-student.svg",
+      "alt": "Student holding a study guide beside organized books"
+    },
+    {
+      "file": "/illustrations/folveta-quick-check-student.svg",
+      "alt": "Student reviewing a checklist and calendar at a laptop"
+    },
+    {
+      "file": "/illustrations/folveta-source-student.svg",
+      "alt": "Student checking a source page beside a laptop and notes"
+    },
+    {
+      "file": "/illustrations/folveta-progress-student.svg",
+      "alt": "Student tracking a study milestone beside a calendar"
+    },
+    {
+      "file": "/illustrations/folveta-locked-student.svg",
+      "alt": "Student pausing beside a private study folder"
+    },
+    {
+      "file": "/illustrations/folveta-heart-student.svg",
+      "alt": "Student returning to review cards and notes"
+    }
+  ]
+}

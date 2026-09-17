@@ -2,7 +2,7 @@ import Link from "next/link";
 import { GuideSummaryCard } from "@/components/guide-summary-card";
 import { EmptyState } from "@/components/ui/feedback";
 import { buttonClassName } from "@/components/ui/styles";
-import { CartoonIcon } from "@/components/ui/cartoon-icon";
+import { StudyIcon } from "@/components/ui/study-icon";
 import { AssetIllustration } from "@/components/ui/asset-illustration";
 import { getCurrentUser } from "@/lib/server/auth";
 import { listRecentGuides } from "@/lib/server/guides";
@@ -24,7 +24,7 @@ export async function RecentGuides() {
 
       {!user ? (
         <EmptyState
-          icon={<CartoonIcon name="profile" size={36} />}
+          icon={<StudyIcon name="profile" size={22} />}
           title="Sign in to see recent Guides"
           description="Your account-owned Guides will appear here. No sample or public Guide is substituted."
           action={<Link href="/auth?next=/my-guides" className={buttonClassName({ size: "sm" })}>Sign in</Link>}
@@ -38,7 +38,7 @@ export async function RecentGuides() {
           icon={<AssetIllustration asset="guide" sizes="96px" />}
           title="No Guides yet"
           description="Create a Guide from your own course materials and it will appear here."
-          action={<a href="#upload" className={buttonClassName({ size: "sm" })}><CartoonIcon name="upload" size={20} /> Create Guide</a>}
+          action={<a href="#upload" className={buttonClassName({ size: "sm" })}><StudyIcon name="upload" size={20} /> Create Guide</a>}
         />
       )}
     </section>

@@ -4,7 +4,7 @@ import { AssessmentShell, type AssessmentTopic } from "@/components/assessment-s
 import { SourceReference } from "@/components/source-reference";
 import { Badge } from "@/components/ui/badge";
 import { AssetIllustration } from "@/components/ui/asset-illustration";
-import { CartoonIcon } from "@/components/ui/cartoon-icon";
+import { StudyIcon } from "@/components/ui/study-icon";
 import { buttonClassName } from "@/components/ui/styles";
 import type { OptionId, QuickCheck, QuickCheckResult } from "@/lib/schemas";
 
@@ -38,11 +38,11 @@ export function QuickCheckResultView({
 
   return (
     <AssessmentShell guidePath={guidePath} topics={topics} activeTopicId={activeTopicId}>
-      <div className="mx-auto flex w-full max-w-[1080px] flex-col px-5 pb-20 pt-8 sm:px-8 sm:pt-10 xl:px-10">
+      <div className="mx-auto flex w-full max-w-[1080px] flex-col px-5 pb-20 pt-8 sm:px-8 sm:pt-10 lg:px-10">
         <header className="result-hero relative grid items-center gap-5 border-b-2 border-[var(--line)] pb-8 sm:grid-cols-[minmax(0,1fr)_180px]" data-state={result.wrong_items.length === 0 ? "success" : "complete"}>
           <div>
           <p className="text-label-sm text-[var(--accent)]">Quick Check result</p>
-          <h1 className="mt-3 font-display text-[40px] font-extrabold leading-[1.08] text-[var(--foreground)] sm:text-[48px]">
+          <h1 className="mt-3 font-display text-[40px] font-bold leading-[1.08] text-[var(--foreground)] sm:text-[48px]">
             Quick Check complete
           </h1>
           <p className="mt-4 max-w-2xl text-[16px] leading-7 text-[var(--text-secondary)] sm:text-[17px]">
@@ -57,8 +57,8 @@ export function QuickCheckResultView({
         <section className="grid gap-8 py-8 md:grid-cols-[250px_minmax(0,1fr)] lg:gap-12">
           <div className="result-score flex items-center gap-5 rounded-3xl bg-[var(--primary-soft)] p-5 text-left md:sticky md:top-28 md:min-h-[280px] md:self-start md:flex-col md:justify-center md:p-7 md:text-center" data-state="complete">
             <div className="relative flex h-28 w-28 shrink-0 flex-col items-center justify-center md:h-36 md:w-36">
-              <CartoonIcon name={accuracy === 100 ? "success" : "check"} size={52} animated />
-              <p className="mt-2 font-display text-[38px] font-extrabold leading-none text-[var(--foreground)] md:text-[44px]">
+              <StudyIcon name={accuracy === 100 ? "success" : "check"} size={28} animated />
+              <p className="mt-2 font-display text-[38px] font-bold leading-none text-[var(--foreground)] md:text-[44px]">
                 {result.correct_count}
                 <span className="text-[18px] font-semibold text-[var(--text-muted)]">/{result.scored_count}</span>
               </p>
@@ -68,7 +68,7 @@ export function QuickCheckResultView({
 
           <div className="min-w-0">
             <div className="flex items-center gap-3 border-b border-[var(--line)]/70 pb-4">
-              <CartoonIcon name="history" size={44} animated />
+              <StudyIcon name="history" size={24} animated />
               <div><p className="text-[12px] font-semibold text-[var(--source-blue-strong)]">Next study action</p><h2 className="font-headline-md text-[24px] font-semibold text-[var(--foreground)]">Learning Loop</h2></div>
             </div>
             <p className="mb-5 mt-5 text-[15px] leading-7 text-[var(--text-secondary)]">
@@ -129,7 +129,7 @@ export function QuickCheckResultView({
                     </Badge>
                     Sampled questions Q{result.understood_items.map((item) => (questionsById.get(item.question_id)?.index ?? 0) + 1).join(", Q")}
                   </div>
-                  <CartoonIcon name="success" size={38} animated className="shrink-0" />
+                  <StudyIcon name="success" size={22} animated className="shrink-0" />
                 </div>
               )}
             </div>
@@ -139,7 +139,7 @@ export function QuickCheckResultView({
         {result.wrong_items.length > 0 && (
           <section className="border-t border-[var(--line)]/70 pt-10">
             <div className="mb-7 flex items-center gap-3">
-              <CartoonIcon name="help" size={44} animated />
+              <StudyIcon name="help" size={24} animated />
               <div>
                 <p className="text-label-sm text-[var(--warning)]">Review details</p>
                 <h2 className="mt-1 font-headline-md text-[26px] font-semibold text-[var(--foreground)]">Correct the sampled gaps</h2>
@@ -163,11 +163,11 @@ export function QuickCheckResultView({
                     </h3>
                     <dl className="mt-5 grid gap-3 text-[14px] sm:grid-cols-2">
                       <div className="result-review rounded-2xl border-2 border-[var(--destructive)] bg-[var(--danger-soft)] p-4" data-state="review">
-                        <dt className="flex items-center gap-2 font-semibold text-[var(--danger)]"><CartoonIcon name="error" size={26} />Your answer</dt>
+                        <dt className="flex items-center gap-2 font-semibold text-[var(--danger)]"><StudyIcon name="error" size={26} />Your answer</dt>
                         <dd className="mt-2 leading-6 text-[var(--text-secondary)]">{selected ? `${selected.id}. ${selected.text}` : "No answer"}</dd>
                       </div>
                       <div className="result-review rounded-2xl border-2 border-[var(--primary)] bg-[var(--accent-soft)] p-4" data-state="success">
-                        <dt className="flex items-center gap-2 font-semibold text-[var(--accent)]"><CartoonIcon name="success" size={26} />Correct answer</dt>
+                        <dt className="flex items-center gap-2 font-semibold text-[var(--accent)]"><StudyIcon name="success" size={26} />Correct answer</dt>
                         <dd className="mt-2 leading-6 text-[var(--text-secondary)]">{correct ? `${correct.id}. ${correct.text}` : question.correct_option_id}</dd>
                       </div>
                     </dl>

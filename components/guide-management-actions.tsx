@@ -6,7 +6,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FieldLabel, FieldMessage, Input } from "@/components/ui/field";
 import { GUIDE_TITLE_MAX_LENGTH } from "@/lib/schemas/guide-management";
-import { CartoonIcon } from "@/components/ui/cartoon-icon";
+import { StudyIcon } from "@/components/ui/study-icon";
 import { DialogFrame } from "@/components/ui/dialog-frame";
 
 type Action = "rename" | "archive" | "restore" | "delete";
@@ -74,7 +74,7 @@ export function GuideManagementActions({
       <div className="flex shrink-0 items-center gap-1" aria-label={`Manage ${title}`}>
         {!archived && (
           <Button variant="ghost" size="icon-sm" aria-label={`Rename ${title}`} title="Rename Guide" onClick={() => open("rename")}>
-            <CartoonIcon name="edit" size={20} />
+            <StudyIcon name="edit" size={20} />
           </Button>
         )}
         <Button
@@ -84,10 +84,10 @@ export function GuideManagementActions({
           title={archived ? "Restore Guide" : "Archive Guide"}
           onClick={() => open(archived ? "restore" : "archive")}
         >
-          {archived ? <CartoonIcon name="history" size={20} /> : <CartoonIcon name="archive" size={20} />}
+          {archived ? <StudyIcon name="history" size={20} /> : <StudyIcon name="archive" size={20} />}
         </Button>
         <Button variant="ghost" size="icon-sm" aria-label={`Delete ${title}`} title="Delete Guide" onClick={() => open("delete")}>
-          <CartoonIcon name="trash" size={20} />
+          <StudyIcon name="trash" size={20} />
         </Button>
       </div>
 

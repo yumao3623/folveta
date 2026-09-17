@@ -10,7 +10,7 @@ import { FieldLabel, Input } from "@/components/ui/field";
 import { Alert, Progress } from "@/components/ui/feedback";
 import { IconFrame } from "@/components/ui/icon-frame";
 import { Badge } from "@/components/ui/badge";
-import { CartoonIcon } from "@/components/ui/cartoon-icon";
+import { StudyIcon } from "@/components/ui/study-icon";
 
 type FileState = {
   name: string;
@@ -35,7 +35,7 @@ function fileSize(bytes: number) {
     : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function UploadPanel() {
+export function UploadPanel({ maxFiles }: { maxFiles: number }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
@@ -48,8 +48,8 @@ export function UploadPanel() {
   function selectFiles(list: FileList | null) {
     const selected = Array.from(list ?? []);
     setFormError(null);
-    if (selected.length > MVP_LIMITS.maxFiles) {
-      setFormError(`Choose at most ${MVP_LIMITS.maxFiles} files.`);
+    if (selected.length > maxFiles) {
+      setFormError(`Your plan allows at most ${maxFiles} files per Guide.`);
       return;
     }
     const invalid = selected.find(
@@ -211,9 +211,9 @@ export function UploadPanel() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-headline-md text-[18px] font-semibold text-[var(--foreground)]">Create your Guide</p>
-          <p className="mt-1 text-[13px] leading-5 text-[var(--muted)]">Name it, then add up to {MVP_LIMITS.maxFiles} course files.</p>
+          <p className="mt-1 text-[13px] leading-5 text-[var(--muted)]">Name it, then add up to {maxFiles} course files.</p>
         </div>
-        <Badge tone={files.length > 0 ? "success" : "neutral"}>{files.length}/{MVP_LIMITS.maxFiles} files</Badge>
+        <Badge tone={files.length > 0 ? "success" : "neutral"}>{files.length}/{maxFiles} files</Badge>
       </div>
       <div className="mt-5 grid gap-2">
         <FieldLabel htmlFor="guide-title">
@@ -237,7 +237,7 @@ export function UploadPanel() {
         role="button"
         tabIndex={busy ? -1 : 0}
         aria-disabled={busy}
-        className={`group mt-5 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center outline-none transition-[background-color,border-color,box-shadow,transform] ${files.length > 0 ? "min-h-[190px]" : "min-h-[250px]"} focus-visible:border-[var(--primary)] focus-visible:shadow-[0_0_0_4px_rgb(60_149_99_/_0.16)] ${dragging ? "border-[var(--primary)] bg-[var(--primary-soft)] shadow-[var(--shadow-sm)]" : "border-[var(--border)] bg-[var(--surface-subtle)] hover:-translate-y-0.5 hover:border-[var(--primary)] hover:bg-white hover:shadow-[var(--shadow-sm)]"} ${busy ? "cursor-not-allowed opacity-60" : ""}`}
+        className={`group mt-5 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed p-5 text-center outline-none transition-[background-color,border-color,box-shadow,transform] ${files.length > 0 ? "min-h-[160px] sm:min-h-[190px]" : "min-h-[180px] sm:min-h-[250px]"} focus-visible:border-[var(--primary)] focus-visible:shadow-[0_0_0_4px_rgb(60_149_99_/_0.16)] ${dragging ? "border-[var(--primary)] bg-[var(--primary-soft)] shadow-[var(--shadow-sm)]" : "border-[var(--border)] bg-[var(--surface-subtle)] hover:-translate-y-0.5 hover:border-[var(--primary)] hover:bg-white hover:shadow-[var(--shadow-sm)]"} ${busy ? "cursor-not-allowed opacity-60" : ""}`}
         onKeyDown={onDropzoneKeyDown}
         onDragEnter={(event) => {
           event.preventDefault();
@@ -255,16 +255,16 @@ export function UploadPanel() {
           tone={dragging ? "primary" : "neutral"}
           className="mb-5 transition-transform group-hover:-translate-y-0.5 group-hover:bg-[var(--primary-soft)] group-hover:text-[var(--primary-hover)]"
         >
-          <CartoonIcon name="upload" size={42} animated={dragging} />
+          <StudyIcon name="upload" size={24} animated={dragging} />
         </IconFrame>
         <span className="font-headline-md text-[20px] font-semibold text-[var(--foreground)]">
-          {dragging ? "Drop files to add them" : files.length > 0 ? "Add different files" : "Drop course files here"}
+          {dragging ? "Drop files to add them" : files.length > 0 ? "Add different files" : <><span className="hidden sm:inline">Drop course files here</span><span className="sm:hidden">Choose course files</span></>}
         </span>
         <span className="mt-2 block max-w-sm text-[14px] leading-6 text-[var(--text-muted)]">
           PDF, Word, Excel, PowerPoint, and common image files. Visual-only content is reported as a gap.
         </span>
         <span className="ui-button ui-button--secondary ui-button--sm mt-5 group-hover:border-[var(--border-strong)] group-hover:bg-[var(--secondary)]">
-          Browse files
+          <span className="hidden sm:inline">Browse files</span><span className="sm:hidden">Choose files</span>
         </span>
         <input
           id="course-material-files"
@@ -311,7 +311,7 @@ export function UploadPanel() {
         size="lg"
         className="mt-5 w-full"
       >
-        <CartoonIcon name="upload" size={20} />
+        <StudyIcon name="upload" size={20} />
         Upload and continue
       </Button>
       <p className="mt-3 text-center text-[12px] leading-5 text-[var(--faint)]">You will review parsing status before generating the Study Guide.</p>
@@ -338,11 +338,11 @@ function QueueItem({
     <li className="ui-surface flex items-center gap-3 p-3 sm:gap-4">
       <IconFrame size="lg" tone={isPdf ? "destructive" : isImage ? "neutral" : "source"}>
         {isPdf ? (
-          <CartoonIcon name="material" size={24} />
+          <StudyIcon name="material" size={24} />
         ) : isImage ? (
-          <CartoonIcon name="material" size={24} />
+          <StudyIcon name="material" size={24} />
         ) : (
-          <CartoonIcon name="guide" size={24} />
+          <StudyIcon name="guide" size={24} />
         )}
       </IconFrame>
       <div className="min-w-0 flex-1">
@@ -367,11 +367,11 @@ function QueueItem({
         )}
       </div>
       {working ? (
-        <CartoonIcon name="loading" size={25} animated />
+        <StudyIcon name="loading" size={25} animated />
       ) : ready ? (
-        <CartoonIcon name="success" size={25} animated />
+        <StudyIcon name="success" size={25} animated />
       ) : state.status === "failed" ? (
-        <CartoonIcon name="error" size={25} animated />
+        <StudyIcon name="error" size={25} animated />
       ) : (
         <Button
           onClick={onRemove}
