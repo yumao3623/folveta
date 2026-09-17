@@ -65,7 +65,10 @@ test("study method leads through PDF and pricing to the correct Free upload limi
   await page.getByRole("link", { name: "Create a Study Guide", exact: true }).click();
   await expect(page).toHaveURL(/\/#upload$/);
   await expect(page.getByText("0/3 files", { exact: true })).toBeVisible();
-  await page.locator('input[type="file"]').setInputFiles(
+  const fileInput = page.locator('input[type="file"]');
+  // setInputFiles bypasses disabled controls; real users must wait for plan resolution.
+  await expect(fileInput).toBeEnabled();
+  await fileInput.setInputFiles(
     Array.from({ length: 4 }, (_, index) => ({ name: `course-${index}.pdf`, mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4 test-only selection") })),
   );
   await expect(page.getByRole("alert").filter({ hasText: "Your plan allows" })).toContainText("at most 3 files");

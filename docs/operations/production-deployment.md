@@ -1,7 +1,7 @@
 # Folveta Production Deployment
 
-Status: **Current deployment runbook; the production verification below is a historical snapshot at commit `6107dac` on 2026-09-02. Later repository changes are not production-verified here.**
-Last updated: 2026-09-10
+Status: **Current deployment runbook. The original product acceptance ledger is a September 2 snapshot at `6107dac`; the September 18 technical SEO release is recorded separately below.**
+Last updated: 2026-09-18
 Canonical target: `https://folveta.com`
 
 ## Deployment identity
@@ -18,7 +18,7 @@ Canonical target: `https://folveta.com`
 | Production origin | `https://folveta.com` | Live with valid HTTPS |
 | Preferred hostname | `folveta.com` | `www.folveta.com` redirects `308` to apex |
 
-The pre-launch infrastructure and environment hotfix were followed by the independent public-launch cutover recorded in this document. The current production deployment is the launch baseline.
+The pre-launch infrastructure and environment hotfix were followed by the independent public-launch cutover recorded in this document. For the latest deployed technical SEO revision and measurements, use [technical-seo-2026-09-18.md](technical-seo-2026-09-18.md).
 
 ## Paddle Sandbox boundary
 
@@ -80,7 +80,7 @@ Preview is always `noindex,nofollow` through `VERCEL_ENV`, regardless of `PRELAU
 
 - Missing, invalid, or `true`: public discovery pages inherit `noindex,nofollow`; sitemap contains no URLs; robots does not advertise the sitemap.
 - Any Vercel environment other than Production: always treated as pre-launch.
-- Exact `false` in Vercel Production: public `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/study-guide-maker-from-pdf`, `/refunds`, and `/contact` may become `index,follow` and enter the sitemap.
+- Exact `false` in Vercel Production: public `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/study-guide-maker-from-pdf`, `/how-to-make-a-study-guide`, `/refunds`, and `/contact` may become `index,follow` and enter the sitemap.
 - Private, account, search, study, result, and future billing routes remain `noindex,nofollow` in every mode.
 
 Changing `PRELAUNCH` to `false` was the explicit public-launch action for this task. Rollback is to restore the prior fail-closed value and re-verify live metadata, robots, and sitemap before resubmitting indexing.
@@ -134,7 +134,7 @@ Verified locally and in Production:
 - `folveta.com` returns `200` over HTTPS; HTTP and `www` redirect `308` to the preferred HTTPS apex.
 - Public `/`, `/about`, `/privacy`, and `/terms` return `200`, self-canonicalize to the Production origin, and emit `index,follow` after the launch cutover.
 - At the `6107dac` launch verification, `robots.txt` returned `200` and advertised the production sitemap; `sitemap.xml` returned `200` with the seven approved public URLs: `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/refunds`, and `/contact`.
-- The current repository adds `/study-guide-maker-from-pdf`, so `app/sitemap.ts` now defines eight intended public URLs. This later repository state is not part of the `6107dac` Production verification snapshot.
+- September 18 current state: the PDF and method pages are published; all 9 sitemap pages pass production HTTP metadata/cache checks. Public HTML is static, while `/api/viewer` and `/api/guides` remain private/no-store. See [technical-seo-2026-09-18.md](technical-seo-2026-09-18.md) for the release and evidence. The `6107dac` rows above remain the original launch snapshot.
 - Favicon/app icon, fonts, CSS, desktop/mobile rendering, and public-page console checks passed.
 - Anonymous session create/persist, signed Storage upload, PDF parse, AI Guide generation/grounding, anonymous-to-account claim, Guide reopen, My Guides, Library, Search, Profile, Quick Check, persisted Results, Auth refresh, sign-out isolation, and relogin passed against Production test data.
 - AI Workflow smoke plus real PDF x3 and legacy PPT x2 passed from new Production sessions; reload/browser loss did not own or stop Workflow execution.

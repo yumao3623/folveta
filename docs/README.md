@@ -1,7 +1,7 @@
 # Folveta Documentation Index
 
 Status: **Active governance index**  
-Last updated: 2026-09-10
+Last updated: 2026-09-18
 
 ## Authority order
 
@@ -48,6 +48,7 @@ If current code contradicts a document's claim that something is implemented, th
 | `operations/seo-growth-v1.md` | Current post-launch SEO growth operating record and query/page ownership |
 | `operations/seo-growth-backlink-tracker.md` | Active backlink and mention research tracker; external communication requires owner approval |
 | `operations/production-seo-checklist.md` | Operational pre-launch/launch/post-launch checklist |
+| `operations/technical-seo-2026-09-18.md` | Public caching, mobile performance, metadata and privacy-boundary acceptance |
 | `operations/production-deployment.md` | Current deployment runbook; verification evidence is dated |
 
 ## Supabase migration workflow

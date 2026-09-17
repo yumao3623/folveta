@@ -1,10 +1,10 @@
 # Folveta Production Pre-launch, Launch, and SEO Checklist
 
-Status: **Active operational checklist; Public Launch Cutover PASS (2026-09-02)**
+Status: **Active operational checklist; original launch passed September 2; latest technical pass September 18, 2026**
 Canonical target: `https://folveta.com`  
 Architecture: `docs/architecture/seo-architecture.md`
 
-Do not mark local assumptions as production verification. The checklist below preserves the pre-launch record and the completed launch evidence; ongoing 24-hour/7-day monitoring is intentionally tracked separately.
+Do not mark local assumptions as production verification. Current implementation and acceptance evidence is in [technical-seo-2026-09-18.md](technical-seo-2026-09-18.md). Historical prelaunch/launch sections remain dated records. Unchecked historical product gates are not a claim that the current implementation is missing those capabilities; use the current product release ledger for product readiness.
 
 ## Scoped Production pre-launch Gate (2026-08-27)
 
@@ -66,7 +66,7 @@ AI Workflow rollout update (2026-08-31): Production `main@613dbeb` is `READY`; t
 - [ ] Trailing-slash/case policy is consistent.
 - [x] No canonical loops, cross-host canonicals, or preview/localhost canonicals.
 - [x] `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/refunds`, and `/contact` return `200 text/html` with self-canonicals in launch Production.
-- [ ] Unknown URLs return real 404 behavior.
+- [x] Unknown URLs return real 404 with noindex and without a conflicting index directive; response regression added September 18.
 - [x] Private missing/expired/unauthorized records fail closed and do not leak existence.
 
 ## F. On-page ownership and public trust
@@ -80,8 +80,8 @@ AI Workflow rollout update (2026-08-31): Production `main@613dbeb` is `READY`; t
 
 ## G. Metadata, social, and structured data
 
-- [ ] Every approved public canonical page has one unique title, description, H1, and self-canonical.
-- [ ] Open Graph/Twitter metadata uses the production origin and correct page URL.
+- [x] All 9 approved public pages have one unique title, description, H1, and self-canonical; response regression added September 18.
+- [x] All 9 pages use the production Open Graph URL/type/site name/images and Twitter metadata, including Privacy, Terms, Refunds, and Contact.
 - [ ] Generated/share images return `200`, render externally, and represent the actual page/product.
 - [ ] JSON-LD matches visible content and stable Folveta facts.
 - [ ] No offer/price/rating/review/organization property is invented.
@@ -101,7 +101,7 @@ AI Workflow rollout update (2026-08-31): Production `main@613dbeb` is `READY`; t
 
 - [x] `https://folveta.com/robots.txt` returns `200 text/plain` and references the production sitemap.
 - [x] `https://folveta.com/sitemap.xml` returns `200 application/xml`.
-- [x] Sitemap contains only approved canonical/indexable/200 pages: `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/refunds`, and `/contact`.
+- [x] Sitemap contains only the 9 approved canonical/indexable/200 pages: `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/study-guide-maker-from-pdf`, `/how-to-make-a-study-guide`, `/refunds`, and `/contact`.
 - [x] No demo, session ID, Guide, Quick Check, result, account, search, checkout, status, billing portal, API, preview, or localhost URL appears.
 - [x] `/study/demo` and its Quick Check remain permanently `noindex,nofollow`.
 - [x] Valid private routes remain `noindex, nofollow` and access-controlled.
@@ -110,11 +110,11 @@ AI Workflow rollout update (2026-08-31): Production `main@613dbeb` is `READY`; t
 ## I. Performance, mobile, and crawl health
 
 - [ ] PageSpeed Insights mobile/desktop is recorded for public page templates.
-- [ ] Lighthouse performance/accessibility/best-practices/SEO findings are reviewed as diagnostics.
+- [x] Homepage Lighthouse findings reviewed September 18: mobile 99, desktop 100; both devices accessibility/best-practices/SEO 100. This is lab evidence, not a field CWV pass.
 - [ ] No horizontal overflow, overlap, clipped labels, unstable fixed UI, or hidden primary content on representative devices.
-- [ ] LCP media/font/CSS and third-party scripts are optimized.
+- [x] Homepage LCP media preloaded without an entrance fade; font and CSS stay cacheable; upload/payment libraries load on intent. Final mobile lab LCP 2.1s; further shared-CSS tuning is optional.
 - [ ] A field plan exists for p75 LCP <= 2.5s, INP <= 200ms, CLS <= 0.1.
-- [ ] CDN/cache does not serve stale metadata, robots, sitemap, index mode, or social images.
+- [x] Public cache/metadata/robots/sitemap response regression passed locally and in production September 18, including identical public HTML with a synthetic auth cookie. Private API responses remain no-store.
 - [ ] Logs/monitoring can identify crawler 4xx/5xx, redirect, timeout, and origin failures without storing private content.
 
 ## J. Explicit launch cutover
@@ -128,13 +128,13 @@ AI Workflow rollout update (2026-08-31): Production `main@613dbeb` is `READY`; t
 
 ## K. Search Console and post-launch monitoring
 
-September 17 authenticated recheck: see [`seo-gsc-review-2026-09-17.md`](seo-gsc-review-2026-09-17.md) for the current 8-URL sitemap, actual 3-URL indexed list, historical commerce exclusions, Terms/PDF Live Tests, and clean manual-action/security reports. The original launch checkboxes below remain a dated cutover record. New method-page publication and post-deploy checks are still outstanding.
+September 18 authenticated Chrome recheck: sitemap last read September 17, success, 9 discovered pages. Coverage still uses the September 14 snapshot (3 indexed, 38 excluded, mostly historical commerce URLs). Manual-action and security reports are clear; both device CWV reports have insufficient data. The method page is published, and Terms/PDF/method indexing requests were accepted September 17. Do not repeatedly resubmit unchanged URLs to compensate for reporting delay. The original cutover checkboxes below remain historical.
 
 - [x] Verify the canonical URL-prefix property `https://folveta.com/` in Google Search Console using the deployed HTML verification file (2026-09-01). The property is verified; Google is still initializing data.
-- [x] Submit the production sitemap after live cutover verification; GSC reports 7 discovered URLs.
+- [x] Submit the production sitemap after live cutover verification; GSC reports 9 discovered URLs as of the September 18 recheck.
 - [x] Inspect/request indexing for approved public pages only: `/`, `/pricing`, and `/about`.
 - [ ] Monitor index coverage, crawl errors, impressions, clicks, CTR, queries, average position, and canonical selection.
-- [ ] Confirm actual indexing; local metadata correctness does not prove inclusion. Google processing remains asynchronous and the latest authenticated URL Inspection result was not available in this run.
+- [ ] Confirm actual indexing; local metadata correctness does not prove inclusion. Google processing remains asynchronous; coverage currently confirms 3 indexed pages, not all 9.
 - [ ] Monitor upload start/success, Guide success/failure, Quick Check loop, account conversion, entitlement/checkout, paid conversion, webhook failures, cleanup failures, and support signals under the approved privacy model.
 - [ ] Complete 24-hour and 7-day launch reviews with owners for every issue.
 - [ ] Re-run this checklist after material domain, routing, framework, billing, localization, or public-page changes.

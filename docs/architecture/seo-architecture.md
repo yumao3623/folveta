@@ -1,11 +1,11 @@
 # Folveta SEO v2 Architecture
 
 Status: **Current project-specific SEO architecture**  
-Last updated: 2026-09-17
+Last updated: 2026-09-18
 Reusable standard: `docs/architecture/SEO_GUIDE.md`
 Canonical production origin: `https://folveta.com`
 
-Current status is recorded in [`../operations/seo-gsc-review-2026-09-17.md`](../operations/seo-gsc-review-2026-09-17.md): authenticated property verification and sitemap success rechecked; 8 live sitemap URLs / 3 indexed; no manual actions or security issues; Terms and PDF pass GSC Live Test. The approved method page is local pending publication (9 intended public URLs after deploy). The cutover statements below are historical, not a claim that all URLs are indexed.
+Current evidence: [`../operations/technical-seo-2026-09-18.md`](../operations/technical-seo-2026-09-18.md). All nine approved public pages are published. Chrome GSC review on September 18 found the sitemap successfully read on September 17 with 9 discovered URLs; coverage still showed the September 14 snapshot (3 indexed). No manual actions or security issues were reported. Discovery, technical eligibility, and actual indexing are separate states. The September 2 cutover below is historical.
 
 ## 0. Public launch cutover record (2026-09-02)
 
@@ -45,16 +45,16 @@ Do not turn the homepage into a generic workspace dashboard. Persistent workspac
 | Study Guide Maker | `/` | Usable product/tool page | Yes | Primary owner; real upload near first viewport |
 | Folveta brand | `/` | Brand/product homepage | Yes | Homepage also owns brand navigation intent |
 | PDF to study guide | `/study-guide-maker-from-pdf` | Focused product task page | Yes | Live; preserve PDF-specific ownership |
-| How to make a study guide | `/how-to-make-a-study-guide` | Practical instructional page | Yes after publication | Approved September 17; steps, synthetic example, checklist; does not own Study Guide Maker |
+| How to make a study guide | `/how-to-make-a-study-guide` | Practical instructional page | Yes | Published; steps, synthetic example, checklist; does not own Study Guide Maker |
 | What Folveta does / product boundaries | `/about` | Trust/about page | Yes | Distinct trust intent; not keyword clone |
 | Folveta privacy / data handling | `/privacy` | Legal/trust page | Yes | Must match Auth, model, storage, analytics, billing reality |
 | Folveta terms | `/terms` | Legal page | Yes | Must match paid service and refund/cancellation reality |
 | Folveta pricing | `/pricing` | Pricing/product page | Yes | Existing public Free/Pro offer |
 | Demo Guide / Quick Check | `/study/demo...` | Product demonstration | No by default | Useful internal proof; retain `noindex` unless a later distinct-public-demo decision changes it |
-| User Guides / Recent / Library | Future authenticated workspace routes | Private product pages | No | Never in sitemap |
-| Knowledge search | Future authenticated search route | Private search results | No | Prevent crawl spaces and private excerpt leakage |
-| Profile/account/Auth | Future account routes | Private/account pages | No | Access control plus noindex |
-| Checkout/success/cancel/failure/billing portal | Future billing routes | Private transaction pages | No | No sitemap or public schema owner |
+| User Guides / Recent / Library | `/my-guides`, `/library` and private Guide routes | Private product pages | No | Never in sitemap |
+| Knowledge search | `/search` | Private search results | No | Prevent crawl spaces and private excerpt leakage |
+| Profile/account/Auth | `/profile`, `/account`, `/auth` | Private/account pages | No | Access control plus noindex |
+| Checkout/success/cancel/failure/billing portal | `/billing/...` and billing actions | Private transaction pages | No | No sitemap or public schema owner |
 
 No current justification exists for a Blog, Use Case hub, Tools hub, comparison/alternatives cluster, industry pages, template library, or pSEO system. A new page requires a distinct intent, real user value, stable canonical owner, useful content/product function, and maintenance owner.
 
@@ -62,23 +62,22 @@ No current justification exists for a Blog, Use Case hub, Tools hub, comparison/
 
 Implemented:
 
-- Static/server-rendered homepage and trust pages.
-- Unique canonical paths for `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/refunds`, and `/contact`.
-- `metadataBase` derived from `NEXT_PUBLIC_SITE_URL` with localhost fallback.
-- Open Graph/Twitter metadata and generated 1200x630 images.
-- Homepage `WebSite`, `WebApplication`, and `WebPage` JSON-LD; supporting page and visible breadcrumb schema. FAQPage was removed in the September 17 local update after Google's FAQ rich-result retirement; visible FAQs remain.
-- `robots.ts` and `sitemap.ts`.
-- Private study and demo routes permanently use `noindex,nofollow`.
-- Fail-closed `PRELAUNCH` handling for public metadata, robots, sitemap, and every Vercel Preview.
-- Automated tests for metadata, canonicals, both index modes, robots, sitemap, and study-route noindex.
+- The nine public pages are statically prerendered; the public HTML is identical for anonymous and authenticated requests.
+- `PublicViewerProvider` retrieves verified identity and plan limits from `/api/viewer`. Signed-in Recent Guides load separately from `/api/guides?limit=4`. Both endpoints use `private, no-store`, `Vary: Cookie`, and `X-Robots-Tag: noindex, nofollow`, including errors.
+- `proxy.ts` skips auth refresh only on the approved public paths; private APIs/app routes still validate and refresh sessions. No user data, cookie-based entitlement, or private Guide is embedded in the shared cache. Client state resets when a bfcache page or hidden tab becomes active again.
+- Unique title, description, H1, canonical, Open Graph URL/type/site name/image, and Twitter metadata on all 9 pages. Production builds reject a missing or noncanonical `NEXT_PUBLIC_SITE_URL`; localhost fallback is restricted to nonpublic local use.
+- Positive robots directives are assigned by `publicPageMetadata` to approved pages. Production root metadata does not add `index` to the framework's `noindex` 404 response. Preview/prelaunch fail closed; private and demo pages remain noindex.
+- Homepage `WebSite`, `WebApplication`, and `WebPage` JSON-LD; supporting page and visible breadcrumb schema. Visible FAQs remain, without FAQPage rich-result claims.
+- `robots.ts` advertises the production sitemap; `sitemap.ts` lists exactly 9 approved pages and no private/transaction routes.
+- Supabase upload and Paddle checkout libraries load on the corresponding user action. Checkout revalidates the current user before opening. Quotas and payment authorization remain server-enforced.
+- Unit, browser, and actual HTTP response tests cover the cache/privacy boundary, metadata, 404, redirect, sitemap, and robots. Run `npm run test:seo:responses` against a production build or production host.
 
-Production cutover record:
+Current operational boundaries:
 
-- Production origin and `PRELAUNCH=false` are live-verified on `https://folveta.com`: approved discovery pages emit `index,follow`, robots advertises the sitemap, and the sitemap contains seven approved URLs.
-- Public `/pricing`, `/refunds`, and `/contact` pages are deployed with the approved Live offer, refund policy, and support channel. Live billing is enabled and payment acceptance was validated in the inherited onboarding task.
-- Privacy states that automatic deletion is missing; cleanup must be implemented.
-- No real product screenshots/image SEO beyond generated social images and code-drawn UI.
-- Google Search Console ownership for the canonical URL-prefix property `https://folveta.com/` is verified, the sitemap is submitted and reports seven discovered URLs, and indexing was requested for `/`, `/pricing`, and `/about`. Analytics, field CWV, crawler-log monitoring, and post-launch review remain separate operational work.
+- The active public offer remains Free / Pro at US$12 per month. This technical SEO pass does not repeat a real payment or alter billing enforcement.
+- Privacy now documents retention cleanup and account deletion; completion of scheduled cleanup jobs is a separate operational check.
+- Narrative illustrations use documented IRA Design source assets; public demo content is synthetic, without private student material.
+- GSC verification/submission is complete, but Google has not yet reported all 9 pages as indexed. Real-user CWV has insufficient data; lab results do not establish a field pass.
 
 ## 5. On-page v2 requirements
 
@@ -141,7 +140,7 @@ Pre-launch reachable site:
 
 Launch site:
 
-- Sitemap initially contains the approved seven public URLs: `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/refunds`, and `/contact`.
+- Sitemap contains exactly 9 approved public URLs: `/`, `/about`, `/privacy`, `/terms`, `/pricing`, `/study-guide-maker-from-pdf`, `/how-to-make-a-study-guide`, `/refunds`, and `/contact`.
 - Exclude demo, user Guide IDs, Quick Checks, results, account, search, checkout, success/cancel/failure, portal, APIs, previews, and noindex URLs.
 - Do not emit fake `lastmod`; use a real material-update timestamp or omit it.
 

@@ -37,6 +37,8 @@ The semantic tokens in `app/globals.css` are the source of truth.
 | Source blue | `--source-blue` | evidence and source state only |
 | Rule | `--border-soft` | section rhythm and surface separation |
 
+Small green labels and white primary-button text must maintain at least 4.5:1 contrast on their actual surface. The September 18 accessibility correction uses `#087b3c` for primary, `#076e35` for hover, and `#065c2d` for active; faint text uses `#5f6b63`. Reserve account-navigation width while private viewer state loads.
+
 Prefer a 1px rule, flat fill, or whitespace before adding elevation. Controls use 6–10px radii; larger panels stop at 16px. Decorative rounding belongs to illustrations rather than ordinary content cards.
 
 ## Typography
@@ -87,6 +89,8 @@ The first viewport always answers: what is this, who is it for, and what should 
 ## Motion
 
 CSS handles the current motion: short entry transitions, button press feedback, loading, and result confirmation. GSAP is reserved for a coordinated scroll narrative, a pinned learning sequence, or another interaction where a timeline materially improves understanding. If GSAP is introduced, scope it to the component, animate transforms and opacity, clean it up on unmount, and provide a reduced-motion path.
+
+Hero artwork must be visible immediately, without an opacity entrance animation that delays LCP. Preload the primary hero asset; keep supporting scenes lazy. Preserve interaction feedback and the reduced-motion controls in the workflow preview.
 
 ## Responsive behavior
 

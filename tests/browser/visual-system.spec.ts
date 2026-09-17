@@ -87,6 +87,7 @@ test("upload validation and queue removal stay local until submit", async ({ pag
   });
   await page.goto("/");
   const input = page.locator('input[type="file"]');
+  await expect(input).toBeEnabled();
   await input.setInputFiles({ name: "unsupported.exe", mimeType: "application/octet-stream", buffer: Buffer.from("not a course document") });
   await expect(page.getByRole("alert").filter({ hasText: "unsupported.exe" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Upload and continue" })).toBeDisabled();

@@ -53,10 +53,10 @@ Tokens live in `app/globals.css`. New code uses semantic names; legacy aliases e
 | `--foreground` | `#172019` | Highest-emphasis text |
 | `--surface` / `--surface-elevated` | `#ffffff` | Base and elevated tools |
 | `--surface-subtle` / `--surface-muted` | `#f1f6f2` / `#e9f0eb` | Quiet grouping and disabled surfaces |
-| `--primary` / hover / active | `#08783e` / `#066333` / `#054f2a` | Brand action hierarchy |
+| `--primary` / hover / active | `#087b3c` / `#076e35` / `#065c2d` | Brand action hierarchy |
 | `--primary-soft` | `#dff4e7` | Selected and supportive green treatment |
 | `--secondary` | `#edf3ef` | Neutral secondary controls |
-| `--muted` / `--faint` | `#526158` / `#6d7971` | Secondary and metadata text |
+| `--muted` / `--faint` | `#526158` / `#5f6b63` | Secondary and metadata text |
 | `--accent-mint` | `#c9f0d8` | Selection and positive decorative accent |
 | `--highlight-yellow` | `#fff0a6` | Study emphasis, not warning |
 | `--source-blue` / strong | `#e7f2ff` / `#2b628d` | Evidence and source references |
