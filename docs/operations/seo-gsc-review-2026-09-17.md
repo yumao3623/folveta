@@ -1,18 +1,18 @@
 # GSC recheck and SEO engineering — 2026-09-17
 
 Status: **Production deployment verified; authenticated GSC follow-up and indexing actions completed.**
-Production release reviewed: `main@345ab8f`. Review uses Chrome and the canonical URL-prefix property `https://folveta.com/`.
+SEO code release reviewed: `main@e8c8d93`. Review uses Chrome and the canonical URL-prefix property `https://folveta.com/`.
 
 ## Production and GSC follow-up after publication
 
-- GitHub `main` and the remote ref both resolved to `345ab8f8da6d7caf7fd4953ef7f43525ec45a2fb`; the linked Vercel deployment completed successfully.
+- SEO code commit `e8c8d935e8bac6a64d9def0d03c22a644649d8d1` was pushed to GitHub and its linked Vercel deployment completed successfully.
 - All nine public sitemap URLs, `robots.txt`, and `sitemap.xml` returned `200` in production. The live sitemap contains nine `https://folveta.com` canonicals, including `/how-to-make-a-study-guide`; robots advertises that sitemap.
 - The method page rendered its production title, index/follow directive, self-canonical, WebPage/Breadcrumb JSON-LD, internal links, and student illustration in Chrome.
 - GSC still shows the September 14 coverage snapshot: 3 indexed and 38 excluded across all known pages; the sitemap filter remains 3 indexed and 5 excluded. This report has not incorporated the new ninth URL.
 - The existing sitemap was resubmitted successfully on September 17. GSC now shows the submitted date as September 17, but its last read remains September 13 and its discovered count remains 8. The live file has 9 URLs, so this is a pending re-read rather than a sitemap-code discrepancy.
 - The method page is discovered through the sitemap but not yet indexed. Its September 17 Live Test says it can be indexed and detects one valid Breadcrumb item. GSC now shows that indexing was requested.
 - The PDF page is discovered but not yet indexed. Its September 17 Live Test says it can be indexed and detects one valid Breadcrumb item. GSC confirmed that it was added to the priority crawl queue.
-- Terms still reflects Google's August 29 noindex crawl in the index report. Its September 17 Live Test says the current page can be indexed. An indexing request returned a temporary GSC submission error and did not change the page to a requested state; retry it after the request quota/service recovers.
+- Terms still reflects Google's August 29 noindex crawl in the index report. Its September 17 Live Test says the current page can be indexed. A first submission returned a temporary GSC error; one later retry was accepted and GSC confirmed that the URL was added to the priority crawl queue.
 - Ownership remains verified. Manual actions and security issues both show no detected problems. HTTPS remains 3 valid and 0 non-HTTPS in the September 11 report.
 - Search performance remains sparse: 2 clicks, 12 impressions, 16.7% CTR, and average position 16.8 for August 30–September 14. The only exposed queries are `voluta` (2 impressions) and `volixta` (1); no Study Guide query is available yet. Homepage, About, and Pricing are the only pages with reported impressions.
 
@@ -42,14 +42,14 @@ GSC links: [Sitemaps](https://search.google.com/search-console/sitemaps?resource
 | `/` | Indexed; last crawl September 3 | `200`, index/follow, self-canonical |
 | `/about` | Indexed; last crawl September 2 | `200`, index/follow, self-canonical |
 | `/pricing` | Indexed; last crawl September 2 | `200`, index/follow, self-canonical |
-| `/terms` | Excluded by noindex from the August 29 crawl | Current HTML is index/follow; GSC Live Test on September 17 says URL can be indexed |
+| `/terms` | Excluded by noindex from the August 29 crawl; indexing requested September 17 | Current HTML is index/follow; GSC Live Test says URL can be indexed |
 | `/study-guide-maker-from-pdf` | Discovered, not indexed; no crawl reported; indexing requested September 17 | `200`, index/follow, self-canonical; Live Test says URL can be indexed and detects one valid Breadcrumb item |
 | `/how-to-make-a-study-guide` | Discovered through the sitemap, not indexed; no crawl reported; indexing requested September 17 | `200`, index/follow, self-canonical; Live Test says URL can be indexed and detects one valid Breadcrumb item |
 | `/contact` | Discovered, not indexed; no last crawl reported | `200`, index/follow, self-canonical; in live sitemap |
 | `/privacy` | Discovered, not indexed; no last crawl reported | `200`, index/follow, self-canonical; in live sitemap |
 | `/refunds` | Discovered, not indexed; no last crawl reported | `200`, index/follow, self-canonical; in live sitemap |
 
-The PDF and method requests are not interpreted as successful crawls or indexing. A successful Live Test demonstrates fetch/index eligibility at test time; it does not mean Google has indexed the URL. Terms does not currently need a code change to remove noindex.
+The PDF, method, and Terms requests are not interpreted as successful crawls or indexing. A successful Live Test demonstrates fetch/index eligibility at test time; it does not mean Google has indexed the URL. Terms does not currently need a code change to remove noindex.
 
 ### Historical URL inventory
 
@@ -118,6 +118,5 @@ No real course upload, paid checkout, provider generation, or authenticated Pro 
 Next checks:
 
 1. Wait for GSC to re-read the nine-URL sitemap and update the September 14 coverage snapshot.
-2. Retry the Terms indexing request once the GSC submission service/quota recovers; do not repeatedly submit the same URL.
-3. Compare like-for-like weekly GSC periods for non-brand discovery, page impressions, canonical selection, and all nine public URLs. No analytics/trackers are added in this task; conversion attribution remains unavailable.
-4. External links and promotion remain a subsequent planning phase. The existing backlink tracker is retained; nothing was submitted, posted, emailed, purchased, or promised here.
+2. Compare like-for-like weekly GSC periods for non-brand discovery, page impressions, canonical selection, and all nine public URLs. No analytics/trackers are added in this task; conversion attribution remains unavailable.
+3. External links and promotion remain a subsequent planning phase. The existing backlink tracker is retained; nothing was submitted, posted, emailed, purchased, or promised here.

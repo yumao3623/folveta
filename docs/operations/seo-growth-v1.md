@@ -4,7 +4,7 @@ Status: **Active: September 17 production publication and GSC follow-up complete
 Started: 2026-09-02
 Canonical production origin: `https://folveta.com`
 
-Latest evidence and current ownership map: [`seo-gsc-review-2026-09-17.md`](seo-gsc-review-2026-09-17.md). The September 2 baseline below is historical. Production now serves 9 intended public URLs. GSC still reads the prior 8-URL sitemap snapshot, with 3 indexed, 4 discovered but not indexed, and Terms excluded on an old prelaunch noindex crawl. The sitemap was resubmitted September 17. Terms, PDF, and the new method page all pass current GSC Live Test; PDF and method indexing requests were accepted. Manual actions and security reports show no issues.
+Latest evidence and current ownership map: [`seo-gsc-review-2026-09-17.md`](seo-gsc-review-2026-09-17.md). The September 2 baseline below is historical. Production now serves 9 intended public URLs. GSC still reads the prior 8-URL sitemap snapshot, with 3 indexed, 4 discovered but not indexed, and Terms excluded on an old prelaunch noindex crawl. The sitemap was resubmitted September 17. Terms, PDF, and the new method page all pass current GSC Live Test, and indexing requests for all three were accepted. Manual actions and security reports show no issues.
 
 This document is the operating record for the SEO growth phase following the public-launch indexing cutover. It is not a target-volume content calendar. The working model is:
 
