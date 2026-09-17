@@ -74,7 +74,7 @@ export default function HomePage() {
                 <StudyIcon name="upload" size={24} /> Build my Guide
               </a>
               <Link href="/study/demo" className="ui-button ui-button--secondary ui-button--lg">
-                <Play aria-hidden="true" /> See how it works
+                <Play aria-hidden="true" /> Explore the example guide
               </Link>
             </div>
             <div className="status-chips">

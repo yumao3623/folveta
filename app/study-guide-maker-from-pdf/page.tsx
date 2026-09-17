@@ -133,7 +133,8 @@ export default function StudyGuideMakerFromPdfPage() {
               <li>Check any conditions, exceptions, equations, or diagram labels that may change the meaning.</li>
               <li>Keep unresolved points on your review list and add missing course material before relying on them.</li>
             </ol>
-            <p className="mt-4 max-w-3xl text-[15px] leading-7 text-[var(--text-secondary)]">A reference helps you verify a claim; it does not prove that the guide covers the entire PDF. Our <Link href="/how-to-make-a-study-guide" className="text-link">five-step study guide method</Link> includes a worked example and a checklist for deciding what to review.</p>
+            <p className="mt-4 max-w-3xl text-[15px] leading-7 text-[var(--text-secondary)]">A reference helps you verify a claim; it does not prove that the guide covers the entire PDF. Use the <Link href="/how-to-make-a-study-guide#review-checklist" className="text-link">study guide review checklist</Link> to check what is ready and what still needs work.</p>
+            <p className="mt-4 max-w-3xl text-[15px] leading-7 text-[var(--text-secondary)]">If a topic needs more explanation, copy the <Link href="/how-to-make-a-study-guide#study-guide-template" className="text-link">reusable study guide topic template</Link> into your notes and complete it alongside the original PDF.</p>
           </section>
 
           <section className="mt-12" aria-labelledby="pdf-questions-heading">

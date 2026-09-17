@@ -25,7 +25,7 @@ export default function PricingPage() {
         </div>
         <section className="mt-10">
           <h2 className="text-2xl font-bold">See what a Study Guide includes</h2>
-          <p className="mt-4 max-w-3xl text-[15px] leading-7 text-[var(--text-secondary)]">Explore the <Link href="/study/demo" className="text-link">example Study Guide</Link> before choosing a plan. It shows topic priorities, source references, visible gaps, and the optional Quick Check. For your own files, start with the <Link href="/study-guide-maker-from-pdf" className="text-link">PDF workflow</Link> or the broader <Link href="/" className="text-link">Study Guide Maker</Link>.</p>
+          <p className="mt-4 max-w-3xl text-[15px] leading-7 text-[var(--text-secondary)]">Explore the <Link href="/study/demo" className="text-link">example Study Guide</Link> before choosing a plan. It shows topic priorities, source references, visible gaps, and the optional Quick Check. For your own files, follow the <Link href="/study-guide-maker-from-pdf" className="text-link">PDF workflow</Link> or <Link href="/#upload" className="text-link">upload your course files</Link> to get started.</p>
           <p className="mt-3 max-w-3xl text-[15px] leading-7 text-[var(--text-secondary)]">Both plans use the same source-based approach. Read <Link href="/about" className="text-link">Folveta&apos;s capabilities and boundaries</Link> and our <Link href="/how-to-make-a-study-guide" className="text-link">guide to making a useful study guide</Link> to decide whether it fits your course.</p>
         </section>
         <section className="public-page__section mt-10 rounded-[28px] bg-[var(--source-blue)] p-6 text-[15px] leading-7 text-[var(--text-secondary)] sm:p-8">

@@ -81,7 +81,25 @@ export default function HowToMakeAStudyGuidePage() {
           </ol>
         </section>
 
-        <section className="method-example" aria-labelledby="example-heading">
+        <section id="study-guide-template" className="method-example mb-8 scroll-mt-6" aria-labelledby="template-heading">
+          <div className="method-example__intro">
+            <p className="method-kicker">A reusable topic template</p>
+            <h2 id="template-heading">Copy this study guide template into your notes</h2>
+            <p>Fill in one set for each topic. Keep the checked answer below the question so you can cover it during review. Use your course objectives to decide which topics belong in the guide.</p>
+            <a href="#worked-example" className="method-inline-link">See a completed topic example <span aria-hidden="true">↓</span></a>
+          </div>
+          <dl className="method-example__facts">
+            <div><dt>Topic</dt><dd>[Name one concept, relationship, or problem type.]</dd></div>
+            <div><dt>Source</dt><dd>[Record the file or reading, page or slide, and relevant section.]</dd></div>
+            <div><dt>Explain it</dt><dd>[Write the idea in your own words, including important conditions.]</dd></div>
+            <div><dt>Review question</dt><dd>[Ask something you should be able to answer with the guide closed.]</dd></div>
+            <div><dt>Checked answer</dt><dd>[Answer the question and verify the reasoning against the source.]</dd></div>
+            <div><dt>Still unclear</dt><dd>[List missing evidence, confusing steps, or a question for your instructor.]</dd></div>
+            <div><dt>Next review</dt><dd>[Choose what to practise next and when to try it again.]</dd></div>
+          </dl>
+        </section>
+
+        <section id="worked-example" className="method-example scroll-mt-6" aria-labelledby="example-heading">
           <div className="method-example__intro">
             <p className="method-kicker">Worked example</p>
             <h2 id="example-heading">Turn a topic into a review task</h2>
@@ -97,10 +115,10 @@ export default function HowToMakeAStudyGuidePage() {
           </dl>
         </section>
 
-        <section className="method-checklist">
+        <section id="review-checklist" className="method-checklist scroll-mt-6" aria-labelledby="checklist-heading">
           <div className="method-checklist__list">
             <p className="method-kicker">A quick check</p>
-            <h2>Before you call it ready</h2>
+            <h2 id="checklist-heading">Before you call it ready</h2>
             <ul>
               <li>Every important topic has a source you can return to.</li>
               <li>Definitions and relationships are checked, not just copied.</li>
@@ -125,7 +143,7 @@ export default function HowToMakeAStudyGuidePage() {
           </div>
           <div className="method-cta__actions">
             <Link href="/#upload" className={buttonClassName({ size: "lg" })}>Make a guide from my files</Link>
-            <p>Further reading: <a href="https://learningcenter.unc.edu/tips-and-tools/studying-101-study-smarter-not-harder/" className="method-inline-link">UNC Learning Center&apos;s Studying 101</a>.</p>
+            <p>For more on self-testing and spacing your study sessions, read <a href="https://learningcenter.unc.edu/tips-and-tools/studying-101-study-smarter-not-harder/" className="method-inline-link">UNC Learning Center&apos;s Studying 101</a>.</p>
           </div>
         </section>
       </PublicPageLayout>
