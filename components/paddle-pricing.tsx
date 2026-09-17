@@ -1,40 +1,53 @@
 "use client";
 
-import { initializePaddle, type Paddle } from "@paddle/paddle-js";
-import { useEffect, useState } from "react";
+import type { Paddle } from "@paddle/paddle-js";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { buttonClassName } from "@/components/ui/styles";
 import { StudyIcon } from "@/components/ui/study-icon";
+import { usePublicViewer } from "@/components/public-viewer";
+import type { PublicViewer } from "@/lib/public-viewer";
 
-export function PaddlePricing({ userId, userEmail, priceId }: { userId: string | null; userEmail?: string | null; priceId: string }) {
+export function PaddlePricing({ priceId }: { priceId: string }) {
   const router = useRouter();
+  const { viewer, status } = usePublicViewer();
   const isLive = process.env.NEXT_PUBLIC_PADDLE_ENV === "production";
-  const [paddle, setPaddle] = useState<Paddle | null>(null);
-  const [error, setError] = useState<string | null>(() => process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN ? null : `${isLive ? "Live" : "Sandbox"} checkout is not configured yet.`);
+  const paddle = useRef<Paddle | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
-    if (!token) return;
-    initializePaddle({
-      token,
-      environment: process.env.NEXT_PUBLIC_PADDLE_ENV === "production" ? "production" : "sandbox",
-    }).then((instance) => setPaddle(instance ?? null)).catch(() => setError(`${isLive ? "Live" : "Sandbox"} checkout could not load.`));
-  }, [isLive]);
-
-  function subscribe() {
-    if (!userId) {
+  async function subscribe() {
+    if (busy || status !== "ready") return;
+    if (!viewer?.user) {
       router.push(`/auth?next=${encodeURIComponent("/pricing")}`);
       return;
     }
-    if (!paddle) return;
-    paddle.Checkout.open({
-      items: [{ priceId, quantity: 1 }],
-      customer: userEmail ? { email: userEmail } : undefined,
-      customData: { user_id: userId },
-      settings: { variant: "one-page", successUrl: `${window.location.origin}/billing/success` },
-    });
+    setBusy(true);
+    setError(null);
+    try {
+      // Revalidate identity at the action boundary, including after a tab was left open.
+      const response = await fetch("/api/viewer", { credentials: "same-origin", cache: "no-store", signal: AbortSignal.timeout(12000) });
+      if (!response.ok) throw new Error("Your account could not be checked. Please try again.");
+      const current: PublicViewer = await response.json();
+      if (!current.user) { router.push(`/auth?next=${encodeURIComponent("/pricing")}`); return; }
+      const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
+      if (!token) throw new Error("Checkout is not available right now. Please try again later.");
+      if (!paddle.current) {
+        const { initializePaddle } = await import("@paddle/paddle-js");
+        paddle.current = await initializePaddle({ token, environment: isLive ? "production" : "sandbox" }) ?? null;
+      }
+      if (!paddle.current) throw new Error("Checkout could not load. Please try again.");
+      paddle.current.Checkout.open({
+        items: [{ priceId, quantity: 1 }],
+        customer: current.user.email ? { email: current.user.email } : undefined,
+        customData: { user_id: current.user.id },
+        settings: { variant: "one-page", successUrl: `${window.location.origin}/billing/success` },
+      });
+    } catch (cause) {
+      setError(cause instanceof Error && cause.name !== "TimeoutError" ? cause.message : "Checkout could not load. Please try again.");
+    } finally { setBusy(false); }
   }
 
   return <section className="mx-auto w-full max-w-[960px]">
@@ -57,8 +70,9 @@ export function PaddlePricing({ userId, userEmail, priceId }: { userId: string |
         <ul className="mt-6 space-y-3 text-sm text-[var(--muted)]">
           {["10 successful Study Guides per month", "Up to 10 files and 300 source units", "Up to 600k extracted characters", "Quick Check included"].map((item) => <li key={item} className="flex items-start gap-2"><StudyIcon name="success" size={20} />{item}</li>)}
         </ul>
-        <Button onClick={subscribe} disabled={Boolean(userId) && !paddle} className="mt-7 w-full"><StudyIcon name="locked" size={20} />{userId ? `Subscribe in ${isLive ? "Folveta Pro" : "Sandbox"}` : "Sign in to subscribe"}</Button>
-        {error && <p className="mt-3 text-xs text-[var(--danger)]">{error}</p>}
+        <Button onClick={subscribe} disabled={status !== "ready" || busy} className="mt-7 w-full"><StudyIcon name="locked" size={20} />{busy ? "Opening checkout…" : viewer?.user ? `Subscribe in ${isLive ? "Folveta Pro" : "Sandbox"}` : "Sign in to subscribe"}</Button>
+        {error && <p role="alert" className="mt-3 text-xs text-[var(--danger)]">{error}</p>}
+        {status === "error" && <p role="alert" className="mt-3 text-xs text-[var(--danger)]">Your account could not load. <button className="underline" onClick={() => window.location.reload()}>Refresh and try again</button>.</p>}
         <p className="mt-3 text-center text-xs text-[var(--muted)]">{isLive ? "Secure checkout powered by Paddle." : "Sandbox only. No real charge is created."}</p>
       </article>
     </div>

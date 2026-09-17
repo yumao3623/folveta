@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { absoluteUrl, SITE_NAME } from "@/lib/site";
+import { absoluteUrl, getPublicRobots, SITE_NAME } from "@/lib/site";
 
 type PublicPage = {
   title: string;
@@ -12,6 +12,7 @@ export function publicPageMetadata({ title, description, path }: PublicPage): Me
   return {
     title: { absolute: fullTitle },
     description,
+    robots: getPublicRobots(),
     alternates: { canonical: path },
     openGraph: {
       type: "website",

@@ -3,7 +3,7 @@ import { ArrowRight, Check, ChevronDown, Play } from "lucide-react";
 import { AssetIllustration } from "@/components/ui/asset-illustration";
 import { StudyIcon } from "@/components/ui/study-icon";
 import { SiteFooter } from "@/components/site-footer";
-import { UploadPanel } from "@/components/upload-panel";
+import { PublicUploadPanel, PublicUploadLimits } from "@/components/public-upload";
 import { StudyLoopPreview } from "@/components/study-loop-preview";
 import { RecentGuides } from "@/components/recent-guides";
 import { SiteHeader } from "@/components/site-header";
@@ -12,8 +12,7 @@ import { absoluteUrl, SITE_NAME } from "@/lib/site";
 import { publicPageMetadata } from "@/lib/seo";
 import { StructuredData } from "@/components/structured-data";
 import { BILLING_PLANS } from "@/lib/billing/config";
-import { getCurrentUser } from "@/lib/server/auth";
-import { getBillingLimitsForUser, type BillingLimits } from "@/lib/server/billing";
+import { PublicViewerProvider } from "@/components/public-viewer";
 
 const description = "Make a study guide from PDFs, notes, and slides. Organize key concepts, check source references, and review with an optional Quick Check.";
 export const metadata = publicPageMetadata({ title: "Study Guide Maker for Course Files", description, path: "/" });
@@ -35,7 +34,7 @@ function JsonLd() {
   return <StructuredData data={jsonLd} />;
 }
 
-function UploadSupport({ limits }: { limits: BillingLimits }) {
+function UploadSupport() {
   return (
     <aside className="upload-support">
       <AssetIllustration asset="source" sizes="160px" />
@@ -52,22 +51,16 @@ function UploadSupport({ limits }: { limits: BillingLimits }) {
           Uploads use private signed storage. <Link href="/privacy">Privacy and retention details</Link>
         </span>
       </p>
-      <dl>
-        <div><dt>{limits.label} files / Guide</dt><dd>Up to {limits.maxFiles}</dd></div>
-        <div><dt>Per file</dt><dd>{formatMegabytes(MVP_LIMITS.maxFileBytes)}</dd></div>
-        <div><dt>Combined</dt><dd>{limits.maxUnits} units</dd></div>
-      </dl>
+      <PublicUploadLimits />
       <Link href="/pricing" className="text-link">Compare plans and limits <ArrowRight /></Link>
       <Link href="/study-guide-maker-from-pdf" className="text-link">See the PDF study guide workflow <ArrowRight /></Link>
     </aside>
   );
 }
 
-export default async function HomePage() {
-  const user = await getCurrentUser();
-  const limits = await getBillingLimitsForUser(user?.id ?? null);
+export default function HomePage() {
   return (
-    <>
+    <PublicViewerProvider>
       <JsonLd />
       <SiteHeader />
       <main className="landing-main">
@@ -105,8 +98,8 @@ export default async function HomePage() {
             <p>Add readable course files, review the queue, then continue to generation.</p>
           </div>
           <div className="upload-layout">
-            <UploadPanel maxFiles={limits.maxFiles} />
-            <UploadSupport limits={limits} />
+            <div><PublicUploadPanel /></div>
+            <UploadSupport />
           </div>
         </section>
         <div className="landing-section"><RecentGuides /></div>
@@ -136,6 +129,6 @@ export default async function HomePage() {
         </section>
       </main>
       <SiteFooter />
-    </>
+    </PublicViewerProvider>
   );
 }

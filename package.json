@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:browser": "playwright test",
+    "test:seo:responses": "node scripts/seo/verify-responses.mjs",
     "check": "npm run lint && npm run typecheck && npm test && npm run test:workflow && npm run build",
     "test:workflow": "vitest run --config vitest.workflow.config.mts",
     "test:watch": "vitest",

@@ -1,4 +1,9 @@
 export const SITE_NAME = "Folveta";
+export const PRODUCTION_ORIGIN = "https://folveta.com";
+export const PUBLIC_PAGE_PATHS = [
+  "/", "/about", "/privacy", "/terms", "/pricing", "/study-guide-maker-from-pdf",
+  "/how-to-make-a-study-guide", "/refunds", "/contact",
+] as const;
 
 const LOCAL_SITE_URL = "http://localhost:3000";
 
@@ -31,7 +36,13 @@ export function getSiteUrl(environment: IndexingEnvironment = process.env) {
     );
   }
 
-  return new URL(configuredUrl || LOCAL_SITE_URL);
+  const url = new URL(configuredUrl || LOCAL_SITE_URL);
+  if (environment.VERCEL_ENV === "production" && (
+    url.origin !== PRODUCTION_ORIGIN || url.pathname !== "/" || url.search || url.hash || url.username || url.password
+  )) {
+    throw new Error(`Production NEXT_PUBLIC_SITE_URL must be ${PRODUCTION_ORIGIN}.`);
+  }
+  return url;
 }
 
 export function absoluteUrl(

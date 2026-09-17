@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { AssetIllustration, type FolvetaAsset } from "@/components/ui/asset-illustration";
+import { PublicViewerProvider } from "@/components/public-viewer";
 
 export function PublicPageLayout({
   label,
@@ -28,7 +29,7 @@ export function PublicPageLayout({
   children: ReactNode;
 }) {
   return (
-    <div className={`public-page public-page--${heroDensity} flex min-h-[100dvh] flex-col ${pageClassName ?? ""}`}>
+    <PublicViewerProvider><div className={`public-page public-page--${heroDensity} flex min-h-[100dvh] flex-col ${pageClassName ?? ""}`}>
       <main className="flex-1">
         <SiteHeader />
         <div className="mx-auto w-full max-w-[1140px] px-5 sm:px-8">
@@ -57,6 +58,6 @@ export function PublicPageLayout({
         </div>
       </main>
       <SiteFooter />
-    </div>
+    </div></PublicViewerProvider>
   );
 }

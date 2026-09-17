@@ -1,12 +1,12 @@
-import type { Metadata } from "next";
+import { publicPageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { PublicPageLayout } from "@/components/public-page-layout";
 
-export const metadata: Metadata = {
+export const metadata = publicPageMetadata({
   title: "Terms",
   description: "Terms for using Folveta Study Guide Maker with course files, Study Guides, Quick Checks, and subscriptions.",
-  alternates: { canonical: "/terms" },
-};
+  path: "/terms",
+});
 
 export default function TermsPage() {
   return (

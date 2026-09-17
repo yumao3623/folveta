@@ -1,12 +1,12 @@
-import type { Metadata } from "next";
+import { publicPageMetadata } from "@/lib/seo";
 import { PublicPageLayout } from "@/components/public-page-layout";
 import { buttonClassName } from "@/components/ui/styles";
 
-export const metadata: Metadata = {
+export const metadata = publicPageMetadata({
   title: "Contact",
   description: "Contact Folveta support for help with Study Guides, subscriptions, or privacy requests.",
-  alternates: { canonical: "/contact" },
-};
+  path: "/contact",
+});
 
 export default function ContactPage() {
   return (

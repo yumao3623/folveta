@@ -3,9 +3,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isInvalidAuthSessionError } from "@/lib/auth-errors";
 import type { Database } from "@/lib/server/database.types";
 import { isSupabaseAuthSessionCookie } from "@/lib/supabase-cookies";
+import { PUBLIC_PAGE_PATHS } from "@/lib/site";
 
 export async function proxy(request: NextRequest) {
-  if (request.nextUrl.pathname.startsWith("/.well-known/workflow/")) {
+  // Public HTML is identical for every viewer. Refresh auth only on the private
+  // API/app requests, so Set-Cookie cannot contaminate a shared public cache.
+  if (PUBLIC_PAGE_PATHS.some((path) => path === request.nextUrl.pathname)
+    || request.nextUrl.pathname.startsWith("/.well-known/workflow/")) {
     return NextResponse.next({ request });
   }
   const authCookies = request.cookies.getAll().filter(({ name }) => isSupabaseAuthSessionCookie(name));

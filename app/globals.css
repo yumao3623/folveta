@@ -10,15 +10,15 @@
   --surface-elevated: #ffffff;
   --surface-subtle: #f5f8f6;
   --surface-muted: #e8edeb;
-  --primary: #098b43;
-  --primary-hover: #0b994a;
-  --primary-active: #076e35;
+  --primary: #087b3c;
+  --primary-hover: #076e35;
+  --primary-active: #065c2d;
   --primary-soft: #e3f8d9;
   --primary-soft-hover: #c9efd7;
   --secondary: #edf7f0;
   --secondary-hover: #e1f0e7;
   --muted: #526158;
-  --faint: #6d7971;
+  --faint: #5f6b63;
   --accent-mint: #c8f4d8;
   --highlight-yellow: #ffe98c;
   --source-blue: #e8f3ff;
@@ -1961,6 +1961,20 @@ a.study-map__item:active { box-shadow: 0 1px 0 var(--border); }
   align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+
+/* Reserve account controls while the private viewer request is in flight. */
+.site-header__account {
+  display: flex;
+  width: 104px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+}
+
+@media (min-width: 768px) {
+  .site-header__account { width: 210px; }
 }
 
 .site-header__link {

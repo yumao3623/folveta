@@ -2,7 +2,6 @@
 
 import { useRef, useState, type DragEvent, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
 import { X } from "lucide-react";
 import { MVP_LIMITS, sourceKindFromFilename, SUPPORTED_FILE_ACCEPT } from "@/lib/config";
 import { Button } from "@/components/ui/button";
@@ -35,7 +34,7 @@ function fileSize(bytes: number) {
     : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function UploadPanel({ maxFiles }: { maxFiles: number }) {
+export function UploadPanel({ maxFiles, unavailable = false }: { maxFiles: number; unavailable?: boolean }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
@@ -46,6 +45,7 @@ export function UploadPanel({ maxFiles }: { maxFiles: number }) {
   const [dragging, setDragging] = useState(false);
 
   function selectFiles(list: FileList | null) {
+    if (unavailable) return;
     const selected = Array.from(list ?? []);
     setFormError(null);
     if (selected.length > maxFiles) {
@@ -91,7 +91,7 @@ export function UploadPanel({ maxFiles }: { maxFiles: number }) {
   }
 
   function onDropzoneKeyDown(event: KeyboardEvent<HTMLLabelElement>) {
-    if (busy || (event.key !== "Enter" && event.key !== " ")) return;
+    if (busy || unavailable || (event.key !== "Enter" && event.key !== " ")) return;
     event.preventDefault();
     inputRef.current?.click();
   }
@@ -111,6 +111,11 @@ export function UploadPanel({ maxFiles }: { maxFiles: number }) {
   }
 
   async function submit() {
+    if (unavailable) return;
+    if (files.length > maxFiles) {
+      setFormError(`Your plan allows at most ${maxFiles} files per Guide.`);
+      return;
+    }
     if (!files.length) {
       setFormError("Choose at least one PDF, Word, Excel, PowerPoint, or image file.");
       return;
@@ -128,6 +133,8 @@ export function UploadPanel({ maxFiles }: { maxFiles: number }) {
     setFormError(null);
     let sessionId: string | null = null;
     try {
+      // Storage is needed only after the user submits; keep its SDK off the landing path.
+      const { createClient } = await import("@supabase/supabase-js");
       const sessionPayload = await readJson(
         await fetch("/api/sessions", {
           method: "POST",
@@ -226,7 +233,7 @@ export function UploadPanel({ maxFiles }: { maxFiles: number }) {
           id="guide-title"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          disabled={busy}
+          disabled={busy || unavailable}
           placeholder="Biology midterm"
           className="text-[16px]"
         />
@@ -235,13 +242,13 @@ export function UploadPanel({ maxFiles }: { maxFiles: number }) {
       <label
         htmlFor="course-material-files"
         role="button"
-        tabIndex={busy ? -1 : 0}
-        aria-disabled={busy}
+        tabIndex={busy || unavailable ? -1 : 0}
+        aria-disabled={busy || unavailable}
         className={`group mt-5 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed p-5 text-center outline-none transition-[background-color,border-color,box-shadow,transform] ${files.length > 0 ? "min-h-[160px] sm:min-h-[190px]" : "min-h-[180px] sm:min-h-[250px]"} focus-visible:border-[var(--primary)] focus-visible:shadow-[0_0_0_4px_rgb(60_149_99_/_0.16)] ${dragging ? "border-[var(--primary)] bg-[var(--primary-soft)] shadow-[var(--shadow-sm)]" : "border-[var(--border)] bg-[var(--surface-subtle)] hover:-translate-y-0.5 hover:border-[var(--primary)] hover:bg-white hover:shadow-[var(--shadow-sm)]"} ${busy ? "cursor-not-allowed opacity-60" : ""}`}
         onKeyDown={onDropzoneKeyDown}
         onDragEnter={(event) => {
           event.preventDefault();
-          if (!busy) setDragging(true);
+          if (!busy && !unavailable) setDragging(true);
         }}
         onDragOver={(event) => event.preventDefault()}
         onDragLeave={(event) => {
@@ -275,7 +282,7 @@ export function UploadPanel({ maxFiles }: { maxFiles: number }) {
           type="file"
           accept={SUPPORTED_FILE_ACCEPT}
           multiple
-          disabled={busy}
+          disabled={busy || unavailable}
           onChange={(event) => selectFiles(event.target.files)}
         />
       </label>
@@ -305,7 +312,7 @@ export function UploadPanel({ maxFiles }: { maxFiles: number }) {
       )}
       <Button
         onClick={submit}
-        disabled={busy || files.length === 0}
+        disabled={busy || unavailable || files.length === 0}
         loading={busy}
         loadingLabel="Uploading and parsing..."
         size="lg"

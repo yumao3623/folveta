@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AuthNavigation } from "@/lib/auth-navigation";
+import { PublicAuthNavigation } from "@/components/public-auth-navigation";
 import { BrandMark } from "@/components/brand-mark";
 import { buttonClassName } from "@/components/ui/styles";
 
@@ -14,7 +14,7 @@ export function SiteHeader() {
           <Link href="/study/demo" className={buttonClassName({ variant: "secondary", size: "sm", className: "site-header__example" })}>
             Example guide
           </Link>
-          <AuthNavigation />
+          <PublicAuthNavigation />
         </nav>
       </div>
     </header>

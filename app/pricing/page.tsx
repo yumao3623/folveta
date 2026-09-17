@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { PaddlePricing } from "@/components/paddle-pricing";
-import { getCurrentUser } from "@/lib/server/auth";
 import { getPaddlePriceId } from "@/lib/billing/config";
 import { PublicPageLayout } from "@/components/public-page-layout";
 import { StructuredData } from "@/components/structured-data";
@@ -13,8 +12,7 @@ const page = {
 };
 export const metadata = publicPageMetadata(page);
 
-export default async function PricingPage() {
-  const user = await getCurrentUser();
+export default function PricingPage() {
   return <><StructuredData data={publicPageSchema(page)} /><PublicPageLayout
     label="Pricing"
     breadcrumbLabel={page.title}
@@ -23,7 +21,7 @@ export default async function PricingPage() {
     asset="quest"
   >
         <div className="public-page__pricing">
-          <PaddlePricing userId={user?.id ?? null} userEmail={user?.email} priceId={getPaddlePriceId()} />
+          <PaddlePricing priceId={getPaddlePriceId()} />
         </div>
         <section className="mt-10">
           <h2 className="text-2xl font-bold">See what a Study Guide includes</h2>

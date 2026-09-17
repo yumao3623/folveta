@@ -74,6 +74,21 @@ describe("Public SEO routes", () => {
     );
   });
 
+  it.each([
+    "http://folveta.com", "https://www.folveta.com", "http://localhost:3000",
+    "https://preview.vercel.app", "https://folveta.com/staging", "https://folveta.com?preview=1",
+    "https://folveta.com/#preview", "https://user:secret@folveta.com",
+  ])("rejects a noncanonical production site URL: %s", (siteUrl) => {
+    expect(() => getSiteUrl({ VERCEL_ENV: "production", NEXT_PUBLIC_SITE_URL: siteUrl })).toThrow(
+      "Production NEXT_PUBLIC_SITE_URL must be https://folveta.com",
+    );
+  });
+
+  it("accepts the canonical origin while allowing isolated preview URLs", () => {
+    expect(getSiteUrl({ VERCEL_ENV: "production", NEXT_PUBLIC_SITE_URL: "https://folveta.com/" }).origin).toBe("https://folveta.com");
+    expect(getSiteUrl({ VERCEL_ENV: "preview", NEXT_PUBLIC_SITE_URL: "https://preview.vercel.app" }).origin).toBe("https://preview.vercel.app");
+  });
+
   it("gives every public trust page its own canonical", () => {
     expect(aboutMetadata.alternates).toEqual(expect.objectContaining({ canonical: "/about" }));
     expect(privacyMetadata.alternates).toEqual(expect.objectContaining({ canonical: "/privacy" }));

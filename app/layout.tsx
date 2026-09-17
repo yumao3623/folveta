@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Source_Sans_3 } from "next/font/google";
-import { getPublicRobots, getSiteUrl, SITE_NAME } from "@/lib/site";
+import { isPrelaunch, getSiteUrl, SITE_NAME } from "@/lib/site";
 import "./globals.css";
 
 const sourceSans = Source_Sans_3({
@@ -19,7 +19,8 @@ export const metadata: Metadata = {
     "Turn course PDFs, Word, Excel, PowerPoint, and image materials into a clear, source-grounded study guide with priorities and an optional Quick Check.",
   applicationName: SITE_NAME,
   category: "education",
-  robots: getPublicRobots(),
+  // Positive directives belong to approved pages, not the root 404 boundary.
+  robots: isPrelaunch() ? { index: false, follow: false } : undefined,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

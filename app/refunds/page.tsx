@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
+import { publicPageMetadata } from "@/lib/seo";
 import { PublicPageLayout } from "@/components/public-page-layout";
 
-export const metadata: Metadata = {
+export const metadata = publicPageMetadata({
   title: "Refund Policy",
   description: "Folveta's policy for monthly subscription cancellations and refund requests.",
-  alternates: { canonical: "/refunds" },
-};
+  path: "/refunds",
+});
 
 export default function RefundsPage() {
   return (

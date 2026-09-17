@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
+import { publicPageMetadata } from "@/lib/seo";
 import { PublicPageLayout } from "@/components/public-page-layout";
 
-export const metadata: Metadata = {
+export const metadata = publicPageMetadata({
   title: "Privacy",
   description: "How the current Study Guide Maker MVP handles uploaded files, generated study data, session access, and retention.",
-  alternates: { canonical: "/privacy" },
-};
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (
