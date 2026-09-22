@@ -66,7 +66,7 @@ export default function StudyGuideMakerFromPdfPage() {
           </>
         )}
       >
-          <section id="upload" className="mb-12 scroll-mt-8" aria-labelledby="pdf-upload-heading">
+          <section id="upload" className="mb-12 scroll-mt-24" aria-labelledby="pdf-upload-heading">
             <h2 id="pdf-upload-heading" className="text-2xl font-bold">Make a study guide from your PDF</h2>
             <p className="mt-3 mb-6 max-w-3xl leading-7 text-[var(--text-secondary)]">Add a readable PDF below, check your file queue, and continue to generation. You can include related course documents or slides in the same guide. Free accounts include {BILLING_PLANS.free.monthlyStudyGuides} successful guides per month.</p>
             <PublicUploadPanel />

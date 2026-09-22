@@ -70,7 +70,7 @@
 | 项目 | 9 月 18 日记录 | 9 月 22 日读取 |
 | --- | --- | --- |
 | GSC 索引 | 3 收录 / 38 未收录 | 7 收录 / 35 未收录；已收录首页、About、Terms、Pricing、Privacy、Refunds、方法页 |
-| PDF 页 | 已发现未收录 | URL 检查仍为已发现未收录，尚无抓取时间；来源为 sitemap、首页、Privacy |
+| PDF 页 | 已发现未收录 | URL 检查仍为已发现未收录，尚无历史抓取时间；来源为 sitemap、首页、Privacy；本次实时测试可索引、检测到有效 Breadcrumb，已成功请求编入索引 |
 | 未收录原因 | 多数旧电商 URL | noindex 1、404 1、已抓取未收录 31、已发现未收录 2；不能等同于现有 9 页全部失败 |
 | sitemap | 成功，9 页 | 仍成功，最后读取 9 月 17 日、发现 9 页 |
 | 近 3 个月效果 | 3 点击 / 13 曝光 / 15.6 平均排名，图表至 9 月 15 日 | 3 点击 / 17 曝光 / CTR 17.6% / 18.8 平均排名，图表至 9 月 19 日 |
@@ -79,11 +79,11 @@
 | Links | 数据处理中 | 仍处理中，导出不可用；不能据此声称零外链 |
 | 人工处置 / 安全 | 旧记录正常 | 两份报告重新打开，均未检测到问题 |
 | 真实用户 CWV | 无数据 | 移动、桌面仍无数据，INP 无法下结论 |
-| Bing | 无已验证配置证据 | 当前账户首次添加 Folveta，接入 Next Metadata 的公开站点验证标记；验证与 sitemap 结果以发布后实测为准 |
+| Bing | 无已验证配置证据 | 当前账户首次添加并验证 Folveta；sitemap 已提交、正在处理，首页/PDF/方法页三个 URL 已提交成功 |
 
 ## 搜索意图与竞争研究
 
-9 月 22 日 Chrome 实际 Google 搜索主词，传入英文/美国参数但浏览器跳转 Google 香港站，因此仅作本次可见 SERP 样本，不声称稳定美国排名。可见 Flint、RemNote、Penseum、Atlas、Scribe、Quizlet、QuillBot、NoteGPT 等结果；Web 搜索结果与 Google 排序不混用。没有 Semrush/Keyword Planner 账户数据，不编造搜索量、DR 或竞品自然流量。
+9 月 22 日 Chrome 实际 Google 搜索主词，传入英文/美国参数但浏览器跳转 Google 香港站，因此仅作本次可见 SERP 样本，不声称稳定美国排名。可见 Flint、RemNote、Penseum、Atlas、Scribe、Quizlet、QuillBot、NoteGPT 等结果；Web 搜索结果与 Google 排序不混用。没有 Semrush/Keyword Planner 账户数据，不编造 Google 搜索量、DR 或竞品自然流量。Bing 验证后已取得关键词工具真实数据，见下。
 
 | 关键词族 | 搜索任务 | Folveta 页面决策 |
 | --- | --- | --- |
@@ -103,6 +103,10 @@
 - [Studrix](https://studrix.com/en/practice-test-generator)、[PDFQuiz](https://pdfquiz.com/practice-test-maker)：试卷任务与纯学习指南不同。没有完整考试体验时不争抢该意图。
 - 未取得可靠竞品反链/域名权威数据，也未验证竞品用户生成内容是否普遍允许索引。Folveta 用户材料及生成结果继续私有/noindex，不为 SEO 公开。
 
+### Bing 关键词工具实测
+
+2026-09-22 查询 `study guide maker`，国家/语言/设备均为“全部”，时间为 2026-06-22 至 09-19。工具标记指标为“印象数”：主词约 **1.1K**（美国约 1K）；相关词 `ai study guide maker` 272、`free study guide maker` 68、`study guide creator` 37、`create a study guide` 48、`make a study guide` 56。它们是 Bing 三个月口径，不是 Folveta 自身曝光、Google 月搜索量或可直接相加的流量预测。该样本支持保留 Study Guide Maker 主词及免费额度说明，不支持将主词替换为 AI 前缀或批量创建近义页。
+
 ## 本次采用的成熟实现
 
 - [Next.js Metadata](https://nextjs.org/docs/app/getting-started/metadata-and-og-images) 与 [sitemap](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap)：保留原生 SSR 元数据，共用公共路径清单；添加真实内容变更日期，不使用每次构建时间，去掉 Google 不使用的 priority/changeFrequency。依据 [Google lastmod 说明](https://developers.google.com/search/blog/2023/06/sitemaps-lastmod-ping)。
@@ -112,6 +116,18 @@
 - GitHub 已检查 next-seo、next-sitemap、Lighthouse CI、lychee 及 programmatic SEO 示例；现有原生 Metadata/sitemap 与小型响应检查已覆盖需要，不重复装库。没有独立数据或足够差异支持程序化扩页，按 [Google 垃圾政策](https://developers.google.com/search/docs/essentials/spam-policies) 与 [Semrush pSEO](https://www.semrush.com/blog/programmatic-seo/) 的页面价值要求不批量生成。
 
 最大缺口是目标查询曝光与可信推荐仍少、PDF 页尚未被抓取、完整 Mock Exam 体验尚未交付；不是 schema 数量不足。优先改善真实入口和可引用示例，等待实际查询和反馈决定下一批页面。
+
+## 本次验证与发布
+
+功能提交 `e4cfa3a` 已推送 main，对应 [Vercel 部署](https://vercel.com/creen-ai/folveta/CWu934bLpuUNbV4Z5o2g6yudq4Qv) 成功；生产响应确认新首页、PDF 上传入口、Bing meta 和 sitemap 的真实 lastmod 已生效。
+
+- `npm run check`：lint、typecheck、253 项单元测试、3 项 Workflow 测试与 production build 通过；11 项环境依赖测试跳过。
+- 浏览器：35 项通过、3 项按设备跳过；包括首页/PDF 上传器身份请求失败后的恢复。Chrome 生产 390px 视口宽度与文档宽度同为 390，控件启用、无横向溢出；修正 PDF 上传锚点滚动间距，避免固定导航遮挡标题。
+- 本地和线上 `test:seo:responses` 通过：9 页 SSR HTML 元数据、canonical、OG/Twitter、私有响应隔离、404、尾斜杠、robots、sitemap、9 页可达、23 个锚点、图片 alt、推广参数 canonical。
+- HTTP→HTTPS、www→非 www 均为 308；HTTP www 经两跳到正式域名；社交图像端点均 200 image/png。RSC 不影响这些公共页直接返回的可见标题/正文与 JSON-LD；未发现 hydration 错误。
+- Schema Validator 实际抓取新首页，WebPage 嵌套 WebSite/WebApplication/Free Offer，**0 错误、0 警告**；不据此声称具备 Google 软件应用评分富结果资格。
+- [PageSpeed 本次报告](https://pagespeed.web.dev/analysis/https-folveta-com/oulsnkhzzp?form_factor=mobile)：9 月 22 日 16:20，移动性能 **97** / LCP **2.3s** / CLS **0** / TBT **10ms**；桌面性能 **92** / LCP **0.4s** / CLS **0** / TBT **0ms**；两端无障碍、最佳实践、SEO 均 **100**。桌面 Speed Index 3.3s 拉低实验室分数；不是 CWV 失败，真实用户 INP/CWV 仍无数据。不追逐单次满分而改动稳定产品逻辑。
+- Bing sitemap 进入处理队列，三个 URL 有实际提交记录；Bing 搜索性能提示准备数据、48 小时后查看；GSC PDF 页实时测试通过；首页和 PDF 页的重新索引请求均成功进入优先队列，收录/更新尚待 Google 决定。
 
 ## 修改后的检查
 
