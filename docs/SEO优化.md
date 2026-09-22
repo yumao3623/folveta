@@ -1,6 +1,6 @@
 # Folveta SEO 优化
 
-当前网站及既有 SEO 属于 **1.0**；本文件的后续待办属于 **2.0 阶段**。内容更新直接维护本文，外链进展维护 [外链清单](外链清单.md)。
+当前 SEO 工具入口基线归入 **2.0.0**；后续增长观察和平台等待不阻塞软件版本结项，也不自动增加版本。内容更新直接维护本文，外链进展维护 [外链清单](外链清单.md)。
 
 ## 现有基础
 
@@ -50,7 +50,7 @@
 
 执行依据是 [Google 链接指南](https://developers.google.com/search/docs/crawling-indexing/links-crawlable)：使用可抓取的真实链接、描述性锚文字与有帮助的上下文。GitHub 调研采用 [marketingskills 的站点组织指南](https://github.com/coreyhaines31/marketingskills/blob/main/skills/site-architecture/SKILL.md) 检查重要页面与孤页；外链与推广项目的筛选结果见 [外链清单](外链清单.md)。不采用固定链接密度、堆关键词或以第三方 DR 分数代替实际排名与访问数据的做法。
 
-## 2.0 待办
+## 持续增长待办（不是 2.0.0 发布门槛）
 
 - [x] 读取 GSC 当前可见 sitemap、概况、搜索效果与链接报告，保留报表延迟和样本量限制。
 - [x] 检查首页、PDF 页和方法页的 Google 收录及 canonical 状态；结果见当前观测起点。
