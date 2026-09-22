@@ -1,4 +1,6 @@
-export function StructuredData({ data }: { data: Record<string, unknown> }) {
+import type { Graph, Thing, WithContext } from "schema-dts";
+
+export function StructuredData({ data }: { data: Graph | WithContext<Thing> }) {
   return (
     <script
       type="application/ld+json"

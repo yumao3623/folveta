@@ -6,9 +6,10 @@ import { StructuredData } from "@/components/structured-data";
 import { publicPageMetadata, publicPageSchema } from "@/lib/seo";
 import { MVP_LIMITS, formatMegabytes } from "@/lib/config";
 import { BILLING_PLANS } from "@/lib/billing/config";
+import { PublicUploadPanel } from "@/components/public-upload";
 
 const page = {
-  title: "Study Guide Maker from PDF: Sources and Review",
+  title: "PDF to Study Guide: Upload and Start Free",
   description: "Turn a readable course PDF into a Study Guide with key concepts, page references, visible gaps, and Quick Check. See file limits and start uploading.",
   path: "/study-guide-maker-from-pdf",
 };
@@ -53,7 +54,7 @@ export default function StudyGuideMakerFromPdfPage() {
         )}
         actions={(
           <>
-              <Link className={buttonClassName({ size: "lg" })} href="/#upload">
+              <Link className={buttonClassName({ size: "lg" })} href="#upload">
                 Make a Guide from PDF
               </Link>
               <Link
@@ -65,6 +66,11 @@ export default function StudyGuideMakerFromPdfPage() {
           </>
         )}
       >
+          <section id="upload" className="mb-12 scroll-mt-8" aria-labelledby="pdf-upload-heading">
+            <h2 id="pdf-upload-heading" className="text-2xl font-bold">Make a study guide from your PDF</h2>
+            <p className="mt-3 mb-6 max-w-3xl leading-7 text-[var(--text-secondary)]">Add a readable PDF below, check your file queue, and continue to generation. You can include related course documents or slides in the same guide. Free accounts include {BILLING_PLANS.free.monthlyStudyGuides} successful guides per month.</p>
+            <PublicUploadPanel />
+          </section>
           <section className="mb-10 max-w-3xl leading-7 text-[var(--text-secondary)]" aria-labelledby="pdf-ready-heading">
             <h2 id="pdf-ready-heading" className="text-2xl font-bold text-[var(--foreground)]">Before you upload your PDF</h2>
             <p className="mt-4">Choose a course handout, assigned reading, or text-based lecture PDF. Try selecting and copying a paragraph in your PDF viewer: readable text is a useful first check, although it does not guarantee that every page will parse correctly.</p>
@@ -157,7 +163,7 @@ export default function StudyGuideMakerFromPdfPage() {
               files. Review <Link className="font-medium text-[var(--accent)] underline underline-offset-4" href="/pricing">plans and monthly limits</Link> or
               read more about <Link className="font-medium text-[var(--accent)] underline underline-offset-4" href="/about">the product boundaries</Link> before you begin.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3"><Link href="/#upload" className={buttonClassName({ size: "lg" })}>Upload my course PDF</Link><Link href="/study/demo" className={buttonClassName({ variant: "secondary", size: "lg" })}>Explore the example guide</Link></div>
+            <div className="mt-6 flex flex-wrap gap-3"><Link href="#upload" className={buttonClassName({ size: "lg" })}>Upload my course PDF</Link><Link href="/study/demo" className={buttonClassName({ variant: "secondary", size: "lg" })}>Explore the example guide</Link></div>
           </section>
       </PublicPageLayout>
     </>

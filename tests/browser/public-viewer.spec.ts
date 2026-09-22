@@ -34,17 +34,19 @@ test("cached public HTML loads private controls and survives a plan downgrade", 
   expect(writes).toEqual([]);
 });
 
-test("viewer errors keep uploads disabled and support recovery", async ({ page }) => {
+for (const pathname of ["/", "/study-guide-maker-from-pdf"]) {
+test(`viewer errors keep uploads disabled and support recovery on ${pathname}`, async ({ page }) => {
   let failed = true;
   await page.route("**/api/viewer", (route) => route.fulfill(failed ? { status: 503, json: { error: "unavailable" } } : { json: anonymous }));
-  await page.goto("/");
+  await page.goto(pathname);
   await expect(page.getByRole("alert").filter({ hasText: "could not check your plan" })).toBeVisible();
   await expect(page.locator('input[type="file"]')).toBeDisabled();
   failed = false;
   await page.getByRole("button", { name: "Refresh and try again" }).click();
   await expect(page.locator('input[type="file"]')).toBeEnabled();
-  await expect(page.getByRole("heading", { name: "Sign in to see recent Guides" })).toBeVisible();
+  if (pathname === "/") await expect(page.getByRole("heading", { name: "Sign in to see recent Guides" })).toBeVisible();
 });
+}
 
 test("switching accounts removes the previous account's recent Guides", async ({ page }) => {
   let viewer = pro;

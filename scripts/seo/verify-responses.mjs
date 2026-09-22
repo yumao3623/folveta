@@ -7,6 +7,7 @@ const paths = ["/", "/about", "/privacy", "/terms", "/pricing", "/study-guide-ma
 const summaries = [];
 const titles = new Set();
 const descriptions = new Set();
+const publicHtml = new Map();
 
 const attributes = (tag) => Object.fromEntries([...tag.matchAll(/([\w:-]+)="([^"]*)"/g)].map((match) => [match[1], match[2]]));
 const meta = (html, key) => [...html.matchAll(/<meta\s[^>]*>/g)].map(([tag]) => attributes(tag)).filter((tag) => tag.name === key || tag.property === key).map((tag) => tag.content);
@@ -19,6 +20,8 @@ const read = async (pathname, headers) => {
 for (const pathname of paths) {
   const { response, html } = await read(pathname);
   assert.equal(response.status, 200, pathname);
+  assert.doesNotMatch(response.headers.get("x-robots-tag") ?? "", /noindex/, `${pathname} HTTP indexing directive`);
+  publicHtml.set(pathname, html);
   assert.equal(response.headers.get("set-cookie"), null, `${pathname} must not personalize public HTML`);
   assert.doesNotMatch(response.headers.get("cache-control") ?? "", /private|no-store/, `${pathname} must be cacheable`);
   assert.equal([...html.matchAll(/<h1(?:\s[^>]*)?>/g)].length, 1, `${pathname} H1`);
@@ -45,6 +48,36 @@ for (const pathname of paths) {
   assert.doesNotMatch(withCookie.response.headers.get("cache-control") ?? "", /private|no-store/);
   assert.equal(withCookie.html, html, `${pathname} must serve the same public shell with an auth cookie`);
   summaries.push({ pathname, status: response.status, cache: response.headers.get("x-vercel-cache") ?? response.headers.get("x-nextjs-cache"), title });
+}
+
+// 检查渲染后的真实链接与片段，并从首页遍历以发现孤页。
+const graph = new Map(paths.map((path) => [path, new Set()]));
+let checkedFragments = 0;
+for (const [pathname, html] of publicHtml) {
+  for (const [tag] of html.matchAll(/<a\s[^>]*>/g)) {
+    const href = attributes(tag).href;
+    if (!href) continue;
+    const target = new URL(href.replaceAll("&amp;", "&"), new URL(pathname, canonicalOrigin));
+    if (target.origin !== canonicalOrigin || !publicHtml.has(target.pathname)) continue;
+    graph.get(pathname).add(target.pathname);
+    if (target.hash) {
+      const id = decodeURIComponent(target.hash.slice(1));
+      assert.ok([...publicHtml.get(target.pathname).matchAll(/\bid="([^"]*)"/g)].some((match) => match[1] === id), `${pathname} broken fragment: ${href}`);
+      checkedFragments++;
+    }
+  }
+  for (const [tag] of html.matchAll(/<img\s[^>]*>/g)) {
+    assert.ok(Object.hasOwn(attributes(tag), "alt"), `${pathname} image missing alt`);
+  }
+}
+const reached = new Set(["/"]);
+for (const pathname of reached) for (const target of graph.get(pathname)) reached.add(target);
+assert.deepEqual([...reached].sort(), [...paths].sort(), "Public pages must be reachable from home");
+
+for (const pathname of ["/?ref=producthunt", "/?utm_source=seo-check"]) {
+  const { response, html } = await read(pathname);
+  assert.equal(response.status, 200);
+  assert.deepEqual(canonical(html), canonical(publicHtml.get("/")), "Referral parameters must not create duplicate canonicals");
 }
 
 for (const pathname of ["/seo-check-missing-page", "/products/seo-check-missing-product"]) {
@@ -78,4 +111,4 @@ for (const [pathname, status] of [["/api/viewer", 200], ["/api/guides", 401]]) {
     assert.equal(viewer.limits.id, "free");
   }
 }
-console.log(JSON.stringify({ base, publicPages: summaries, checks: "PASS: metadata, CDN isolation, private APIs, 404, redirects, sitemap and robots" }, null, 2));
+console.log(JSON.stringify({ base, publicPages: summaries, reachablePages: reached.size, checkedFragments, checks: "PASS: metadata, CDN isolation, private APIs, 404, redirects, sitemap, robots, public link graph, fragments, image alt and referral canonicals" }, null, 2));

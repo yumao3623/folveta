@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Graph } from "schema-dts";
 import { ArrowRight, Check, ChevronDown, Play } from "lucide-react";
 import { AssetIllustration } from "@/components/ui/asset-illustration";
 import { StudyIcon } from "@/components/ui/study-icon";
@@ -14,21 +15,24 @@ import { StructuredData } from "@/components/structured-data";
 import { BILLING_PLANS } from "@/lib/billing/config";
 import { PublicViewerProvider } from "@/components/public-viewer";
 
-const description = "Make a study guide from PDFs, notes, and slides. Organize key concepts, check source references, and review with an optional Quick Check.";
+const description = "Make a study guide from PDFs, lecture notes, and slides. Get review priorities, source references, and optional practice questions. Start with 2 free guides/month.";
 export const metadata = publicPageMetadata({ title: "Study Guide Maker for Course Files", description, path: "/" });
 const FAQ_ITEMS = [
   ["What files can I use with this study guide maker?", `Use PDF, Word, Excel, PowerPoint, and common image files, up to ${formatMegabytes(MVP_LIMITS.maxFileBytes)} each. Free allows ${BILLING_PLANS.free.maxFiles} files and ${BILLING_PLANS.free.maxUnits} source units per Guide; Pro has higher limits. For PDFs, one page is one source unit.`],
   ["Can I try Folveta for free?", `You can begin with the upload workspace or explore the example Guide. The Free account plan includes ${BILLING_PLANS.free.monthlyStudyGuides} successful Study Guides per month. Compare plans and limits on the Pricing page before starting a larger set of files.`],
   ["What does the generated Study Guide include?", "The guide organizes topics into study-priority bands and can include concise explanations, key concepts, definitions, processes, relationships, common confusions, material gaps, and page or slide references when supported."],
-  ["How does this AI study guide maker use my files?", "Folveta works as a study guide generator for the course files you choose. It organizes uploaded material into source-linked sections and review priorities without pulling in open-web facts. Verify important claims against the cited page or slide."],
+  ["How does this study guide maker use my files?", "Folveta uses AI to organize the course files you choose into source-linked sections and review priorities without pulling in open-web facts. Verify important claims against the cited page or slide."],
+  ["Can I make a study guide from lecture notes?", "Yes. Upload notes saved as a readable PDF or Word document, or use the original PowerPoint slides. Folveta currently accepts files, not pasted text, website links, or lecture recordings. Include the course material behind your notes when they omit important context."],
+  ["How are study priorities chosen?", "Study First, Study Next, and Review If Time organize topics by their learning importance in your uploaded material. Each section includes a reason for its priority. Compare these suggestions with your instructor's objectives; they are not predictions of exam questions."],
+  ["Why use Folveta instead of a general chat prompt?", "Folveta provides a repeatable workflow: upload course files, review a structured guide with priorities and source references, then use a Quick Check to return to sections behind mistakes. You do not need to design the guide format in a prompt. Both AI-generated guides and chat answers still need source verification."],
   ["Can it read scanned PDFs or handwriting?", "Common image files are supported through a constrained visual-text extraction step. Scanned or image-only pages inside PDFs, and visual-only charts or diagrams, may still be shown as material gaps when reliable text cannot be extracted."],
   ["What is Quick Check?", "Quick Check is an optional five-question multiple-choice check based on the current Study Guide. Mistakes link back to the relevant guide section for review."],
 ] as const;
 
 function JsonLd() {
-  const jsonLd = { "@context": "https://schema.org", "@graph": [
+  const jsonLd: Graph = { "@context": "https://schema.org", "@graph": [
     { "@type": "WebSite", "@id": absoluteUrl("/#website"), name: SITE_NAME, url: absoluteUrl("/"), inLanguage: "en" },
-    { "@type": "WebApplication", "@id": absoluteUrl("/#application"), name: SITE_NAME, url: absoluteUrl("/"), description, applicationCategory: "EducationalApplication", operatingSystem: "Web" },
+    { "@type": "WebApplication", "@id": absoluteUrl("/#application"), name: SITE_NAME, url: absoluteUrl("/"), description, applicationCategory: "EducationalApplication", operatingSystem: "Any", browserRequirements: "Requires JavaScript and an internet connection.", offers: { "@type": "Offer", name: "Free", price: 0, priceCurrency: "USD", description: `${BILLING_PLANS.free.monthlyStudyGuides} successful Study Guides per month`, url: absoluteUrl("/pricing") } },
     { "@type": "WebPage", "@id": absoluteUrl("/#webpage"), name: "Study Guide Maker for Course Files", url: absoluteUrl("/"), description, isPartOf: { "@id": absoluteUrl("/#website") }, mainEntity: { "@id": absoluteUrl("/#application") } },
   ] };
   return <StructuredData data={jsonLd} />;
@@ -103,6 +107,16 @@ export default function HomePage() {
           </div>
         </section>
         <div className="landing-section"><RecentGuides /></div>
+        <section className="landing-section" aria-labelledby="study-material-heading">
+          <div className="section-heading">
+            <div><p className="eyebrow">Start with what your course covers</p><h2 id="study-material-heading">A study guide for your next review session.</h2></div>
+          </div>
+          <div className="mt-7 grid gap-8 md:grid-cols-3">
+            <div><h3 className="text-xl font-bold">Course PDFs</h3><p className="mt-3 leading-7 text-[var(--text-secondary)]">Turn a chapter or handout into topics you can verify against page references. Use the <Link href="/study-guide-maker-from-pdf#upload" className="text-link">PDF to Study Guide tool</Link> to upload directly.</p></div>
+            <div><h3 className="text-xl font-bold">Lecture notes and slides</h3><p className="mt-3 leading-7 text-[var(--text-secondary)]">Upload notes as PDF or Word files alongside related slides. Check definitions, processes, and missing context in one guide. See a <Link href="/how-to-make-a-study-guide#worked-example" className="text-link">worked study guide example</Link>.</p></div>
+            <div><h3 className="text-xl font-bold">Exam revision</h3><p className="mt-3 leading-7 text-[var(--text-secondary)]">Review priority topics, answer practice prompts from memory, and check mistakes against your sources. Use the <Link href="/how-to-make-a-study-guide#review-checklist" className="text-link">review checklist</Link> alongside your instructor&apos;s exam scope.</p></div>
+          </div>
+        </section>
         <section className="landing-section landing-section--workflow">
           <div className="section-heading">
             <div><p className="eyebrow">From material to review</p><h2>Build a guide you can check.</h2></div>

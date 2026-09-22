@@ -19,6 +19,7 @@ export const metadata: Metadata = {
     "Turn course PDFs, Word, Excel, PowerPoint, and image materials into a clear, source-grounded study guide with priorities and an optional Quick Check.",
   applicationName: SITE_NAME,
   category: "education",
+  verification: { other: { "msvalidate.01": "424E809ECD7DA2EC25500506FE4352BB" } },
   // Positive directives belong to approved pages, not the root 404 boundary.
   robots: isPrelaunch() ? { index: false, follow: false } : undefined,
 };

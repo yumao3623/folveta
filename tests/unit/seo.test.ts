@@ -133,5 +133,7 @@ describe("Public SEO routes", () => {
     expect(paths).toEqual(["/", "/about", "/privacy", "/terms", "/pricing", "/study-guide-maker-from-pdf", "/how-to-make-a-study-guide", "/refunds", "/contact"]);
     expect(entries.every((entry) => entry.url.startsWith("https://folveta.com/"))).toBe(true);
     expect(paths.some((path) => path.startsWith("/study/") || path.startsWith("/api/"))).toBe(false);
+    expect(entries.find((entry) => new URL(entry.url).pathname === "/")?.lastModified).toBe("2026-09-22");
+    expect(entries.find((entry) => new URL(entry.url).pathname === "/privacy")?.lastModified).toBeUndefined();
   });
 });

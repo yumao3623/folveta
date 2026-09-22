@@ -5,6 +5,13 @@ export const PUBLIC_PAGE_PATHS = [
   "/how-to-make-a-study-guide", "/refunds", "/contact",
 ] as const;
 
+// 仅记录实质内容变更日期；没有可靠日期的页面不输出 lastmod。
+export const PUBLIC_PAGE_MODIFIED: Partial<Record<typeof PUBLIC_PAGE_PATHS[number], string>> = {
+  "/": "2026-09-22",
+  "/study-guide-maker-from-pdf": "2026-09-22",
+  "/how-to-make-a-study-guide": "2026-09-18",
+};
+
 const LOCAL_SITE_URL = "http://localhost:3000";
 
 export type IndexingEnvironment = {

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Graph } from "schema-dts";
 import { absoluteUrl, getPublicRobots, SITE_NAME } from "@/lib/site";
 
 type PublicPage = {
@@ -34,7 +35,7 @@ export function publicPageMetadata({ title, description, path }: PublicPage): Me
 export function publicPageSchema(
   page: PublicPage,
   pageType: "WebPage" | "AboutPage" = "WebPage",
-) {
+): Graph {
   const url = absoluteUrl(page.path);
   return {
     "@context": "https://schema.org",
