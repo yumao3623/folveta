@@ -76,6 +76,7 @@
 | 近 3 个月效果 | 3 点击 / 13 曝光 / 15.6 平均排名，图表至 9 月 15 日 | 3 点击 / 17 曝光 / CTR 17.6% / 18.8 平均排名，图表至 9 月 19 日 |
 | 最近 7 天 | 未记录 | 9 月 13–19 日：1 点击 / 5 曝光 / CTR 20% / 平均排名 23.6；不是完整最近四天窗口 |
 | 可见查询 | voluta、volixta | volixta 2、voluta 2、wolfeta 1 次曝光，均无点击；没有可确认的目标学习词曝光 |
+| Contact | 未逐页复查 | Google 无法识别此网址；本次补交索引请求成功，现有 sitemap 与内链均已包含它 |
 | Links | 数据处理中 | 仍处理中，导出不可用；不能据此声称零外链 |
 | 人工处置 / 安全 | 旧记录正常 | 两份报告重新打开，均未检测到问题 |
 | 真实用户 CWV | 无数据 | 移动、桌面仍无数据，INP 无法下结论 |
@@ -119,7 +120,7 @@
 
 ## 本次验证与发布
 
-功能提交 `e4cfa3a` 已推送 main，对应 [Vercel 部署](https://vercel.com/creen-ai/folveta/CWu934bLpuUNbV4Z5o2g6yudq4Qv) 成功；生产响应确认新首页、PDF 上传入口、Bing meta 和 sitemap 的真实 lastmod 已生效。
+功能提交 `e4cfa3a`、锚点修正 `05b2dc8` 已推送 main，最终代码对应 [Vercel 部署](https://vercel.com/creen-ai/folveta/797g7swzaQftkkfoT6cVN7C2GhaW) 成功；生产响应确认新首页、PDF 上传入口、Bing meta 和 sitemap 的真实 lastmod 已生效。
 
 - `npm run check`：lint、typecheck、253 项单元测试、3 项 Workflow 测试与 production build 通过；11 项环境依赖测试跳过。
 - 浏览器：35 项通过、3 项按设备跳过；包括首页/PDF 上传器身份请求失败后的恢复。Chrome 生产 390px 视口宽度与文档宽度同为 390，控件启用、无横向溢出；修正 PDF 上传锚点滚动间距，避免固定导航遮挡标题。
@@ -127,7 +128,8 @@
 - HTTP→HTTPS、www→非 www 均为 308；HTTP www 经两跳到正式域名；社交图像端点均 200 image/png。RSC 不影响这些公共页直接返回的可见标题/正文与 JSON-LD；未发现 hydration 错误。
 - Schema Validator 实际抓取新首页，WebPage 嵌套 WebSite/WebApplication/Free Offer，**0 错误、0 警告**；不据此声称具备 Google 软件应用评分富结果资格。
 - [PageSpeed 本次报告](https://pagespeed.web.dev/analysis/https-folveta-com/oulsnkhzzp?form_factor=mobile)：9 月 22 日 16:20，移动性能 **97** / LCP **2.3s** / CLS **0** / TBT **10ms**；桌面性能 **92** / LCP **0.4s** / CLS **0** / TBT **0ms**；两端无障碍、最佳实践、SEO 均 **100**。桌面 Speed Index 3.3s 拉低实验室分数；不是 CWV 失败，真实用户 INP/CWV 仍无数据。不追逐单次满分而改动稳定产品逻辑。
-- Bing sitemap 进入处理队列，三个 URL 有实际提交记录；Bing 搜索性能提示准备数据、48 小时后查看；GSC PDF 页实时测试通过；首页和 PDF 页的重新索引请求均成功进入优先队列，收录/更新尚待 Google 决定。
+- [PDF 页 PageSpeed 复测](https://pagespeed.web.dev/analysis/https-folveta-com-study-guide-maker-from-pdf/d1k1nvtry6?form_factor=mobile)：移动/桌面性能均 **96**，LCP **1.4s / 0.5s**，CLS 均 **0**，SEO/无障碍均 **100**；最佳实践 **96**，仍记录测试节点读取静态 JS/RSC 的 `ERR_CONNECTION_FAILED`。同一静态资源独立 GET 均为 200、Chrome 实测无控制台错误；线上响应检查第一次遇 TLS ECONNRESET，重跑全部通过。保留这项网络测量限制，不声称外部测试全绿或已确定故障来源。
+- Bing sitemap 进入处理队列，三个 URL 有实际提交记录；Bing 搜索性能提示准备数据、48 小时后查看；GSC PDF 页实时测试通过；首页、PDF 页和 Contact 的索引请求均成功进入优先队列，收录/更新尚待 Google 决定。
 
 ## 修改后的检查
 
